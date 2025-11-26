@@ -1,0 +1,89 @@
+info:
+  app:
+    version: '@project.version@'
+
+spring:
+  application:
+    name: todo-api
+  profiles:
+    active: default
+  datasource:
+    url: jdbc:sqlite:file:./todo/db/todo.db?date_class=TEXT&date_string_format=yyyy-MM-dd HH:mm:ss
+    username: sa
+    password:
+    driverClassName: org.sqlite.JDBC
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    defer-datasource-initialization: true
+    open-in-view: false
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        "[format_sql]": true
+  sql:
+    init:
+      mode: embedded
+  devtools:
+    add-properties: false
+  jackson:
+    date-format: yyyy-MM-dd'T'HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    property-naming-strategy: LOWER_CAMEL_CASE
+    default-property-inclusion: NON_NULL
+
+logging:
+  level:
+    root: INFO
+    org:
+      springframework:
+        web: INFO
+        data:
+          jpa: INFO
+      hibernate:
+        SQL: DEBUG
+        type: INFO
+    br:
+      com:
+        exemplo:
+          todo: DEBUG
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+  compression:
+    enabled: true
+    mime-types: application/json
+    min-response-size: 1024
+
+springdoc:
+  version: '@springdoc.version@'
+  api-docs:
+    path: /api-docs
+    version: openapi-3-1
+  swagger-ui:
+    path: /swagger-ui.html
+    layout: BaseLayout
+    display-request-duration: true
+    operationsSorter: method
+    disable-swagger-default-url: true
+    use-root-path: true
+  show-actuator: false
+  cache:
+    disabled: true
+
+management:
+  server:
+    port: 9101
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+      base-path: "/"
+      path-mapping:
+        prometheus: "metrics"

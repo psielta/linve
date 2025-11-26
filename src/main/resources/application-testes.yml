@@ -1,0 +1,34 @@
+spring:
+  config:
+    activate:
+      on-profile: testes
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: jdbc:sqlite:file:./todo/db/todo-test.db?date_class=TEXT&date_string_format=yyyy-MM-dd HH:mm:ss
+    username: sa
+    password:
+    driverClassName: org.sqlite.JDBC
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    defer-datasource-initialization: true
+    open-in-view: false
+    show-sql: false
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        "[format_sql]": false
+
+server:
+  servlet:
+    context-path: /api
+
+logging:
+  level:
+    root: WARN
+    br:
+      com:
+        exemplo:
+          todo: INFO
