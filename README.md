@@ -187,19 +187,22 @@ Após o primeiro registro, você terá acesso ao sistema. Alternativamente:
 
 ### Fase 1: Base Arquitetural (Concluído)
 
+> **Nota:** O CRUD de Tarefas (Todo) foi implementado como **ponto de partida** para validar a arquitetura completa (autenticação, multi-tenancy, geração de clientes). Este módulo será substituído pelos módulos de negócio nas próximas fases.
+
 - [x] **Backend Spring Boot**
   - [x] Autenticação JWT com refresh token
   - [x] Multi-tenancy por organização
-  - [x] CRUD de tarefas (Todo)
-  - [x] OpenAPI otimizado para geração de clientes
-  - [x] Tratamento global de exceções
+  - [x] CRUD de tarefas (Todo) - módulo de exemplo/validação da arquitetura
+  - [x] OpenAPI otimizado para geração de clientes TypeScript
+  - [x] Tratamento global de exceções (ProblemDetail RFC 7807)
 
 - [x] **Frontend Angular**
   - [x] Standalone components
   - [x] Sistema de temas (Light/Dark/System)
-  - [x] Geração automática de clientes TypeScript
-  - [x] Guards e interceptors
-  - [x] Formulários reativos
+  - [x] Geração automática de clientes TypeScript via ng-openapi-gen
+  - [x] Guards e interceptors (auth, JWT refresh)
+  - [x] Formulários reativos com validação
+  - [x] CRUD de tarefas (Todo) - tela de exemplo/validação
 
 ### Fase 2: Admin Dashboard
 
