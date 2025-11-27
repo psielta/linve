@@ -366,12 +366,19 @@ textarea.form-control {
 // ============================================
 // Dropdown Menu
 // ============================================
+// Fix for dropdown inside cards with transform (stacking context issue)
+.card:has(.dropdown-menu.show) {
+  z-index: 1050;
+  position: relative;
+}
+
 .dropdown-menu {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 0.475rem;
   box-shadow: 0 0 30px 0 var(--shadow-color);
   padding: 0.5rem 0;
+  z-index: 1050;
 
   .dropdown-item {
     color: var(--text-primary);
