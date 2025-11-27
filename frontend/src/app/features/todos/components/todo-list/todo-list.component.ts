@@ -1,7 +1,18 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
 import { TodoService } from '../../../../core/services/todo.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ThemeService } from '../../../../core/services/theme.service';
 import { Todo, TodoInput } from '../../../../core/models/todo.model';
 import { TodoFormComponent } from '../todo-form/todo-form.component';
 
@@ -10,87 +21,135 @@ type FilterType = 'todas' | 'pendentes' | 'concluidas';
 @Component({
   selector: 'app-todo-list',
   standalone: true,
-  imports: [CommonModule, TodoFormComponent],
+  imports: [
+    CommonModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatIconModule,
+    MatCardModule,
+    MatChipsModule,
+    MatProgressSpinnerModule,
+    MatCheckboxModule,
+    MatMenuModule,
+    MatTooltipModule,
+    MatDividerModule,
+    TodoFormComponent
+  ],
   template: `
     <div class="todo-container">
-      <header class="header">
-        <div class="header-content">
-          <div class="brand">
-            <h1>📋 Minhas Tarefas</h1>
-            @if (authService.currentUser; as user) {
-              <span class="user-info">{{ user.nome }} • {{ authService.organizationName }}</span>
-            }
-          </div>
-          <button class="btn-logout" (click)="logout()">Sair</button>
-        </div>
-      </header>
+      <mat-toolbar color="primary" class="toolbar">
+        <mat-icon class="toolbar-icon">checklist</mat-icon>
+        <span class="toolbar-title">Minhas Tarefas</span>
 
-      <main class="main">
-        <div class="toolbar">
-          <div class="filters">
-            <button
-              class="filter-btn"
-              [class.active]="filter() === 'todas'"
-              (click)="onFilterChange('todas')"
-            >Todas</button>
-            <button
-              class="filter-btn"
-              [class.active]="filter() === 'pendentes'"
-              (click)="onFilterChange('pendentes')"
-            >Pendentes</button>
-            <button
-              class="filter-btn"
-              [class.active]="filter() === 'concluidas'"
-              (click)="onFilterChange('concluidas')"
-            >Concluídas</button>
-          </div>
-          <button class="btn-add" (click)="openNewForm()">+ Nova Tarefa</button>
+        <span class="spacer"></span>
+
+        @if (authService.currentUser; as user) {
+          <span class="user-info">{{ user.nome }}</span>
+        }
+
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Menu">
+          <mat-icon>account_circle</mat-icon>
+        </button>
+
+        <mat-menu #userMenu="matMenu">
+          <button mat-menu-item disabled>
+            <mat-icon>business</mat-icon>
+            <span>{{ authService.organizationName }}</span>
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="themeService.toggle()">
+            <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+            <span>{{ themeService.isDark() ? 'Tema Claro' : 'Tema Escuro' }}</span>
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Sair</span>
+          </button>
+        </mat-menu>
+      </mat-toolbar>
+
+      <main class="main-content">
+        <div class="actions-bar">
+          <mat-chip-listbox [value]="filter()" (change)="onFilterChange($event.value)" aria-label="Filtros">
+            <mat-chip-option value="todas">Todas</mat-chip-option>
+            <mat-chip-option value="pendentes">Pendentes</mat-chip-option>
+            <mat-chip-option value="concluidas">Concluídas</mat-chip-option>
+          </mat-chip-listbox>
+
+          <button mat-raised-button color="primary" (click)="openNewForm()">
+            <mat-icon>add</mat-icon>
+            Nova Tarefa
+          </button>
         </div>
 
         @if (error()) {
-          <div class="error-message">{{ error() }}</div>
+          <div class="error-alert">
+            <mat-icon>error</mat-icon>
+            <span>{{ error() }}</span>
+          </div>
         }
 
         @if (loading()) {
-          <div class="loading">
-            <div class="spinner"></div>
+          <div class="loading-container">
+            <mat-spinner diameter="48"></mat-spinner>
             <span>Carregando tarefas...</span>
           </div>
         } @else if (todos().length === 0) {
-          <div class="empty-state">
-            <div class="empty-icon">📝</div>
-            <h3>Nenhuma tarefa encontrada</h3>
-            <p>Clique em "Nova Tarefa" para começar</p>
-          </div>
+          <mat-card class="empty-state">
+            <mat-card-content>
+              <mat-icon class="empty-icon">task_alt</mat-icon>
+              <h3>Nenhuma tarefa encontrada</h3>
+              <p>Clique em "Nova Tarefa" para começar a organizar suas atividades</p>
+              <button mat-stroked-button color="primary" (click)="openNewForm()">
+                <mat-icon>add</mat-icon>
+                Criar primeira tarefa
+              </button>
+            </mat-card-content>
+          </mat-card>
         } @else {
           <div class="todo-list">
             @for (todo of todos(); track todo.id) {
-              <div class="todo-item" [class.completed]="todo.concluido">
-                <button
-                  class="checkbox"
-                  [class.checked]="todo.concluido"
-                  (click)="toggleConcluido(todo)"
-                  [attr.aria-label]="todo.concluido ? 'Marcar como pendente' : 'Marcar como concluída'"
-                >
-                  @if (todo.concluido) {
-                    <span class="check-icon">✓</span>
-                  }
-                </button>
+              <mat-card class="todo-card" [class.completed]="todo.concluido">
+                <mat-card-content class="todo-card-content">
+                  <mat-checkbox
+                    [checked]="todo.concluido"
+                    (change)="toggleConcluido(todo)"
+                    color="primary"
+                  ></mat-checkbox>
 
-                <div class="todo-content" (click)="openEditForm(todo)">
-                  <h3 class="todo-title">{{ todo.titulo }}</h3>
-                  @if (todo.descricao) {
-                    <p class="todo-description">{{ todo.descricao }}</p>
-                  }
-                  <span class="todo-date">
-                    {{ todo.concluido ? 'Concluída em ' + formatDate(todo.dataConclusao) : 'Criada em ' + formatDate(todo.dataCriacao) }}
-                  </span>
-                </div>
+                  <div class="todo-info" (click)="openEditForm(todo)">
+                    <span class="todo-title">{{ todo.titulo }}</span>
+                    @if (todo.descricao) {
+                      <span class="todo-description">{{ todo.descricao }}</span>
+                    }
+                    <span class="todo-date">
+                      <mat-icon class="date-icon">schedule</mat-icon>
+                      {{ todo.concluido ? 'Concluída em ' + formatDate(todo.dataConclusao) : 'Criada em ' + formatDate(todo.dataCriacao) }}
+                    </span>
+                  </div>
 
-                <button class="btn-delete" (click)="delete(todo)" aria-label="Excluir tarefa">
-                  🗑️
-                </button>
-              </div>
+                  <button mat-icon-button [matMenuTriggerFor]="todoMenu" matTooltip="Opções">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+
+                  <mat-menu #todoMenu="matMenu">
+                    <button mat-menu-item (click)="openEditForm(todo)">
+                      <mat-icon>edit</mat-icon>
+                      <span>Editar</span>
+                    </button>
+                    <button mat-menu-item (click)="toggleConcluido(todo)">
+                      <mat-icon>{{ todo.concluido ? 'replay' : 'check' }}</mat-icon>
+                      <span>{{ todo.concluido ? 'Reabrir' : 'Concluir' }}</span>
+                    </button>
+                    <mat-divider></mat-divider>
+                    <button mat-menu-item class="delete-option" (click)="delete(todo)">
+                      <mat-icon>delete</mat-icon>
+                      <span>Excluir</span>
+                    </button>
+                  </mat-menu>
+                </mat-card-content>
+              </mat-card>
             }
           </div>
         }
@@ -108,157 +167,95 @@ type FilterType = 'todas' | 'pendentes' | 'concluidas';
   styles: [`
     .todo-container {
       min-height: 100vh;
-      background: #f5f7fa;
+      background: var(--bg-primary);
     }
 
-    .header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px;
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    .header-content {
-      max-width: 800px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .toolbar-icon {
+      margin-right: 12px;
     }
 
-    .brand {
-      h1 {
-        margin: 0;
-        font-size: 24px;
-        font-weight: 700;
-      }
+    .toolbar-title {
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    .spacer {
+      flex: 1;
     }
 
     .user-info {
+      margin-right: 8px;
       font-size: 14px;
       opacity: 0.9;
     }
 
-    .btn-logout {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background 0.2s;
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.3);
-      }
-    }
-
-    .main {
+    .main-content {
       max-width: 800px;
       margin: 0 auto;
-      padding: 24px 20px;
+      padding: 24px 16px;
     }
 
-    .toolbar {
+    .actions-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 16px;
+      margin-bottom: 24px;
     }
 
-    .filters {
+    .error-alert {
       display: flex;
+      align-items: center;
       gap: 8px;
-    }
-
-    .filter-btn {
-      background: white;
-      border: 1px solid #ddd;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-
-      &:hover {
-        border-color: #667eea;
-        color: #667eea;
-      }
-
-      &.active {
-        background: #667eea;
-        border-color: #667eea;
-        color: white;
-      }
-    }
-
-    .btn-add {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-      }
-    }
-
-    .error-message {
-      background: #fee;
-      color: #c00;
       padding: 12px 16px;
+      background: #ffebee;
+      color: #c62828;
       border-radius: 8px;
       margin-bottom: 16px;
     }
 
-    .loading {
-      text-align: center;
-      padding: 60px 20px;
-      color: #666;
-
-      .spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid #eee;
-        border-top-color: #667eea;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin: 0 auto 16px;
-      }
+    :host-context(.dark-theme) .error-alert {
+      background: #4a1c1c;
+      color: #ef9a9a;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 16px;
+      gap: 16px;
+      color: var(--text-secondary);
     }
 
     .empty-state {
       text-align: center;
-      padding: 60px 20px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      padding: 48px 24px;
 
       .empty-icon {
-        font-size: 48px;
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: var(--text-secondary);
         margin-bottom: 16px;
       }
 
       h3 {
         margin: 0 0 8px 0;
-        color: #333;
+        color: var(--text-primary);
       }
 
       p {
-        margin: 0;
-        color: #666;
+        margin: 0 0 24px 0;
+        color: var(--text-secondary);
       }
     }
 
@@ -268,19 +265,12 @@ type FilterType = 'todas' | 'pendentes' | 'concluidas';
       gap: 12px;
     }
 
-    .todo-item {
-      background: white;
-      border-radius: 12px;
-      padding: 16px;
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    .todo-card {
       transition: transform 0.2s, box-shadow 0.2s;
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px var(--shadow-color);
       }
 
       &.completed {
@@ -288,78 +278,56 @@ type FilterType = 'todas' | 'pendentes' | 'concluidas';
 
         .todo-title {
           text-decoration: line-through;
-          color: #888;
+          color: var(--text-secondary);
         }
       }
     }
 
-    .checkbox {
-      width: 24px;
-      height: 24px;
-      min-width: 24px;
-      border: 2px solid #ddd;
-      border-radius: 50%;
-      background: white;
-      cursor: pointer;
+    .todo-card-content {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-      margin-top: 2px;
-
-      &:hover {
-        border-color: #667eea;
-      }
-
-      &.checked {
-        background: #667eea;
-        border-color: #667eea;
-      }
-
-      .check-icon {
-        color: white;
-        font-size: 14px;
-        font-weight: bold;
-      }
+      align-items: flex-start;
+      gap: 16px;
+      padding: 8px 0 !important;
     }
 
-    .todo-content {
+    .todo-info {
       flex: 1;
-      cursor: pointer;
       min-width: 0;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
 
     .todo-title {
-      margin: 0 0 4px 0;
       font-size: 16px;
-      color: #333;
+      font-weight: 500;
+      color: var(--text-primary);
       word-break: break-word;
     }
 
     .todo-description {
-      margin: 0 0 8px 0;
       font-size: 14px;
-      color: #666;
+      color: var(--text-secondary);
       word-break: break-word;
     }
 
     .todo-date {
+      display: flex;
+      align-items: center;
+      gap: 4px;
       font-size: 12px;
-      color: #999;
+      color: var(--text-secondary);
     }
 
-    .btn-delete {
-      background: none;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-      opacity: 0.5;
-      transition: opacity 0.2s;
-      padding: 4px;
+    .date-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
 
-      &:hover {
-        opacity: 1;
-      }
+    .delete-option {
+      color: #f44336;
     }
   `]
 })
@@ -373,7 +341,8 @@ export class TodoListComponent implements OnInit {
 
   constructor(
     private todoService: TodoService,
-    public authService: AuthService
+    public authService: AuthService,
+    public themeService: ThemeService
   ) {}
 
   ngOnInit(): void {
@@ -405,8 +374,10 @@ export class TodoListComponent implements OnInit {
   }
 
   onFilterChange(filter: FilterType): void {
-    this.filter.set(filter);
-    this.loadTodos();
+    if (filter) {
+      this.filter.set(filter);
+      this.loadTodos();
+    }
   }
 
   openNewForm(): void {

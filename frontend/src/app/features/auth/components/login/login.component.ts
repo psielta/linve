@@ -2,70 +2,95 @@ import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ThemeService } from '../../../../core/services/theme.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule
+  ],
   template: `
     <div class="auth-container">
-      <div class="auth-card">
-        <h1>Login</h1>
-        <p class="subtitle">Entre na sua conta para gerenciar suas tarefas</p>
+      <button mat-icon-button class="theme-toggle" (click)="themeService.toggle()" aria-label="Alternar tema">
+        <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
 
-        @if (error()) {
-          <div class="error-message">{{ error() }}</div>
-        }
+      <mat-card class="auth-card">
+        <mat-card-header>
+          <mat-card-title>Login</mat-card-title>
+          <mat-card-subtitle>Entre na sua conta para gerenciar suas tarefas</mat-card-subtitle>
+        </mat-card-header>
 
-        <form [formGroup]="form" (ngSubmit)="onSubmit()">
-          <div class="form-group">
-            <label for="email">E-mail</label>
-            <input
-              type="email"
-              id="email"
-              formControlName="email"
-              placeholder="seu@email.com"
-              [class.invalid]="f['email'].touched && f['email'].invalid"
-            />
-            @if (f['email'].touched && f['email'].errors?.['required']) {
-              <span class="error">E-mail é obrigatório</span>
-            }
-            @if (f['email'].touched && f['email'].errors?.['email']) {
-              <span class="error">E-mail inválido</span>
-            }
-          </div>
+        <mat-card-content>
+          @if (error()) {
+            <div class="error-alert">
+              <mat-icon>error</mat-icon>
+              <span>{{ error() }}</span>
+            </div>
+          }
 
-          <div class="form-group">
-            <label for="senha">Senha</label>
-            <input
-              type="password"
-              id="senha"
-              formControlName="senha"
-              placeholder="••••••••"
-              [class.invalid]="f['senha'].touched && f['senha'].invalid"
-            />
-            @if (f['senha'].touched && f['senha'].errors?.['required']) {
-              <span class="error">Senha é obrigatória</span>
-            }
-            @if (f['senha'].touched && f['senha'].errors?.['minlength']) {
-              <span class="error">Mínimo 6 caracteres</span>
-            }
-          </div>
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>E-mail</mat-label>
+              <input matInput type="email" formControlName="email" placeholder="seu@email.com">
+              <mat-icon matSuffix>email</mat-icon>
+              @if (f['email'].touched && f['email'].errors?.['required']) {
+                <mat-error>E-mail é obrigatório</mat-error>
+              }
+              @if (f['email'].touched && f['email'].errors?.['email']) {
+                <mat-error>E-mail inválido</mat-error>
+              }
+            </mat-form-field>
 
-          <button type="submit" [disabled]="loading()" class="btn-primary">
-            @if (loading()) {
-              <span class="spinner"></span> Entrando...
-            } @else {
-              Entrar
-            }
-          </button>
-        </form>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Senha</mat-label>
+              <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="senha" placeholder="••••••••">
+              <button mat-icon-button matSuffix type="button" (click)="hidePassword.set(!hidePassword())">
+                <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              @if (f['senha'].touched && f['senha'].errors?.['required']) {
+                <mat-error>Senha é obrigatória</mat-error>
+              }
+              @if (f['senha'].touched && f['senha'].errors?.['minlength']) {
+                <mat-error>Mínimo 6 caracteres</mat-error>
+              }
+            </mat-form-field>
 
-        <p class="switch-auth">
-          Não tem uma conta? <a routerLink="/auth/register">Criar conta</a>
-        </p>
-      </div>
+            <button mat-raised-button color="primary" type="submit" class="full-width submit-btn" [disabled]="loading()">
+              @if (loading()) {
+                <mat-spinner diameter="20"></mat-spinner>
+                <span>Entrando...</span>
+              } @else {
+                <ng-container>
+                  <mat-icon>login</mat-icon>
+                  <span>Entrar</span>
+                </ng-container>
+              }
+            </button>
+          </form>
+        </mat-card-content>
+
+        <mat-card-actions align="end">
+          <span class="switch-text">Não tem uma conta?</span>
+          <a mat-button color="accent" routerLink="/auth/register">Criar conta</a>
+        </mat-card-actions>
+      </mat-card>
     </div>
   `,
   styles: [`
@@ -74,131 +99,85 @@ import { AuthService } from '../../../../core/services/auth.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: var(--bg-primary);
       padding: 20px;
+      position: relative;
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 16px;
+      right: 16px;
     }
 
     .auth-card {
-      background: white;
-      padding: 40px;
-      border-radius: 16px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
+      padding: 24px;
     }
 
-    h1 {
-      margin: 0 0 8px 0;
-      color: #333;
-      font-size: 28px;
-      font-weight: 700;
+    mat-card-header {
+      margin-bottom: 24px;
     }
 
-    .subtitle {
-      color: #666;
-      margin: 0 0 24px 0;
-    }
-
-    .error-message {
-      background: #fee;
-      color: #c00;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      font-size: 14px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 6px;
-      color: #444;
+    mat-card-title {
+      font-size: 28px !important;
       font-weight: 500;
     }
 
-    input {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 16px;
-      transition: border-color 0.2s;
-      box-sizing: border-box;
-
-      &:focus {
-        outline: none;
-        border-color: #667eea;
-      }
-
-      &.invalid {
-        border-color: #e53935;
-      }
+    mat-card-subtitle {
+      margin-top: 8px !important;
     }
 
-    .error {
-      color: #e53935;
-      font-size: 12px;
-      margin-top: 4px;
-      display: block;
-    }
-
-    .btn-primary {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
+    .error-alert {
       display: flex;
       align-items: center;
-      justify-content: center;
       gap: 8px;
+      padding: 12px 16px;
+      background: #ffebee;
+      color: #c62828;
+      border-radius: 8px;
+      margin-bottom: 16px;
 
-      &:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-      }
-
-      &:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
       }
     }
 
-    .spinner {
-      width: 18px;
-      height: 18px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+    :host-context(.dark-theme) .error-alert {
+      background: #4a1c1c;
+      color: #ef9a9a;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    mat-form-field {
+      margin-bottom: 8px;
     }
 
-    .switch-auth {
-      text-align: center;
-      margin-top: 24px;
-      color: #666;
+    .submit-btn {
+      height: 48px;
+      font-size: 16px;
+      margin-top: 8px;
 
-      a {
-        color: #667eea;
-        text-decoration: none;
-        font-weight: 600;
-
-        &:hover {
-          text-decoration: underline;
-        }
+      mat-spinner {
+        display: inline-block;
+        margin-right: 8px;
       }
+
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+
+    mat-card-actions {
+      padding: 16px 0 0 0 !important;
+      margin: 0 !important;
+    }
+
+    .switch-text {
+      color: var(--text-secondary);
+      margin-right: 4px;
     }
   `]
 })
@@ -206,11 +185,13 @@ export class LoginComponent {
   form: FormGroup;
   loading = signal(false);
   error = signal<string | null>(null);
+  hidePassword = signal(true);
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    public themeService: ThemeService
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
