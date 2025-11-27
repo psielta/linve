@@ -2,114 +2,98 @@ import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../../core/services/auth.service';
-import { ThemeService } from '../../../../core/services/theme.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterLink,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule
-  ],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="auth-container">
-      <button mat-icon-button class="theme-toggle" (click)="themeService.toggle()" aria-label="Alternar tema">
-        <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
-      </button>
+      <div class="auth-card">
+        <h1>Criar Conta</h1>
+        <p class="subtitle">Cadastre-se para começar a organizar suas tarefas</p>
 
-      <mat-card class="auth-card">
-        <mat-card-header>
-          <mat-card-title>Criar Conta</mat-card-title>
-          <mat-card-subtitle>Cadastre-se para começar a organizar suas tarefas</mat-card-subtitle>
-        </mat-card-header>
+        @if (error()) {
+          <div class="error-message">{{ error() }}</div>
+        }
 
-        <mat-card-content>
-          @if (error()) {
-            <div class="error-alert">
-              <mat-icon>error</mat-icon>
-              <span>{{ error() }}</span>
-            </div>
-          }
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <div class="form-group">
+            <label for="nome">Nome</label>
+            <input
+              type="text"
+              id="nome"
+              formControlName="nome"
+              placeholder="Seu nome"
+              [class.invalid]="f['nome'].touched && f['nome'].invalid"
+            />
+            @if (f['nome'].touched && f['nome'].errors?.['required']) {
+              <span class="error">Nome é obrigatório</span>
+            }
+            @if (f['nome'].touched && f['nome'].errors?.['minlength']) {
+              <span class="error">Mínimo 2 caracteres</span>
+            }
+          </div>
 
-          <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Nome</mat-label>
-              <input matInput type="text" formControlName="nome" placeholder="Seu nome">
-              <mat-icon matSuffix>person</mat-icon>
-              @if (f['nome'].touched && f['nome'].errors?.['required']) {
-                <mat-error>Nome é obrigatório</mat-error>
-              }
-              @if (f['nome'].touched && f['nome'].errors?.['minlength']) {
-                <mat-error>Mínimo 2 caracteres</mat-error>
-              }
-            </mat-form-field>
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              placeholder="seu@email.com"
+              [class.invalid]="f['email'].touched && f['email'].invalid"
+            />
+            @if (f['email'].touched && f['email'].errors?.['required']) {
+              <span class="error">E-mail é obrigatório</span>
+            }
+            @if (f['email'].touched && f['email'].errors?.['email']) {
+              <span class="error">E-mail inválido</span>
+            }
+          </div>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>E-mail</mat-label>
-              <input matInput type="email" formControlName="email" placeholder="seu@email.com">
-              <mat-icon matSuffix>email</mat-icon>
-              @if (f['email'].touched && f['email'].errors?.['required']) {
-                <mat-error>E-mail é obrigatório</mat-error>
-              }
-              @if (f['email'].touched && f['email'].errors?.['email']) {
-                <mat-error>E-mail inválido</mat-error>
-              }
-            </mat-form-field>
+          <div class="form-group">
+            <label for="senha">Senha</label>
+            <input
+              type="password"
+              id="senha"
+              formControlName="senha"
+              placeholder="••••••••"
+              [class.invalid]="f['senha'].touched && f['senha'].invalid"
+            />
+            @if (f['senha'].touched && f['senha'].errors?.['required']) {
+              <span class="error">Senha é obrigatória</span>
+            }
+            @if (f['senha'].touched && f['senha'].errors?.['minlength']) {
+              <span class="error">Mínimo 6 caracteres</span>
+            }
+          </div>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Senha</mat-label>
-              <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="senha" placeholder="••••••••">
-              <button mat-icon-button matSuffix type="button" (click)="hidePassword.set(!hidePassword())">
-                <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
-              </button>
-              @if (f['senha'].touched && f['senha'].errors?.['required']) {
-                <mat-error>Senha é obrigatória</mat-error>
-              }
-              @if (f['senha'].touched && f['senha'].errors?.['minlength']) {
-                <mat-error>Mínimo 6 caracteres</mat-error>
-              }
-            </mat-form-field>
+          <div class="form-group">
+            <label for="nomeOrganizacao">Nome da Organização <span class="optional">(opcional)</span></label>
+            <input
+              type="text"
+              id="nomeOrganizacao"
+              formControlName="nomeOrganizacao"
+              placeholder="Minha Empresa"
+            />
+            <span class="hint">Se não informado, será criada uma organização pessoal</span>
+          </div>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Nome da Organização (opcional)</mat-label>
-              <input matInput type="text" formControlName="nomeOrganizacao" placeholder="Minha Empresa">
-              <mat-icon matSuffix>business</mat-icon>
-              <mat-hint>Se não informado, será criada uma organização pessoal</mat-hint>
-            </mat-form-field>
+          <button type="submit" [disabled]="loading()" class="btn-primary">
+            @if (loading()) {
+              <span class="spinner"></span> Criando conta...
+            } @else {
+              Criar Conta
+            }
+          </button>
+        </form>
 
-            <button mat-raised-button color="primary" type="submit" class="full-width submit-btn" [disabled]="loading()">
-              @if (loading()) {
-                <mat-spinner diameter="20"></mat-spinner>
-                <span>Criando conta...</span>
-              } @else {
-                <ng-container>
-                  <mat-icon>person_add</mat-icon>
-                  <span>Criar Conta</span>
-                </ng-container>
-              }
-            </button>
-          </form>
-        </mat-card-content>
-
-        <mat-card-actions align="end">
-          <span class="switch-text">Já tem uma conta?</span>
-          <a mat-button color="accent" routerLink="/auth/login">Fazer login</a>
-        </mat-card-actions>
-      </mat-card>
+        <p class="switch-auth">
+          Já tem uma conta? <a routerLink="/auth/login">Fazer login</a>
+        </p>
+      </div>
     </div>
   `,
   styles: [`
@@ -118,85 +102,144 @@ import { ThemeService } from '../../../../core/services/theme.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--bg-primary);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       padding: 20px;
-      position: relative;
-    }
-
-    .theme-toggle {
-      position: absolute;
-      top: 16px;
-      right: 16px;
     }
 
     .auth-card {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
       width: 100%;
-      max-width: 420px;
-      padding: 24px;
+      max-width: 400px;
     }
 
-    mat-card-header {
-      margin-bottom: 24px;
+    h1 {
+      margin: 0 0 8px 0;
+      color: #333;
+      font-size: 28px;
+      font-weight: 700;
     }
 
-    mat-card-title {
-      font-size: 28px !important;
+    .subtitle {
+      color: #666;
+      margin: 0 0 24px 0;
+    }
+
+    .error-message {
+      background: #fee;
+      color: #c00;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #444;
       font-weight: 500;
     }
 
-    mat-card-subtitle {
-      margin-top: 8px !important;
+    .optional {
+      color: #999;
+      font-weight: 400;
+      font-size: 13px;
     }
 
-    .error-alert {
+    .hint {
+      color: #888;
+      font-size: 12px;
+      margin-top: 4px;
+      display: block;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+
+      &:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      &.invalid {
+        border-color: #e53935;
+      }
+    }
+
+    .error {
+      color: #e53935;
+      font-size: 12px;
+      margin-top: 4px;
+      display: block;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
-      padding: 12px 16px;
-      background: #ffebee;
-      color: #c62828;
-      border-radius: 8px;
-      margin-bottom: 16px;
 
-      mat-icon {
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+
+      &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
       }
     }
 
-    :host-context(.dark-theme) .error-alert {
-      background: #4a1c1c;
-      color: #ef9a9a;
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
 
-    mat-form-field {
-      margin-bottom: 8px;
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
-    .submit-btn {
-      height: 48px;
-      font-size: 16px;
-      margin-top: 16px;
+    .switch-auth {
+      text-align: center;
+      margin-top: 24px;
+      color: #666;
 
-      mat-spinner {
-        display: inline-block;
-        margin-right: 8px;
+      a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+
+        &:hover {
+          text-decoration: underline;
+        }
       }
-
-      mat-icon {
-        margin-right: 8px;
-      }
-    }
-
-    mat-card-actions {
-      padding: 16px 0 0 0 !important;
-      margin: 0 !important;
-    }
-
-    .switch-text {
-      color: var(--text-secondary);
-      margin-right: 4px;
     }
   `]
 })
@@ -204,13 +247,11 @@ export class RegisterComponent {
   form: FormGroup;
   loading = signal(false);
   error = signal<string | null>(null);
-  hidePassword = signal(true);
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router,
-    public themeService: ThemeService
+    private router: Router
   ) {
     this.form = this.fb.group({
       nome: ['', [Validators.required, Validators.minLength(2)]],
