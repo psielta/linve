@@ -12,30 +12,30 @@ export interface AuthResponse {
   /**
    * Access token JWT (curta duracao)
    */
-  accessToken?: string;
+  accessToken: string;
 
   /**
    * Tempo de expiracao do access token em segundos
    */
-  expiresIn?: number;
+  expiresIn: number;
 
   /**
    * Organizacoes do usuario
    */
-  organizations?: Array<MembershipOutput>;
+  organizations: Array<MembershipOutput>;
 
   /**
    * Refresh token (longa duracao)
    */
-  refreshToken?: string;
+  refreshToken: string;
 
   /**
    * Tipo do token
    */
-  tokenType?: string;
+  tokenType: string;
 
   /**
    * Dados do usuario autenticado
    */
-  user?: UserOutput;
+  user: UserOutput;
 }

@@ -11,10 +11,10 @@ export interface MembershipOutput {
   /**
    * Dados da organizacao
    */
-  organization?: OrganizationOutput;
+  organization: OrganizationOutput;
 
   /**
    * Papel do usuario na organizacao
    */
-  role?: 'OWNER' | 'ADMIN' | 'MEMBER';
+  role: 'OWNER' | 'ADMIN' | 'MEMBER';
 }

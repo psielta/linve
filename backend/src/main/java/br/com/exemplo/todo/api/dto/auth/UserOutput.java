@@ -3,7 +3,7 @@ package br.com.exemplo.todo.api.dto.auth;
 import br.com.exemplo.todo.domain.model.entity.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Dados do usuario")
+@Schema(description = "Dados do usuario", requiredProperties = {"id", "nome", "email"})
 public record UserOutput(
         @Schema(description = "ID do usuario")
         Long id,

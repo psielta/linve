@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@Schema(description = "Dados de saída da tarefa", requiredProperties = {"id", "titulo", "concluido", "dataCriacao"})
 public class TodoOutput {
 
     @Schema(description = "ID único da tarefa", example = "1")

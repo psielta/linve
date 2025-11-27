@@ -28,7 +28,7 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/todos")
+@RequestMapping(value = "/api/todos", produces = "application/json")
 @PreAuthorize("@tenantSecurity.isMember()")
 public class TodoController implements TodoControllerOpenApi {
 

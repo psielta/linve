@@ -10,15 +10,15 @@ export interface UserOutput {
   /**
    * Email do usuario
    */
-  email?: string;
+  email: string;
 
   /**
    * ID do usuario
    */
-  id?: number;
+  id: number;
 
   /**
    * Nome do usuario
    */
-  nome?: string;
+  nome: string;
 }

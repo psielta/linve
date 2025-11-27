@@ -10,7 +10,7 @@ export interface OrganizationOutput {
   /**
    * ID da organizacao
    */
-  id?: number;
+  id: number;
 
   /**
    * URL do logo da organizacao
@@ -20,10 +20,10 @@ export interface OrganizationOutput {
   /**
    * Nome da organizacao
    */
-  nome?: string;
+  nome: string;
 
   /**
    * Slug da organizacao (URL-friendly)
    */
-  slug?: string;
+  slug: string;
 }

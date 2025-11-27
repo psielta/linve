@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
-@Schema(description = "Resposta de autenticacao com tokens e dados do usuario")
+@Schema(description = "Resposta de autenticacao com tokens e dados do usuario", requiredProperties = {"accessToken", "refreshToken", "tokenType", "expiresIn", "user", "organizations"})
 public record AuthResponse(
         @Schema(description = "Access token JWT (curta duracao)")
         String accessToken,

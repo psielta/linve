@@ -3,7 +3,7 @@ package br.com.exemplo.todo.api.dto.auth;
 import br.com.exemplo.todo.domain.model.entity.Organization;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Dados da organizacao")
+@Schema(description = "Dados da organizacao", requiredProperties = {"id", "nome", "slug"})
 public record OrganizationOutput(
         @Schema(description = "ID da organizacao")
         Long id,

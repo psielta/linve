@@ -12,5 +12,10 @@
   "ignoreUnusedModels": false,
   "removeStaleFiles": true,
   "indexFile": true,
-  "customizedResponseType": {}
+  "customizedResponseType": {
+    "toJson": {
+      "operationIds": ["login", "register", "refresh", "logout", "listar", "buscar", "criar", "atualizar", "excluir", "marcarConcluido", "reabrir"],
+      "accept": "application/json"
+    }
+  }
 }

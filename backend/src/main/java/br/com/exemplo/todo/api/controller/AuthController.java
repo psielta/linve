@@ -28,13 +28,13 @@ public class AuthController {
             description = "Cria uma nova conta de usuario com uma organizacao inicial")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Usuario criado com sucesso",
-                    content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponse.class))),
             @ApiResponse(responseCode = "409", description = "Email ja cadastrado",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "400", description = "Dados invalidos",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)))
     })
-    @PostMapping("/register")
+    @PostMapping(value = "/register", produces = "application/json")
     public ResponseEntity<AuthResponse> register(
             @Valid @RequestBody RegisterInput input,
             HttpServletRequest request) {
@@ -47,13 +47,13 @@ public class AuthController {
             description = "Autentica um usuario e retorna tokens de acesso")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Login realizado com sucesso",
-                    content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponse.class))),
             @ApiResponse(responseCode = "401", description = "Credenciais invalidas",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "423", description = "Conta bloqueada",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)))
     })
-    @PostMapping("/login")
+    @PostMapping(value = "/login", produces = "application/json")
     public ResponseEntity<AuthResponse> login(
             @Valid @RequestBody LoginInput input,
             HttpServletRequest request) {
@@ -66,11 +66,11 @@ public class AuthController {
             description = "Gera novos tokens usando o refresh token atual (rotacao de token)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Tokens renovados com sucesso",
-                    content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponse.class))),
             @ApiResponse(responseCode = "401", description = "Refresh token invalido ou expirado",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)))
     })
-    @PostMapping("/refresh")
+    @PostMapping(value = "/refresh", produces = "application/json")
     public ResponseEntity<AuthResponse> refresh(
             @Valid @RequestBody RefreshTokenInput input,
             HttpServletRequest request) {
@@ -84,7 +84,7 @@ public class AuthController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Logout realizado com sucesso")
     })
-    @PostMapping("/logout")
+    @PostMapping(value = "/logout", produces = "application/json")
     public ResponseEntity<Void> logout(@RequestBody(required = false) RefreshTokenInput input) {
         if (input != null) {
             authService.logout(input.refreshToken());
