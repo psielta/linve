@@ -1,46 +1,49 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { Todo, TodoInput } from '../models/todo.model';
+import { Observable, from } from 'rxjs';
+import {
+  Api,
+  listar,
+  buscar,
+  criar,
+  atualizar,
+  excluir,
+  marcarConcluido,
+  reabrir,
+  TodoOutput,
+  TodoInput
+} from '../api';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TodoService {
-  private readonly apiUrl = `${environment.apiUrl}/todos`;
+  constructor(private api: Api) {}
 
-  constructor(private http: HttpClient) {}
-
-  listar(concluido?: boolean): Observable<Todo[]> {
-    let params = new HttpParams();
-    if (concluido !== undefined) {
-      params = params.set('concluido', concluido.toString());
-    }
-    return this.http.get<Todo[]>(this.apiUrl, { params });
+  listar(concluido?: boolean): Observable<TodoOutput[]> {
+    return from(this.api.invoke(listar, { concluido }));
   }
 
-  buscarPorId(id: number): Observable<Todo> {
-    return this.http.get<Todo>(`${this.apiUrl}/${id}`);
+  buscarPorId(id: number): Observable<TodoOutput> {
+    return from(this.api.invoke(buscar, { id }));
   }
 
-  criar(input: TodoInput): Observable<Todo> {
-    return this.http.post<Todo>(this.apiUrl, input);
+  criar(input: TodoInput): Observable<TodoOutput> {
+    return from(this.api.invoke(criar, { body: input }));
   }
 
-  atualizar(id: number, input: TodoInput): Observable<Todo> {
-    return this.http.put<Todo>(`${this.apiUrl}/${id}`, input);
+  atualizar(id: number, input: TodoInput): Observable<TodoOutput> {
+    return from(this.api.invoke(atualizar, { id, body: input }));
   }
 
   excluir(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return from(this.api.invoke(excluir, { id }));
   }
 
-  concluir(id: number): Observable<Todo> {
-    return this.http.patch<Todo>(`${this.apiUrl}/${id}/concluir`, {});
+  concluir(id: number): Observable<TodoOutput> {
+    return from(this.api.invoke(marcarConcluido, { id }));
   }
 
-  reabrir(id: number): Observable<Todo> {
-    return this.http.patch<Todo>(`${this.apiUrl}/${id}/reabrir`, {});
+  reabrir(id: number): Observable<TodoOutput> {
+    return from(this.api.invoke(reabrir, { id }));
   }
 }

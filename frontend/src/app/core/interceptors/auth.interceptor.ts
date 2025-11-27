@@ -29,7 +29,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if ((error.status === 401 || error.status === 403) && authService.refreshToken) {
-        return authService.refresh().pipe(
+        return authService.refreshTokens().pipe(
           switchMap(() => {
             // Update headers with new token
             let newHeaders = req.headers;

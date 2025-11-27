@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TodoService } from '../../../../core/services/todo.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ThemeService } from '../../../../core/services/theme.service';
-import { Todo, TodoInput } from '../../../../core/models/todo.model';
+import { TodoOutput, TodoInput } from '../../../../core/api';
 import { TodoFormComponent } from '../todo-form/todo-form.component';
 import Swal from 'sweetalert2';
 
@@ -222,11 +222,11 @@ type FilterType = 'todas' | 'pendentes' | 'concluidas';
   `]
 })
 export class TodoListComponent implements OnInit {
-  todos = signal<Todo[]>([]);
+  todos = signal<TodoOutput[]>([]);
   loading = signal(false);
   filter = signal<FilterType>('todas');
   showForm = signal(false);
-  editingTodo = signal<Todo | null>(null);
+  editingTodo = signal<TodoOutput | null>(null);
   error = signal<string | null>(null);
 
   constructor(
@@ -273,7 +273,7 @@ export class TodoListComponent implements OnInit {
     this.showForm.set(true);
   }
 
-  openEditForm(todo: Todo): void {
+  openEditForm(todo: TodoOutput): void {
     this.editingTodo.set(todo);
     this.showForm.set(true);
   }
@@ -286,7 +286,7 @@ export class TodoListComponent implements OnInit {
   onSave(input: TodoInput): void {
     const editing = this.editingTodo();
     if (editing) {
-      this.todoService.atualizar(editing.id, input).subscribe({
+      this.todoService.atualizar(editing.id!, input).subscribe({
         next: () => {
           this.closeForm();
           this.loadTodos();
@@ -320,10 +320,10 @@ export class TodoListComponent implements OnInit {
     }
   }
 
-  toggleConcluido(todo: Todo): void {
+  toggleConcluido(todo: TodoOutput): void {
     const action = todo.concluido
-      ? this.todoService.reabrir(todo.id)
-      : this.todoService.concluir(todo.id);
+      ? this.todoService.reabrir(todo.id!)
+      : this.todoService.concluir(todo.id!);
 
     action.subscribe({
       next: () => this.loadTodos(),
@@ -331,7 +331,7 @@ export class TodoListComponent implements OnInit {
     });
   }
 
-  delete(todo: Todo): void {
+  delete(todo: TodoOutput): void {
     Swal.fire({
       title: 'Excluir tarefa?',
       text: `Deseja excluir "${todo.titulo}"?`,
@@ -342,7 +342,7 @@ export class TodoListComponent implements OnInit {
       confirmButtonText: 'Sim, excluir'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.todoService.excluir(todo.id).subscribe({
+        this.todoService.excluir(todo.id!).subscribe({
           next: () => {
             this.loadTodos();
             Swal.fire({

@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/ng-openapi-gen/ng-openapi-gen-schema.json",
+  "input": "http://localhost:8080/api-docs",
+  "output": "src/app/core/api",
+  "servicePrefix": "",
+  "serviceSuffix": "Client",
+  "modelSuffix": "",
+  "enumStyle": "alias",
+  "templates": null,
+  "excludeTags": [],
+  "includeTags": [],
+  "ignoreUnusedModels": false,
+  "removeStaleFiles": true,
+  "indexFile": true,
+  "customizedResponseType": {}
+}

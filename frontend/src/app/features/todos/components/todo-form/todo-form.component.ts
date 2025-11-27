@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Todo, TodoInput } from '../../../../core/models/todo.model';
+import { TodoOutput, TodoInput } from '../../../../core/api';
 
 @Component({
   selector: 'app-todo-form',
@@ -128,7 +128,7 @@ import { Todo, TodoInput } from '../../../../core/models/todo.model';
   `]
 })
 export class TodoFormComponent implements OnInit {
-  @Input() todo: Todo | null = null;
+  @Input() todo: TodoOutput | null = null;
   @Output() save = new EventEmitter<TodoInput>();
   @Output() cancel = new EventEmitter<void>();
 

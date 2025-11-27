@@ -1,9 +1,25 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, from, tap } from 'rxjs';
 import { Router } from '@angular/router';
-import { environment } from '../../../environments/environment';
-import { AuthResponse, AuthState, LoginRequest, RegisterRequest, User } from '../models/auth.model';
+import {
+  Api,
+  login,
+  register,
+  refresh,
+  logout,
+  AuthResponse,
+  LoginInput,
+  RegisterInput,
+  UserOutput
+} from '../api';
+
+export interface AuthState {
+  accessToken: string | null;
+  refreshToken: string | null;
+  user: UserOutput | null;
+  organizationId: number | null;
+  organizationName: string | null;
+}
 
 const AUTH_KEY = 'auth';
 
@@ -11,14 +27,12 @@ const AUTH_KEY = 'auth';
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly apiUrl = `${environment.apiUrl}/auth`;
-
   private authState = new BehaviorSubject<AuthState>(this.loadAuthState());
 
   public authState$ = this.authState.asObservable();
 
   constructor(
-    private http: HttpClient,
+    private api: Api,
     private router: Router
   ) {}
 
@@ -34,7 +48,7 @@ export class AuthService {
     return this.authState.value.refreshToken;
   }
 
-  get currentUser(): User | null {
+  get currentUser(): UserOutput | null {
     return this.authState.value.user;
   }
 
@@ -46,30 +60,28 @@ export class AuthService {
     return this.authState.value.organizationName;
   }
 
-  login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
+  login(credentials: LoginInput): Observable<AuthResponse> {
+    return from(this.api.invoke(login, { body: credentials })).pipe(
       tap(response => this.handleAuthResponse(response))
     );
   }
 
-  register(data: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, data).pipe(
+  register(data: RegisterInput): Observable<AuthResponse> {
+    return from(this.api.invoke(register, { body: data })).pipe(
       tap(response => this.handleAuthResponse(response))
     );
   }
 
-  refresh(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh`, {
-      refreshToken: this.refreshToken
-    }).pipe(
+  refreshTokens(): Observable<AuthResponse> {
+    return from(this.api.invoke(refresh, { body: { refreshToken: this.refreshToken! } })).pipe(
       tap(response => this.handleAuthResponse(response))
     );
   }
 
   logout(): void {
     if (this.refreshToken) {
-      this.http.post(`${this.apiUrl}/logout`, { refreshToken: this.refreshToken })
-        .subscribe({ error: () => {} });
+      this.api.invoke(logout, { body: { refreshToken: this.refreshToken } })
+        .catch(() => {});
     }
     this.clearAuth();
     this.router.navigate(['/auth/login']);
@@ -90,9 +102,9 @@ export class AuthService {
     const firstOrg = response.organizations?.[0];
 
     const state: AuthState = {
-      accessToken: response.accessToken,
-      refreshToken: response.refreshToken,
-      user: response.user,
+      accessToken: response.accessToken ?? null,
+      refreshToken: response.refreshToken ?? null,
+      user: response.user ?? null,
       organizationId: firstOrg?.organization?.id ?? null,
       organizationName: firstOrg?.organization?.nome ?? null
     };
