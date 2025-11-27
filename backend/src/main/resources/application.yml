@@ -8,7 +8,7 @@ spring:
   profiles:
     active: default
   datasource:
-    url: jdbc:sqlite:file:./todo/db/todo.db?date_class=TEXT&date_string_format=yyyy-MM-dd HH:mm:ss
+    url: jdbc:sqlite:file:./data/todo.db?date_class=TEXT&date_string_format=yyyy-MM-dd HH:mm:ss
     username: sa
     password:
     driverClassName: org.sqlite.JDBC
