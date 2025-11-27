@@ -24,16 +24,16 @@
   --bg-body: #f5f8fa;
   --bg-card: #ffffff;
   --bg-secondary: #f3f6f9;
+  --bg-input: #f5f8fa;
   --text-primary: #181c32;
   --text-secondary: #7e8299;
   --text-muted: #a1a5b7;
   --border-color: #e4e6ef;
   --shadow-color: rgba(0, 0, 0, 0.08);
 
-  // Sidebar
-  --sidebar-bg: #1e1e2d;
-  --sidebar-text: #9899ac;
-  --sidebar-active: #3699ff;
+  // Auth page gradient
+  --auth-gradient-start: #3699ff;
+  --auth-gradient-end: #1b55e2;
 
   // Transitions
   --transition-base: 0.3s ease;
@@ -44,13 +44,18 @@
   --bg-body: #1e1e2d;
   --bg-card: #2b2b40;
   --bg-secondary: #323248;
+  --bg-input: #323248;
   --text-primary: #ffffff;
   --text-secondary: #9899ac;
   --text-muted: #6d6d80;
-  --border-color: #323248;
-  --shadow-color: rgba(0, 0, 0, 0.3);
+  --border-color: #3f3f5a;
+  --shadow-color: rgba(0, 0, 0, 0.4);
 
   --primary-light: rgba(54, 153, 255, 0.15);
+
+  // Darker auth gradient for dark mode
+  --auth-gradient-start: #1e1e2d;
+  --auth-gradient-end: #151521;
 }
 
 // ============================================
@@ -113,7 +118,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 0;
   border-radius: 0.625rem;
   box-shadow: 0 0 20px 0 var(--shadow-color);
-  transition: box-shadow var(--transition-base);
+  transition: box-shadow var(--transition-base), background-color var(--transition-base);
 
   &:hover {
     box-shadow: 0 0 30px 0 var(--shadow-color);
@@ -144,37 +149,59 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 // ============================================
-// Form Controls (Metronic style)
+// Bootstrap Form Controls Override
 // ============================================
-.form-control {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+.form-control,
+.form-select {
+  background-color: var(--bg-input) !important;
+  border: 1px solid var(--border-color) !important;
   border-radius: 0.475rem;
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   padding: 0.75rem 1rem;
   font-size: 1rem;
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base);
 
   &:focus {
-    background-color: var(--bg-card);
-    border-color: var(--primary);
-    box-shadow: 0 0 0 0.25rem rgba(54, 153, 255, 0.25);
+    background-color: var(--bg-card) !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 0.25rem rgba(54, 153, 255, 0.25) !important;
     outline: none;
+    color: var(--text-primary) !important;
   }
 
   &::placeholder {
-    color: var(--text-muted);
+    color: var(--text-muted) !important;
+  }
+
+  &:disabled,
+  &[readonly] {
+    background-color: var(--bg-secondary) !important;
+    opacity: 0.7;
   }
 
   &.is-invalid {
-    border-color: var(--danger);
+    border-color: var(--danger) !important;
 
     &:focus {
-      box-shadow: 0 0 0 0.25rem rgba(246, 78, 96, 0.25);
+      box-shadow: 0 0 0 0.25rem rgba(246, 78, 96, 0.25) !important;
     }
   }
 }
 
+// Textarea specific
+textarea.form-control {
+  min-height: 100px;
+}
+
+// Input group addon
+.input-group-text {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  transition: background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base);
+}
+
+// Form Labels
 .form-label {
   font-weight: 500;
   color: var(--text-primary);
@@ -189,6 +216,42 @@ h1, h2, h3, h4, h5, h6 {
 .invalid-feedback {
   color: var(--danger);
   font-size: 0.85rem;
+}
+
+// ============================================
+// Checkbox and Radio Buttons
+// ============================================
+.form-check-input {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  transition: background-color var(--transition-base), border-color var(--transition-base);
+
+  &:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  &:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.25rem rgba(54, 153, 255, 0.25);
+  }
+
+  &:not(:checked):hover {
+    border-color: var(--primary);
+  }
+}
+
+.form-check-label {
+  color: var(--text-primary);
+}
+
+// Switch
+.form-switch .form-check-input {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%237e8299'/%3e%3c/svg%3e");
+
+  &:checked {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+  }
 }
 
 // ============================================
@@ -224,9 +287,15 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--primary-inverse);
   }
 
-  &:active {
+  &:active, &.active {
     background-color: var(--primary-hover) !important;
     border-color: var(--primary-hover) !important;
+  }
+
+  &:disabled {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    opacity: 0.65;
   }
 }
 
@@ -236,19 +305,37 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
 
   &:hover, &:focus {
-    background-color: var(--secondary-hover);
-    border-color: var(--secondary-hover);
+    background-color: var(--border-color);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
+
+  &:active, &.active {
+    background-color: var(--border-color) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
   }
 }
 
-.btn-light-primary {
-  background-color: var(--primary-light);
-  border-color: transparent;
+.btn-outline-primary {
+  border-color: var(--primary);
   color: var(--primary);
 
   &:hover, &:focus {
     background-color: var(--primary);
+    border-color: var(--primary);
     color: var(--primary-inverse);
+  }
+}
+
+.btn-outline-secondary {
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+
+  &:hover, &:focus {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
   }
 }
 
@@ -262,11 +349,105 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0.475rem;
 }
 
+.btn-close {
+  filter: invert(0);
+  opacity: 0.5;
+  transition: opacity var(--transition-base);
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+[data-theme="dark"] .btn-close {
+  filter: invert(1);
+}
+
+// ============================================
+// Dropdown Menu
+// ============================================
+.dropdown-menu {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.475rem;
+  box-shadow: 0 0 30px 0 var(--shadow-color);
+  padding: 0.5rem 0;
+
+  .dropdown-item {
+    color: var(--text-primary);
+    padding: 0.65rem 1.25rem;
+    transition: background-color var(--transition-base), color var(--transition-base);
+
+    &:hover, &:focus {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    &.active, &:active {
+      background-color: var(--primary-light);
+      color: var(--primary);
+    }
+
+    &.text-danger {
+      color: var(--danger) !important;
+
+      &:hover, &:focus {
+        background-color: rgba(246, 78, 96, 0.1);
+      }
+    }
+
+    i {
+      width: 1.25rem;
+    }
+  }
+
+  .dropdown-divider {
+    border-color: var(--border-color);
+  }
+
+  .dropdown-item-text {
+    color: var(--text-muted);
+    padding: 0.65rem 1.25rem;
+  }
+}
+
+// ============================================
+// Alerts
+// ============================================
+.alert {
+  border-radius: 0.475rem;
+  border: none;
+  padding: 1rem 1.25rem;
+
+  &.alert-danger {
+    background-color: rgba(246, 78, 96, 0.15);
+    color: var(--danger);
+  }
+
+  &.alert-success {
+    background-color: rgba(27, 197, 189, 0.15);
+    color: var(--success);
+  }
+
+  &.alert-warning {
+    background-color: rgba(255, 168, 0, 0.15);
+    color: var(--warning);
+  }
+
+  &.alert-info {
+    background-color: rgba(54, 153, 255, 0.15);
+    color: var(--primary);
+  }
+}
+
 // ============================================
 // Tables (Metronic style)
 // ============================================
 .table {
   color: var(--text-primary);
+  --bs-table-bg: transparent;
+  --bs-table-striped-bg: var(--bg-secondary);
+  --bs-table-hover-bg: var(--bg-secondary);
 
   th {
     font-weight: 600;
@@ -276,12 +457,14 @@ h1, h2, h3, h4, h5, h6 {
     letter-spacing: 0.5px;
     border-bottom: 1px solid var(--border-color);
     padding: 1rem;
+    background-color: transparent;
   }
 
   td {
     padding: 1rem;
     border-bottom: 1px solid var(--border-color);
     vertical-align: middle;
+    color: var(--text-primary);
   }
 
   tbody tr {
@@ -323,11 +506,28 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 // ============================================
-// Alerts (SweetAlert2 customization)
+// Spinners
+// ============================================
+.spinner-border {
+  color: var(--primary);
+}
+
+// ============================================
+// SweetAlert2 Dark Mode
 // ============================================
 .swal2-popup {
   font-family: inherit;
   border-radius: 0.625rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.swal2-title {
+  color: var(--text-primary);
+}
+
+.swal2-html-container {
+  color: var(--text-secondary);
 }
 
 .swal2-styled.swal2-confirm {
@@ -338,9 +538,75 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .swal2-styled.swal2-cancel {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
   border-radius: 0.475rem;
   padding: 0.75rem 1.5rem;
   font-weight: 500;
+}
+
+// Toast notifications
+.swal2-popup.swal2-toast {
+  background: var(--bg-card) !important;
+  box-shadow: 0 0 20px 0 var(--shadow-color);
+
+  .swal2-title {
+    color: var(--text-primary);
+  }
+
+  .swal2-html-container {
+    color: var(--text-secondary);
+  }
+
+  .swal2-close {
+    color: var(--text-muted);
+
+    &:hover {
+      color: var(--text-primary);
+    }
+  }
+}
+
+// Dark mode specific for toast
+[data-theme="dark"] .swal2-popup.swal2-toast {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color);
+}
+
+// Toast icon colors should remain visible
+.swal2-popup.swal2-toast .swal2-icon {
+  &.swal2-success {
+    border-color: var(--success);
+    color: var(--success);
+
+    .swal2-success-ring {
+      border-color: rgba(27, 197, 189, 0.3);
+    }
+
+    [class^="swal2-success-line"] {
+      background-color: var(--success);
+    }
+  }
+
+  &.swal2-error {
+    border-color: var(--danger);
+    color: var(--danger);
+
+    .swal2-x-mark-line-left,
+    .swal2-x-mark-line-right {
+      background-color: var(--danger);
+    }
+  }
+
+  &.swal2-warning {
+    border-color: var(--warning);
+    color: var(--warning);
+  }
+
+  &.swal2-info {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
 }
 
 // ============================================
@@ -353,6 +619,7 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--bg-card);
     border: none;
     padding: 1.5rem;
+    color: var(--text-primary);
   }
 
   .p-datatable-thead > tr > th {
@@ -390,14 +657,19 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--bg-card);
     border: none;
     padding: 1rem;
+    color: var(--text-primary);
   }
 }
 
-// Dropdown
+// PrimeNG Dropdown
 .p-dropdown {
-  background: var(--bg-secondary);
+  background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: 0.475rem;
+
+  .p-dropdown-label {
+    color: var(--text-primary);
+  }
 
   &:not(.p-disabled):hover {
     border-color: var(--primary);
@@ -409,9 +681,27 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-// InputText
+.p-dropdown-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+
+  .p-dropdown-items .p-dropdown-item {
+    color: var(--text-primary);
+
+    &:hover {
+      background: var(--bg-secondary);
+    }
+
+    &.p-highlight {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+  }
+}
+
+// PrimeNG InputText
 .p-inputtext {
-  background: var(--bg-secondary);
+  background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: 0.475rem;
   color: var(--text-primary);
@@ -426,7 +716,7 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-// Button
+// PrimeNG Button
 .p-button {
   background: var(--primary);
   border-color: var(--primary);
@@ -456,23 +746,21 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
     color: var(--text-primary);
   }
-
-  .btn-close {
-    filter: var(--text-primary);
-  }
 }
 
 .modal-body {
   padding: 2rem;
+  color: var(--text-primary);
 }
 
 .modal-footer {
   border-top: 1px solid var(--border-color);
   padding: 1.5rem 2rem;
+  background-color: var(--bg-secondary);
 }
 
 // ============================================
-// Spinner (spin.js styling)
+// Spinner Overlay
 // ============================================
 .spinner-overlay {
   position: fixed;
@@ -485,10 +773,10 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   z-index: 9999;
+}
 
-  [data-theme="dark"] & {
-    background: rgba(30, 30, 45, 0.8);
-  }
+[data-theme="dark"] .spinner-overlay {
+  background: rgba(30, 30, 45, 0.8);
 }
 
 // ============================================
@@ -538,17 +826,19 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary) 0%, #1b55e2 100%);
+  background: linear-gradient(135deg, var(--auth-gradient-start) 0%, var(--auth-gradient-end) 100%);
   padding: 2rem;
+  transition: background var(--transition-base);
 }
 
 .auth-card {
   background: var(--bg-card);
   border-radius: 0.625rem;
-  box-shadow: 0 0 50px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 50px 0 rgba(0, 0, 0, 0.25);
   width: 100%;
   max-width: 450px;
   padding: 2.5rem;
+  transition: background-color var(--transition-base);
 }
 
 // ============================================
@@ -571,6 +861,7 @@ h1, h2, h3, h4, h5, h6 {
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: background-color var(--transition-base), border-color var(--transition-base);
 }
 
 .app-content {
@@ -589,6 +880,8 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--border-color);
   border-radius: 0.475rem;
   padding: 0.5rem;
+  width: 40px;
+  height: 40px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -598,16 +891,77 @@ h1, h2, h3, h4, h5, h6 {
   &:hover {
     background: var(--primary-light);
     border-color: var(--primary);
-    color: var(--primary);
   }
 
   i {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     color: var(--text-secondary);
     transition: color var(--transition-base);
   }
 
   &:hover i {
     color: var(--primary);
+  }
+}
+
+// ============================================
+// Custom Modal Overlay (for todo-form)
+// ============================================
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 1rem;
+}
+
+[data-theme="dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.modal-container {
+  background: var(--bg-card);
+  border-radius: 0.625rem;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 0 50px 0 var(--shadow-color);
+  overflow: hidden;
+
+  .modal-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+
+    .modal-title {
+      margin: 0;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+
+      i {
+        color: var(--primary);
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 2rem;
+    background: transparent;
+  }
+
+  .modal-footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    background: var(--bg-secondary);
   }
 }
