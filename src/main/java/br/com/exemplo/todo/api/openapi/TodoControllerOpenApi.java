@@ -8,15 +8,18 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ProblemDetail;
 
 import java.util.List;
 
-@Tag(name = "Tarefas (Todo)", description = "Gerenciamento de tarefas")
+@Tag(name = "Tarefas (Todo)", description = "Gerenciamento de tarefas da organizacao atual")
+@SecurityRequirement(name = "bearerAuth")
 public interface TodoControllerOpenApi {
 
-    @Operation(summary = "Lista todas as tarefas", description = "Retorna a lista de todas as tarefas cadastradas")
+    @Operation(summary = "Lista todas as tarefas",
+            description = "Retorna a lista de todas as tarefas da organizacao atual")
     @ApiResponse(responseCode = "200", description = "Lista de tarefas retornada com sucesso")
     List<TodoOutput> listar(
             @Parameter(description = "Filtrar por status de conclusão (true = concluídas, false = pendentes)")

@@ -1,5 +1,10 @@
 package br.com.exemplo.todo.api.exceptionhandler;
 
+import br.com.exemplo.todo.domain.exception.AccountLockedException;
+import br.com.exemplo.todo.domain.exception.EmailAlreadyExistsException;
+import br.com.exemplo.todo.domain.exception.InvalidCredentialsException;
+import br.com.exemplo.todo.domain.exception.InvalidRefreshTokenException;
+import br.com.exemplo.todo.domain.exception.OrganizationAccessDeniedException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
 import lombok.Getter;
 import lombok.NonNull;
@@ -15,6 +20,21 @@ public enum ProblemType {
 
     CAMPO_INVALIDO(IllegalArgumentException.class,
             "Campo inválido", "campo-invalido"),
+
+    CREDENCIAIS_INVALIDAS(InvalidCredentialsException.class,
+            "Credenciais inválidas", "credenciais-invalidas"),
+
+    CONTA_BLOQUEADA(AccountLockedException.class,
+            "Conta bloqueada", "conta-bloqueada"),
+
+    TOKEN_INVALIDO(InvalidRefreshTokenException.class,
+            "Token inválido", "token-invalido"),
+
+    EMAIL_JA_CADASTRADO(EmailAlreadyExistsException.class,
+            "Email já cadastrado", "email-ja-cadastrado"),
+
+    ACESSO_NEGADO_ORGANIZACAO(OrganizationAccessDeniedException.class,
+            "Acesso negado à organização", "acesso-negado-organizacao"),
 
     ERRO_SISTEMA(Exception.class,
             "Erro de sistema não previsto", "erro-de-sistema-nao-previsto");

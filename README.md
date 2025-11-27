@@ -1,6 +1,6 @@
-# Todo API - Spring Boot + SQLite
+# Todo API - Spring Boot + SQLite + JWT + Multi-Tenancy
 
-API REST de CRUD de tarefas (Todo) desenvolvida como exemplo para aprendizado de Spring Boot com SQLite.
+API REST de CRUD de tarefas (Todo) com **autenticação JWT** e **multi-tenancy por organização**, desenvolvida como exemplo para aprendizado de Spring Boot com SQLite.
 
 Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-backend`, usando as mesmas versões e padrões.
 
@@ -10,15 +10,17 @@ Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-back
 
 1. [Tecnologias](#tecnologias)
 2. [Arquitetura do Projeto](#arquitetura-do-projeto)
-3. [Entendendo as Camadas](#entendendo-as-camadas)
-4. [Fluxo de uma Requisição](#fluxo-de-uma-requisição)
-5. [Conceitos Importantes](#conceitos-importantes)
-6. [Como Executar](#como-executar)
-7. [Endpoints da API](#endpoints-da-api)
-8. [Exemplos de Requisições](#exemplos-de-requisições)
-9. [Banco de Dados](#banco-de-dados)
-10. [Testes](#testes)
-11. [Comparação com o Projeto Base](#comparação-com-o-projeto-base)
+3. [Autenticação JWT](#autenticação-jwt)
+4. [Multi-Tenancy](#multi-tenancy)
+5. [Entendendo as Camadas](#entendendo-as-camadas)
+6. [Fluxo de uma Requisição](#fluxo-de-uma-requisição)
+7. [Conceitos Importantes](#conceitos-importantes)
+8. [Como Executar](#como-executar)
+9. [Endpoints da API](#endpoints-da-api)
+10. [Exemplos de Requisições](#exemplos-de-requisições)
+11. [Banco de Dados](#banco-de-dados)
+12. [Testes](#testes)
+13. [Comparação com o Projeto Base](#comparação-com-o-projeto-base)
 
 ---
 
@@ -28,12 +30,15 @@ Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-back
 |------------|--------|-----------|
 | Java | 21 | Linguagem de programação |
 | Spring Boot | 3.4.7 | Framework web |
+| Spring Security | 6.4.x | Autenticação e autorização |
 | Spring Data JPA | 3.4.7 | Abstração para acesso a dados |
 | SQLite | - | Banco de dados local (arquivo) |
 | Hibernate Community Dialects | 3.4.7 | Suporte SQLite no Hibernate |
+| JJWT | 0.12.6 | Geração e validação de tokens JWT |
 | SpringDoc OpenAPI | 2.8.9 | Documentação da API (Swagger) |
 | Lombok | - | Redução de código boilerplate |
 | ModelMapper | 3.2.5 | Mapeamento entre objetos |
+| BCrypt | - | Hash seguro de senhas |
 | JUnit 5 | - | Framework de testes |
 | AssertJ | - | Assertions fluentes |
 | Mockito | - | Mocks para testes |
@@ -45,8 +50,10 @@ Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-back
 ```
 todo-api/
 ├── pom.xml                                    # Configuração Maven (dependências)
-├── flyway/
-│   └── sql/V0001__criar_tabela_todo.sql       # Migration do banco de dados
+├── flyway/sql/
+│   ├── V0001__criar_tabela_todo.sql           # Migration inicial (tabela TODO)
+│   ├── V0002__criar_tabelas_autenticacao.sql  # Tabelas de auth (USUARIO, ORGANIZATION, etc)
+│   └── V0003__adicionar_organizacao_todo.sql  # Adiciona org_id à tabela TODO
 ├── todo/db/                                   # Banco SQLite (criado automaticamente)
 └── src/
     ├── main/
@@ -55,40 +62,359 @@ todo-api/
     │   │   │
     │   │   ├── api/                           # CAMADA DE APRESENTAÇÃO (REST)
     │   │   │   ├── controller/
-    │   │   │   │   └── TodoController.java    # Endpoints REST
+    │   │   │   │   ├── AuthController.java    # Endpoints de autenticação
+    │   │   │   │   └── TodoController.java    # Endpoints de tarefas
+    │   │   │   ├── dto/auth/                  # DTOs de autenticação
+    │   │   │   │   ├── LoginInput.java
+    │   │   │   │   ├── RegisterInput.java
+    │   │   │   │   ├── RefreshTokenInput.java
+    │   │   │   │   ├── AuthResponse.java
+    │   │   │   │   ├── UserOutput.java
+    │   │   │   │   ├── OrganizationOutput.java
+    │   │   │   │   └── MembershipOutput.java
     │   │   │   ├── exceptionhandler/
     │   │   │   │   ├── ApiExceptionHandler.java  # Tratamento global de erros
     │   │   │   │   └── ProblemType.java          # Tipos de erro (enum)
     │   │   │   ├── model/
-    │   │   │   │   ├── input/
-    │   │   │   │   │   └── TodoInput.java     # DTO de entrada (requisição)
-    │   │   │   │   └── output/
-    │   │   │   │       └── TodoOutput.java    # DTO de saída (resposta)
+    │   │   │   │   ├── input/TodoInput.java
+    │   │   │   │   └── output/TodoOutput.java
     │   │   │   └── openapi/
-    │   │   │       └── TodoControllerOpenApi.java  # Interface de documentação
+    │   │   │       └── TodoControllerOpenApi.java
     │   │   │
     │   │   ├── config/                        # CONFIGURAÇÕES
-    │   │   │   └── ModelMapperConfig.java     # Bean do ModelMapper
+    │   │   │   ├── JwtConfig.java             # Propriedades JWT
+    │   │   │   ├── ModelMapperConfig.java
+    │   │   │   ├── OpenApiSecurityConfig.java # Swagger com auth
+    │   │   │   └── SecurityConfig.java        # Spring Security 6
     │   │   │
-    │   │   └── domain/                        # CAMADA DE DOMÍNIO (Negócio)
-    │   │       ├── model/entity/
-    │   │       │   └── Todo.java              # Entidade JPA (tabela)
+    │   │   ├── security/                      # INFRAESTRUTURA DE SEGURANÇA
+    │   │   │   ├── AuthenticatedUser.java     # Principal do usuário autenticado
+    │   │   │   ├── JwtAuthenticationFilter.java  # Filtro que valida JWT
+    │   │   │   ├── JwtService.java            # Geração/validação de tokens
+    │   │   │   ├── TenantContext.java         # ThreadLocal com contexto do tenant
+    │   │   │   ├── TenantFilter.java          # Filtro que resolve organização
+    │   │   │   ├── TenantInfo.java            # Record com dados do tenant
+    │   │   │   └── TenantSecurityExpressions.java  # SpEL para @PreAuthorize
+    │   │   │
+    │   │   └── domain/                        # CAMADA DE DOMÍNIO
+    │   │       ├── model/
+    │   │       │   ├── entity/
+    │   │       │   │   ├── Account.java       # Credenciais do usuário
+    │   │       │   │   ├── Membership.java    # Vínculo usuário-organização
+    │   │       │   │   ├── Organization.java  # Organização (tenant)
+    │   │       │   │   ├── RefreshToken.java  # Token de refresh
+    │   │       │   │   ├── Todo.java          # Tarefa (com org_id)
+    │   │       │   │   └── User.java          # Usuário
+    │   │       │   └── enums/
+    │   │       │       └── MembershipRole.java  # OWNER, ADMIN, MEMBER
     │   │       ├── repository/
-    │   │       │   └── TodoRepository.java    # Acesso ao banco de dados
-    │   │       └── service/
-    │   │           ├── TodoService.java       # Lógica de negócio
-    │   │           └── exception/
-    │   │               └── TodoNaoEncontradoException.java
+    │   │       │   ├── AccountRepository.java
+    │   │       │   ├── MembershipRepository.java
+    │   │       │   ├── OrganizationRepository.java
+    │   │       │   ├── RefreshTokenRepository.java
+    │   │       │   ├── TodoRepository.java
+    │   │       │   └── UserRepository.java
+    │   │       ├── service/
+    │   │       │   ├── AuthService.java       # Lógica de autenticação
+    │   │       │   └── TodoService.java       # Lógica de tarefas (com tenant)
+    │   │       └── exception/
+    │   │           ├── AccountLockedException.java
+    │   │           ├── AuthenticationException.java
+    │   │           ├── EmailAlreadyExistsException.java
+    │   │           ├── InvalidCredentialsException.java
+    │   │           ├── InvalidRefreshTokenException.java
+    │   │           ├── OrganizationAccessDeniedException.java
+    │   │           └── TodoNaoEncontradoException.java
     │   │
     │   └── resources/
-    │       ├── application.yml                # Configuração principal
-    │       └── application-testes.yml         # Configuração para testes
+    │       ├── application.yml                # Configuração principal + JWT
+    │       └── application-testes.yml
     │
     └── test/java/br/com/exemplo/todo/
         ├── testesunitarios/
-        │   └── TodoServiceTest.java           # Testes do Service (com mocks)
+        │   └── TodoServiceTest.java
         └── testesintegracao/
-            └── TodoControllerIntegracaoTest.java  # Testes end-to-end
+            └── TodoControllerIntegracaoTest.java
+```
+
+---
+
+## Autenticação JWT
+
+### Visão Geral
+
+O sistema usa **JWT (JSON Web Token)** para autenticação stateless:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          FLUXO DE AUTENTICAÇÃO                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. LOGIN                                                                   │
+│     POST /auth/login { email, senha }                                       │
+│          │                                                                  │
+│          ▼                                                                  │
+│     ┌─────────────────────────────────────────────────────────┐            │
+│     │ AuthService                                              │            │
+│     │  - Valida credenciais                                    │            │
+│     │  - Gera Access Token (15 min)                            │            │
+│     │  - Gera Refresh Token (30 dias)                          │            │
+│     │  - Persiste hash do refresh token                        │            │
+│     └─────────────────────────────────────────────────────────┘            │
+│          │                                                                  │
+│          ▼                                                                  │
+│     { accessToken, refreshToken, user, organizations }                      │
+│                                                                             │
+│  2. REQUISIÇÕES AUTENTICADAS                                                │
+│     GET /todos                                                              │
+│     Headers:                                                                │
+│       - Authorization: Bearer {accessToken}                                 │
+│       - X-Organization-Id: 1                                                │
+│          │                                                                  │
+│          ▼                                                                  │
+│     ┌─────────────────────────────────────────────────────────┐            │
+│     │ JwtAuthenticationFilter                                  │            │
+│     │  - Extrai token do header                                │            │
+│     │  - Valida assinatura e expiração                         │            │
+│     │  - Popula SecurityContext com AuthenticatedUser          │            │
+│     └─────────────────────────────────────────────────────────┘            │
+│          │                                                                  │
+│          ▼                                                                  │
+│     ┌─────────────────────────────────────────────────────────┐            │
+│     │ TenantFilter                                             │            │
+│     │  - Lê X-Organization-Id do header                        │            │
+│     │  - Valida membership do usuário na org                   │            │
+│     │  - Popula TenantContext (ThreadLocal)                    │            │
+│     └─────────────────────────────────────────────────────────┘            │
+│          │                                                                  │
+│          ▼                                                                  │
+│     Controller → Service → Repository (com isolamento por org)              │
+│                                                                             │
+│  3. REFRESH TOKEN                                                           │
+│     POST /auth/refresh { refreshToken }                                     │
+│          │                                                                  │
+│          ▼                                                                  │
+│     ┌─────────────────────────────────────────────────────────┐            │
+│     │ AuthService                                              │            │
+│     │  - Valida refresh token (hash no banco)                  │            │
+│     │  - Revoga token antigo (rotação)                         │            │
+│     │  - Gera novos tokens                                     │            │
+│     │  - Detecta roubo (token já revogado = revoga família)    │            │
+│     └─────────────────────────────────────────────────────────┘            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Estrutura do JWT
+
+**Access Token (Header.Payload.Signature):**
+```json
+{
+  "sub": "1",              // User ID
+  "iss": "todo-api",       // Issuer
+  "iat": 1700000000,       // Issued At
+  "exp": 1700000900,       // Expiration (15 min)
+  "email": "user@email.com",
+  "nome": "João Silva"
+}
+```
+
+### Configuração (application.yml)
+
+```yaml
+security:
+  jwt:
+    secret: ${JWT_SECRET:chave-secreta-minimo-32-caracteres}
+    access-token:
+      expiration-ms: 900000      # 15 minutos
+    refresh-token:
+      expiration-days: 30        # 30 dias
+  bcrypt:
+    strength: 12                 # Força do hash BCrypt
+```
+
+### Endpoints de Autenticação
+
+| Método | Endpoint | Descrição | Autenticação |
+|--------|----------|-----------|--------------|
+| POST | /auth/register | Registrar novo usuário | Pública |
+| POST | /auth/login | Login com email/senha | Pública |
+| POST | /auth/refresh | Renovar tokens | Pública |
+| POST | /auth/logout | Revogar refresh token | Pública |
+
+### Segurança do Refresh Token
+
+1. **Armazenamento seguro**: Apenas o hash SHA-256 é persistido
+2. **Rotação automática**: Cada uso gera um novo token
+3. **Detecção de roubo**: Token já usado = revoga toda família
+4. **Family tracking**: Tokens relacionados compartilham `familiaId`
+5. **Metadados**: IP e User-Agent são registrados
+
+### Classes Importantes
+
+```java
+// JwtService.java - Geração e validação de tokens
+public String generateAccessToken(User user) {
+    return Jwts.builder()
+        .subject(String.valueOf(user.getId()))
+        .claim("email", user.getEmail())
+        .claim("nome", user.getNome())
+        .issuedAt(new Date())
+        .expiration(new Date(System.currentTimeMillis() + expirationMs))
+        .signWith(secretKey)
+        .compact();
+}
+
+// JwtAuthenticationFilter.java - Filtro de validação
+@Override
+protected void doFilterInternal(HttpServletRequest request, ...) {
+    String token = extractToken(request);
+    if (token != null) {
+        Claims claims = jwtService.validateAccessToken(token);
+        AuthenticatedUser principal = new AuthenticatedUser(
+            claims.get("sub", Long.class),
+            claims.get("email", String.class),
+            claims.get("nome", String.class)
+        );
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(principal, null, List.of())
+        );
+    }
+    filterChain.doFilter(request, response);
+}
+```
+
+---
+
+## Multi-Tenancy
+
+### Conceito
+
+Multi-tenancy permite que múltiplas organizações usem a mesma aplicação com dados isolados.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          MODELO DE MULTI-TENANCY                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────┐                      ┌─────────────┐                       │
+│  │   User A    │                      │   User B    │                       │
+│  │  (João)     │                      │  (Maria)    │                       │
+│  └──────┬──────┘                      └──────┬──────┘                       │
+│         │                                    │                              │
+│         │  Membership                        │  Membership                  │
+│         │  (OWNER)                           │  (MEMBER)                    │
+│         │                                    │                              │
+│         ▼                                    ▼                              │
+│  ┌─────────────────────────────────────────────────────────────┐           │
+│  │                    Organization 1                            │           │
+│  │                    "Empresa ABC"                             │           │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐                   │           │
+│  │  │  Todo 1  │  │  Todo 2  │  │  Todo 3  │  (org_id = 1)     │           │
+│  │  └──────────┘  └──────────┘  └──────────┘                   │           │
+│  └─────────────────────────────────────────────────────────────┘           │
+│                                                                             │
+│         │  Membership                                                       │
+│         │  (ADMIN)                                                          │
+│         ▼                                                                   │
+│  ┌─────────────────────────────────────────────────────────────┐           │
+│  │                    Organization 2                            │           │
+│  │                    "Startup XYZ"                             │           │
+│  │  ┌──────────┐  ┌──────────┐  (org_id = 2)                   │           │
+│  │  │  Todo 4  │  │  Todo 5  │  ← João também acessa aqui      │           │
+│  │  └──────────┘  └──────────┘                                 │           │
+│  └─────────────────────────────────────────────────────────────┘           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Entidades do Multi-Tenancy
+
+| Entidade | Descrição |
+|----------|-----------|
+| **User** | Usuário do sistema (pode pertencer a várias orgs) |
+| **Organization** | Organização/tenant (agrupa tarefas) |
+| **Membership** | Vínculo usuário ↔ organização com papel |
+| **Account** | Credenciais (email/senha, OAuth, etc) |
+| **RefreshToken** | Tokens de refresh persistidos |
+
+### Papéis (MembershipRole)
+
+```java
+public enum MembershipRole {
+    OWNER,   // Dono da organização (pode tudo)
+    ADMIN,   // Administrador (gerencia membros)
+    MEMBER   // Membro comum (apenas CRUD de tarefas)
+}
+```
+
+### TenantContext (ThreadLocal)
+
+O `TenantContext` armazena informações da organização ativa para cada requisição:
+
+```java
+// Definir contexto (feito pelo TenantFilter)
+TenantContext.set(organizationId, userId, role);
+
+// Usar no Service
+Long orgId = TenantContext.getOrganizationId();
+Long userId = TenantContext.getUserId();
+MembershipRole role = TenantContext.getRole();
+
+// Verificações de permissão
+TenantContext.isOwner();  // É dono?
+TenantContext.isAdmin();  // É admin ou dono?
+
+// IMPORTANTE: Limpar ao final (feito automaticamente pelo TenantFilter)
+TenantContext.clear();
+```
+
+### Header X-Organization-Id
+
+O cliente deve enviar o header `X-Organization-Id` para especificar qual organização acessar:
+
+```bash
+curl -H "Authorization: Bearer {token}" \
+     -H "X-Organization-Id: 1" \
+     http://localhost:8080/api/todos
+```
+
+**Comportamento:**
+- Se não enviar: usa a primeira organização do usuário
+- Se enviar ID inválido: retorna 400 Bad Request
+- Se não tiver membership: retorna 403 Forbidden
+
+### Isolamento de Dados
+
+Os repositórios filtram por `organizationId`:
+
+```java
+// TodoRepository.java
+List<Todo> findByOrganizationIdOrderByDataCriacaoDesc(Long organizationId);
+Optional<Todo> findByIdAndOrganizationId(Long id, Long organizationId);
+
+// TodoService.java
+public List<Todo> listarTodos() {
+    Long orgId = TenantContext.getOrganizationId();
+    return repository.findByOrganizationIdOrderByDataCriacaoDesc(orgId);
+}
+```
+
+### @PreAuthorize para Controle de Acesso
+
+```java
+// Verificar membership no controller
+@RestController
+@PreAuthorize("@tenantSecurity.isMember()")
+public class TodoController { ... }
+
+// Verificar papel específico
+@PreAuthorize("@tenantSecurity.isAdmin()")
+public void deletarMembro(Long membroId) { ... }
+
+// Verificar se é o próprio usuário
+@PreAuthorize("@tenantSecurity.isCurrentUser(#userId)")
+public void alterarPerfil(Long userId) { ... }
 ```
 
 ---
@@ -623,25 +949,124 @@ java -jar target/todo-api.jar
 
 ## Endpoints da API
 
+### Autenticação (públicos)
+
 | Método | Endpoint | Descrição | Status |
 |--------|----------|-----------|--------|
-| GET | /api/todos | Listar todas as tarefas | 200 |
-| GET | /api/todos?concluido=true | Filtrar por status | 200 |
-| GET | /api/todos/{id} | Buscar tarefa por ID | 200 / 404 |
-| POST | /api/todos | Criar nova tarefa | 201 / 400 |
-| PUT | /api/todos/{id} | Atualizar tarefa | 200 / 400 / 404 |
-| DELETE | /api/todos/{id} | Excluir tarefa | 204 / 404 |
-| PATCH | /api/todos/{id}/concluir | Marcar como concluída | 200 / 404 |
-| PATCH | /api/todos/{id}/reabrir | Reabrir tarefa | 200 / 404 |
+| POST | /auth/register | Registrar novo usuário | 201 / 400 / 409 |
+| POST | /auth/login | Login com email/senha | 200 / 401 / 423 |
+| POST | /auth/refresh | Renovar tokens | 200 / 401 |
+| POST | /auth/logout | Revogar refresh token | 204 |
+
+### Tarefas (autenticados - requer Bearer token)
+
+| Método | Endpoint | Descrição | Headers | Status |
+|--------|----------|-----------|---------|--------|
+| GET | /todos | Listar tarefas da org | Authorization, X-Organization-Id | 200 / 403 |
+| GET | /todos?concluido=true | Filtrar por status | Authorization, X-Organization-Id | 200 |
+| GET | /todos/{id} | Buscar tarefa por ID | Authorization, X-Organization-Id | 200 / 404 |
+| POST | /todos | Criar nova tarefa | Authorization, X-Organization-Id | 201 / 400 |
+| PUT | /todos/{id} | Atualizar tarefa | Authorization, X-Organization-Id | 200 / 400 / 404 |
+| DELETE | /todos/{id} | Excluir tarefa | Authorization, X-Organization-Id | 204 / 404 |
+| PATCH | /todos/{id}/concluir | Marcar como concluída | Authorization, X-Organization-Id | 200 / 404 |
+| PATCH | /todos/{id}/reabrir | Reabrir tarefa | Authorization, X-Organization-Id | 200 / 404 |
 
 ---
 
 ## Exemplos de Requisições
 
-### Criar tarefa
+> **Nota:** Todos os exemplos usam variáveis de ambiente para facilitar os testes.
+> Configure `TOKEN` após login/registro e `ORG_ID` com sua organização.
+
+### 1. Autenticação
+
+#### Registrar novo usuário
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nome": "João Silva",
+    "email": "joao@exemplo.com",
+    "senha": "minhasenha123",
+    "nomeOrganizacao": "Empresa do João"
+  }'
+```
+
+**Resposta (201 Created):**
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "a1b2c3d4e5f6...",
+  "expiresIn": 900,
+  "user": {
+    "id": 1,
+    "nome": "João Silva",
+    "email": "joao@exemplo.com"
+  },
+  "memberships": [
+    {
+      "organizationId": 1,
+      "organizationName": "Empresa do João",
+      "organizationSlug": "empresa-do-joao",
+      "role": "OWNER"
+    }
+  ]
+}
+```
+
+#### Login
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "joao@exemplo.com",
+    "senha": "minhasenha123"
+  }'
+```
+
+**Salvar token para usar nos próximos comandos:**
+```bash
+# No Linux/Mac:
+export TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+export ORG_ID=1
+
+# No Windows (CMD):
+set TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+set ORG_ID=1
+
+# No Windows (PowerShell):
+$env:TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+$env:ORG_ID=1
+```
+
+#### Renovar tokens (refresh)
+```bash
+curl -X POST http://localhost:8080/api/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refreshToken": "a1b2c3d4e5f6..."
+  }'
+```
+
+#### Logout
+```bash
+curl -X POST http://localhost:8080/api/auth/logout \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refreshToken": "a1b2c3d4e5f6..."
+  }'
+```
+
+---
+
+### 2. Operações de Tarefas (Requerem Autenticação)
+
+#### Criar tarefa
 ```bash
 curl -X POST http://localhost:8080/api/todos \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Organization-Id: $ORG_ID" \
   -d '{"titulo": "Comprar pão", "descricao": "Ir à padaria do João"}'
 ```
 
@@ -656,59 +1081,189 @@ curl -X POST http://localhost:8080/api/todos \
 }
 ```
 
-### Listar todas as tarefas
+#### Listar todas as tarefas
+```bash
+curl http://localhost:8080/api/todos \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Organization-Id: $ORG_ID"
+```
+
+#### Listar tarefas pendentes
+```bash
+curl "http://localhost:8080/api/todos?concluido=false" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Organization-Id: $ORG_ID"
+```
+
+#### Listar tarefas concluídas
+```bash
+curl "http://localhost:8080/api/todos?concluido=true" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Organization-Id: $ORG_ID"
+```
+
+#### Buscar por ID
+```bash
+curl http://localhost:8080/api/todos/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Organization-Id: $ORG_ID"
+```
+
+#### Atualizar tarefa
+```bash
+curl -X PUT http://localhost:8080/api/todos/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Organization-Id: $ORG_ID" \
+  -d '{"titulo": "Comprar pão integral", "descricao": "Na padaria do centro"}'
+```
+
+#### Marcar como concluída
+```bash
+curl -X PATCH http://localhost:8080/api/todos/1/concluir \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Organization-Id: $ORG_ID"
+```
+
+#### Reabrir tarefa
+```bash
+curl -X PATCH http://localhost:8080/api/todos/1/reabrir \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Organization-Id: $ORG_ID"
+```
+
+#### Excluir tarefa
+```bash
+curl -X DELETE http://localhost:8080/api/todos/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Organization-Id: $ORG_ID"
+```
+
+---
+
+### 3. Exemplos de Erros
+
+#### Acesso sem token (403 Forbidden)
 ```bash
 curl http://localhost:8080/api/todos
 ```
 
-### Listar tarefas pendentes
-```bash
-curl "http://localhost:8080/api/todos?concluido=false"
+**Resposta:**
+```json
+{
+  "type": "about:blank",
+  "title": "Forbidden",
+  "status": 403,
+  "detail": "Access Denied"
+}
 ```
 
-### Buscar por ID
+#### Credenciais inválidas (401 Unauthorized)
 ```bash
-curl http://localhost:8080/api/todos/1
-```
-
-### Atualizar tarefa
-```bash
-curl -X PUT http://localhost:8080/api/todos/1 \
+curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"titulo": "Comprar pão integral", "descricao": "Na padaria do centro"}'
+  -d '{"email": "joao@exemplo.com", "senha": "senhaerrada"}'
 ```
 
-### Marcar como concluída
+**Resposta:**
+```json
+{
+  "type": "/api/errors/credenciais-invalidas",
+  "title": "Credenciais inválidas.",
+  "status": 401,
+  "detail": "Email ou senha incorretos"
+}
+```
+
+#### Email já cadastrado (409 Conflict)
 ```bash
-curl -X PATCH http://localhost:8080/api/todos/1/concluir
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"nome": "João", "email": "joao@exemplo.com", "senha": "123456"}'
 ```
 
-### Reabrir tarefa
-```bash
-curl -X PATCH http://localhost:8080/api/todos/1/reabrir
+**Resposta:**
+```json
+{
+  "type": "/api/errors/email-ja-existe",
+  "title": "Email já cadastrado.",
+  "status": 409,
+  "detail": "O email joao@exemplo.com já está cadastrado no sistema"
+}
 ```
 
-### Excluir tarefa
-```bash
-curl -X DELETE http://localhost:8080/api/todos/1
+#### Conta bloqueada (423 Locked)
+```json
+{
+  "type": "/api/errors/conta-bloqueada",
+  "title": "Conta bloqueada.",
+  "status": 423,
+  "detail": "Conta bloqueada por excesso de tentativas de login"
+}
 ```
 
-### Exemplo de erro (validação)
+#### Validação de campos (400 Bad Request)
 ```bash
 curl -X POST http://localhost:8080/api/todos \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Organization-Id: $ORG_ID" \
   -d '{"titulo": "", "descricao": "Sem título"}'
 ```
 
-**Resposta (400 Bad Request):**
+**Resposta:**
 ```json
 {
   "type": "/api/errors/campo-invalido",
   "title": "Campos inválidos.",
   "status": 400,
-  "detail": "Um ou mais campos são inválidos - [titulo: Título é obrigatório]",
-  "timestamp": "2024-01-15T10:30:00Z"
+  "detail": "Um ou mais campos são inválidos - [titulo: Título é obrigatório]"
 }
+```
+
+---
+
+### 4. Script Completo de Teste
+
+```bash
+#!/bin/bash
+# Script para testar a API completa
+
+BASE_URL="http://localhost:8080/api"
+
+echo "=== 1. Registrando usuário ==="
+REGISTER_RESPONSE=$(curl -s -X POST "$BASE_URL/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nome": "Teste User",
+    "email": "teste@exemplo.com",
+    "senha": "senha123"
+  }')
+
+TOKEN=$(echo $REGISTER_RESPONSE | jq -r '.accessToken')
+ORG_ID=$(echo $REGISTER_RESPONSE | jq -r '.memberships[0].organizationId')
+
+echo "Token: ${TOKEN:0:50}..."
+echo "Org ID: $ORG_ID"
+
+echo -e "\n=== 2. Criando tarefa ==="
+curl -s -X POST "$BASE_URL/todos" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Organization-Id: $ORG_ID" \
+  -d '{"titulo": "Minha primeira tarefa", "descricao": "Testando a API"}' | jq
+
+echo -e "\n=== 3. Listando tarefas ==="
+curl -s "$BASE_URL/todos" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Organization-Id: $ORG_ID" | jq
+
+echo -e "\n=== 4. Marcando como concluída ==="
+curl -s -X PATCH "$BASE_URL/todos/1/concluir" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Organization-Id: $ORG_ID" | jq
+
+echo -e "\n=== Teste completo! ==="
 ```
 
 ---
@@ -723,17 +1278,131 @@ O SQLite é um banco de dados em arquivo. Não precisa de servidor separado.
 - **Driver:** `org.sqlite.JDBC`
 - **Dialect:** `org.hibernate.community.dialect.SQLiteDialect`
 
-### Estrutura da Tabela
+### Modelo de Dados (ER)
 
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              MODELO DE DADOS                                     │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│   ┌──────────────┐           ┌──────────────────┐           ┌──────────────┐   │
+│   │   USUARIO    │           │    MEMBERSHIP    │           │ ORGANIZATION │   │
+│   ├──────────────┤           ├──────────────────┤           ├──────────────┤   │
+│   │ USR_ID (PK)  │──────────<│ MBS_USR_ID (FK)  │>──────────│ ORG_ID (PK)  │   │
+│   │ USR_NOME     │           │ MBS_ORG_ID (FK)  │           │ ORG_NOME     │   │
+│   │ USR_EMAIL    │           │ MBS_PAPEL        │           │ ORG_SLUG     │   │
+│   │ USR_ATIVO    │           │ MBS_ATIVO        │           │ ORG_ATIVA    │   │
+│   └──────┬───────┘           └──────────────────┘           └──────┬───────┘   │
+│          │                                                          │           │
+│          │ 1:N                                                      │ 1:N       │
+│          ▼                                                          ▼           │
+│   ┌──────────────┐                                           ┌──────────────┐   │
+│   │   ACCOUNT    │                                           │     TODO     │   │
+│   ├──────────────┤                                           ├──────────────┤   │
+│   │ ACC_ID (PK)  │                                           │ TODO_ID (PK) │   │
+│   │ ACC_USR_ID   │                                           │ TODO_ORG_ID  │   │
+│   │ ACC_PROVIDER │                                           │ TODO_TITULO  │   │
+│   │ ACC_SENHA    │                                           │ TODO_DESCR   │   │
+│   │ ACC_BLOQUEADO│                                           │ TODO_CONCL   │   │
+│   │ ACC_TENTATIVAS│                                          └──────────────┘   │
+│   └──────────────┘                                                              │
+│          │                                                                       │
+│          │ 1:N                                                                   │
+│          ▼                                                                       │
+│   ┌──────────────────┐                                                          │
+│   │  REFRESH_TOKEN   │                                                          │
+│   ├──────────────────┤                                                          │
+│   │ RTK_ID (PK)      │                                                          │
+│   │ RTK_USR_ID (FK)  │                                                          │
+│   │ RTK_TOKEN_HASH   │                                                          │
+│   │ RTK_FAMILIA_ID   │   ◄── Agrupa tokens para rotação                         │
+│   │ RTK_REVOGADO     │                                                          │
+│   │ RTK_DATA_EXPIRACAO│                                                         │
+│   └──────────────────┘                                                          │
+│                                                                                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Estrutura das Tabelas (Migrations Flyway)
+
+**V0001 - Tabela TODO (inicial):**
 ```sql
 CREATE TABLE TODO (
     TODO_ID INTEGER PRIMARY KEY AUTOINCREMENT,
     TODO_TITULO TEXT NOT NULL,
     TODO_DESCRICAO TEXT,
-    TODO_CONCLUIDO INTEGER DEFAULT 0,  -- 0 = false, 1 = true
-    TODO_DATA_CRIACAO TEXT NOT NULL,   -- SQLite não tem tipo DATE
+    TODO_CONCLUIDO INTEGER DEFAULT 0,
+    TODO_DATA_CRIACAO TEXT NOT NULL,
     TODO_DATA_CONCLUSAO TEXT
 );
+```
+
+**V0002 - Tabelas de Autenticação:**
+```sql
+-- Organização (tenant)
+CREATE TABLE ORGANIZATION (
+    ORG_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ORG_NOME TEXT NOT NULL,
+    ORG_SLUG TEXT NOT NULL UNIQUE,
+    ORG_ATIVA INTEGER DEFAULT 1,
+    ORG_DATA_CRIACAO TEXT NOT NULL,
+    ORG_DATA_ATUALIZACAO TEXT NOT NULL
+);
+
+-- Usuário
+CREATE TABLE USUARIO (
+    USR_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    USR_NOME TEXT NOT NULL,
+    USR_EMAIL TEXT NOT NULL UNIQUE,
+    USR_AVATAR_URL TEXT,
+    USR_ATIVO INTEGER DEFAULT 1,
+    USR_ULTIMO_ACESSO TEXT,
+    USR_DATA_CRIACAO TEXT NOT NULL,
+    USR_DATA_ATUALIZACAO TEXT NOT NULL
+);
+
+-- Credenciais (permite múltiplos providers: local, google, github)
+CREATE TABLE ACCOUNT (
+    ACC_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ACC_USR_ID INTEGER NOT NULL REFERENCES USUARIO(USR_ID),
+    ACC_PROVIDER TEXT NOT NULL,                    -- 'local', 'google', 'github'
+    ACC_PROVIDER_ACCOUNT_ID TEXT,
+    ACC_SENHA_HASH TEXT,                           -- Apenas para provider 'local'
+    ACC_BLOQUEADO INTEGER DEFAULT 0,
+    ACC_TENTATIVAS_FALHA INTEGER DEFAULT 0,
+    ACC_DATA_BLOQUEIO TEXT,
+    ACC_DATA_CRIACAO TEXT NOT NULL,
+    UNIQUE(ACC_USR_ID, ACC_PROVIDER)
+);
+
+-- Vínculo usuário-organização
+CREATE TABLE MEMBERSHIP (
+    MBS_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    MBS_USR_ID INTEGER NOT NULL REFERENCES USUARIO(USR_ID),
+    MBS_ORG_ID INTEGER NOT NULL REFERENCES ORGANIZATION(ORG_ID),
+    MBS_PAPEL TEXT NOT NULL,                       -- 'OWNER', 'ADMIN', 'MEMBER'
+    MBS_ATIVO INTEGER DEFAULT 1,
+    MBS_DATA_INGRESSO TEXT NOT NULL,
+    UNIQUE(MBS_USR_ID, MBS_ORG_ID)
+);
+
+-- Refresh tokens (com suporte a rotação)
+CREATE TABLE REFRESH_TOKEN (
+    RTK_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    RTK_USR_ID INTEGER NOT NULL REFERENCES USUARIO(USR_ID),
+    RTK_TOKEN_HASH TEXT NOT NULL UNIQUE,
+    RTK_DATA_EXPIRACAO TEXT NOT NULL,
+    RTK_REVOGADO INTEGER DEFAULT 0,
+    RTK_FAMILIA_ID TEXT NOT NULL,                  -- Para rotação de tokens
+    RTK_DEVICE_INFO TEXT,
+    RTK_IP_ADDRESS TEXT,
+    RTK_DATA_CRIACAO TEXT NOT NULL
+);
+```
+
+**V0003 - Adiciona organização ao TODO:**
+```sql
+ALTER TABLE TODO ADD COLUMN TODO_ORG_ID INTEGER REFERENCES ORGANIZATION(ORG_ID);
 ```
 
 ### Configuração (application.yml)
@@ -746,7 +1415,24 @@ spring:
   jpa:
     database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:
-      ddl-auto: update  # Cria/atualiza tabelas automaticamente
+      ddl-auto: none  # Flyway gerencia o schema
+  flyway:
+    enabled: true
+    locations: filesystem:./flyway/sql
+    baseline-on-migrate: true
+
+# Configuração JWT
+app:
+  jwt:
+    secret: ${JWT_SECRET:chave-secreta-muito-segura-com-pelo-menos-64-caracteres}
+    access-token:
+      expiration-ms: 900000           # 15 minutos
+    refresh-token:
+      expiration-days: 30
+  security:
+    bcrypt:
+      strength: 12                    # Custo do BCrypt
+    max-login-attempts: 5             # Bloqueia após 5 tentativas
 ```
 
 ---
@@ -759,7 +1445,7 @@ spring:
 src/test/java/br/com/exemplo/todo/
 ├── testesunitarios/           # Testes isolados (com mocks)
 │   └── TodoServiceTest.java
-└── testesintegracao/          # Testes end-to-end (com banco real)
+└── testesintegracao/          # Testes end-to-end (com banco real + auth)
     └── TodoControllerIntegracaoTest.java
 ```
 
@@ -776,9 +1462,10 @@ mvn test -Dtest="**/testesunitarios/**"
 mvn test -Dtest="**/testesintegracao/**"
 ```
 
-### Testes Unitários
+### Testes Unitários (com TenantContext)
 
 Testam uma classe isolada, usando mocks para dependências.
+**Importante:** É necessário configurar o `TenantContext` nos testes para simular o multi-tenancy.
 
 ```java
 @ExtendWith(MockitoExtension.class)  // Ativa Mockito
@@ -790,6 +1477,25 @@ class TodoServiceTest {
     @InjectMocks  // Injeta mocks no service
     private TodoService service;
 
+    @BeforeEach
+    void setUp() {
+        // Configura o TenantContext para simular um usuário autenticado
+        TenantInfo tenantInfo = new TenantInfo(
+            1L,                    // userId
+            "Teste",               // userName
+            1L,                    // organizationId
+            "Org Teste",           // organizationName
+            MembershipRole.OWNER   // role
+        );
+        TenantContext.set(tenantInfo);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // IMPORTANTE: Limpar o ThreadLocal após cada teste
+        TenantContext.clear();
+    }
+
     @Test
     void deveCriarTodoComSucesso() {
         // Configura comportamento do mock
@@ -800,36 +1506,111 @@ class TodoServiceTest {
 
         // Verifica
         assertThat(resultado.getTitulo()).isEqualTo("Comprar pão");
-        verify(repository).save(any());  // Verifica que save foi chamado
+        assertThat(resultado.getOrganization().getId()).isEqualTo(1L);  // Valida org
+        verify(repository).save(any());
     }
 }
 ```
 
-### Testes de Integração
+### Testes de Integração (com JWT)
 
-Testam o fluxo completo, com banco de dados real.
+Testam o fluxo completo, com banco de dados real e autenticação JWT.
 
 ```java
-@SpringBootTest(webEnvironment = RANDOM_PORT)  // Sobe aplicação completa
-@ActiveProfiles("testes")  // Usa application-testes.yml
+@SpringBootTest(webEnvironment = RANDOM_PORT)
+@ActiveProfiles("testes")
+@Sql(scripts = "/limpar-banco.sql", executionPhase = BEFORE_TEST_METHOD)
 class TodoControllerIntegracaoTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;  // Cliente HTTP para testes
+    private TestRestTemplate restTemplate;
+
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private OrganizationRepository organizationRepository;
+
+    @Autowired
+    private MembershipRepository membershipRepository;
+
+    private String accessToken;
+    private Long organizationId;
+
+    @BeforeEach
+    void setUp() {
+        // Cria usuário de teste
+        User user = new User();
+        user.setNome("Teste");
+        user.setEmail("teste@teste.com");
+        user.setAtivo(true);
+        user.setDataCriacao(LocalDateTime.now());
+        user.setDataAtualizacao(LocalDateTime.now());
+        user = userRepository.save(user);
+
+        // Cria organização de teste
+        Organization org = new Organization();
+        org.setNome("Org Teste");
+        org.setSlug("org-teste");
+        org.setAtiva(true);
+        org.setDataCriacao(LocalDateTime.now());
+        org.setDataAtualizacao(LocalDateTime.now());
+        org = organizationRepository.save(org);
+        organizationId = org.getId();
+
+        // Cria membership
+        Membership membership = new Membership();
+        membership.setUser(user);
+        membership.setOrganization(org);
+        membership.setPapel(MembershipRole.OWNER);
+        membership.setAtivo(true);
+        membership.setDataIngresso(LocalDateTime.now());
+        membershipRepository.save(membership);
+
+        // Gera token JWT real
+        accessToken = jwtService.generateAccessToken(user);
+    }
 
     @Test
     void deveCriarTodo() {
         TodoInput input = new TodoInput();
         input.setTitulo("Nova Tarefa");
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(accessToken);                    // Authorization: Bearer {token}
+        headers.set("X-Organization-Id", organizationId.toString());
+
+        HttpEntity<TodoInput> request = new HttpEntity<>(input, headers);
+
         ResponseEntity<TodoOutput> response = restTemplate.postForEntity(
-            "/api/todos", input, TodoOutput.class);
+            "/api/todos", request, TodoOutput.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody().getId()).isNotNull();
     }
+
+    @Test
+    void deveRetornar403SemToken() {
+        ResponseEntity<String> response = restTemplate.getForEntity(
+            "/api/todos", String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
 }
 ```
+
+### Pontos Importantes nos Testes
+
+| Aspecto | Teste Unitário | Teste de Integração |
+|---------|---------------|---------------------|
+| TenantContext | Manual via `TenantContext.set()` | Automático via filtros |
+| Autenticação | Não passa pelos filtros | Requer token JWT real |
+| Banco de dados | Mockado | Real (em memória) |
+| Limpeza | `TenantContext.clear()` | Script SQL `@Sql` |
 
 ---
 
@@ -837,25 +1618,38 @@ class TodoControllerIntegracaoTest {
 
 | Aspecto | Todo API | Reforma Tributária |
 |---------|----------|-------------------|
-| Controllers | 1 | Múltiplos |
-| Entities | 1 (Todo) | 50+ tabelas |
-| Complexidade | CRUD básico | Cálculos tributários complexos |
-| Endpoints | 8 | 20+ |
+| Controllers | 2 (Auth + Todo) | Múltiplos |
+| Entities | 6 (User, Org, Todo...) | 50+ tabelas |
+| Autenticação | JWT + Refresh Token | JWT + OAuth2 |
+| Multi-tenancy | Por header X-Organization-Id | Complexo, múltiplas camadas |
+| Complexidade | CRUD + Auth | Cálculos tributários complexos |
+| Endpoints | 12 | 20+ |
 | Cache | Não implementado | 60+ caches Caffeine |
 | Validações | Bean Validation básico | Regras de negócio complexas |
-| Exceções | 1 customizada | 40+ exceções de negócio |
+| Exceções | 7 customizadas | 40+ exceções de negócio |
 | Serviços externos | Nenhum | WebClient, retry patterns |
 
 ### O que este projeto ensina:
 
-- **Estrutura de pastas** - Organização `api/` e `domain/`
+**Básico (estrutura):**
+- **Estrutura de pastas** - Organização `api/`, `domain/`, `security/`, `config/`
 - **Padrão de camadas** - Controller → Service → Repository
 - **DTOs separados** - Input/Output para controle da API
-- **Exception Handler** - Tratamento centralizado com ProblemDetail
-- **OpenAPI/Swagger** - Documentação automática
+- **Exception Handler** - Tratamento centralizado com ProblemDetail (RFC 7807)
+- **OpenAPI/Swagger** - Documentação automática com autenticação
 - **Testes organizados** - Unitários vs Integração
-- **Bean Validation** - Validação declarativa
-- **Spring Data JPA** - Query methods automáticas
+
+**Intermediário (autenticação):**
+- **JWT stateless** - Access token + Refresh token
+- **Spring Security 6** - SecurityFilterChain (sem WebSecurityConfigurerAdapter)
+- **Filtros customizados** - JwtAuthenticationFilter, TenantFilter
+- **BCrypt** - Hash seguro de senhas
+- **Rotação de tokens** - Família de tokens para detecção de roubo
+
+**Avançado (multi-tenancy):**
+- **ThreadLocal** - TenantContext para isolamento por thread
+- **SpEL expressions** - @PreAuthorize com expressões customizadas
+- **Isolamento de dados** - Cada organização vê apenas seus dados
 
 ### Próximos passos para aprender:
 
@@ -864,6 +1658,7 @@ class TodoControllerIntegracaoTest {
 3. Analisar as validações de negócio customizadas
 4. Entender o uso de WebClient para chamadas externas
 5. Explorar os testes de integração mais elaborados
+6. Implementar OAuth2 (Google, GitHub) usando o padrão Account
 
 ---
 

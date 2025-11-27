@@ -2,9 +2,12 @@ package br.com.exemplo.todo.testesunitarios;
 
 import br.com.exemplo.todo.api.model.input.TodoInput;
 import br.com.exemplo.todo.domain.model.entity.Todo;
+import br.com.exemplo.todo.domain.model.enums.MembershipRole;
 import br.com.exemplo.todo.domain.repository.TodoRepository;
 import br.com.exemplo.todo.domain.service.TodoService;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
+import br.com.exemplo.todo.security.TenantContext;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,12 +25,16 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("TodoService")
 class TodoServiceTest {
+
+    private static final Long ORG_ID = 1L;
+    private static final Long USER_ID = 100L;
 
     @Mock
     private TodoRepository repository;
@@ -43,16 +50,26 @@ class TodoServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Configura TenantContext para os testes
+        TenantContext.set(ORG_ID, USER_ID, MembershipRole.MEMBER);
+
         todo = new Todo();
         todo.setId(1L);
         todo.setTitulo("Comprar pão");
         todo.setDescricao("Ir à padaria");
         todo.setConcluido(false);
         todo.setDataCriacao(LocalDateTime.now());
+        todo.setOrganizationId(ORG_ID);
+        todo.setCriadoPor(USER_ID);
 
         todoInput = new TodoInput();
         todoInput.setTitulo("Comprar pão");
         todoInput.setDescricao("Ir à padaria");
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
     @Nested
@@ -62,19 +79,19 @@ class TodoServiceTest {
         @Test
         @DisplayName("deve retornar lista de todos ordenada por data de criação")
         void deveRetornarListaOrdenada() {
-            when(repository.findAllByOrderByDataCriacaoDesc()).thenReturn(List.of(todo));
+            when(repository.findByOrganizationIdOrderByDataCriacaoDesc(ORG_ID)).thenReturn(List.of(todo));
 
             List<Todo> resultado = service.listarTodos();
 
             assertThat(resultado).hasSize(1);
             assertThat(resultado.get(0).getTitulo()).isEqualTo("Comprar pão");
-            verify(repository).findAllByOrderByDataCriacaoDesc();
+            verify(repository).findByOrganizationIdOrderByDataCriacaoDesc(ORG_ID);
         }
 
         @Test
         @DisplayName("deve retornar lista vazia quando não há tarefas")
         void deveRetornarListaVazia() {
-            when(repository.findAllByOrderByDataCriacaoDesc()).thenReturn(List.of());
+            when(repository.findByOrganizationIdOrderByDataCriacaoDesc(ORG_ID)).thenReturn(List.of());
 
             List<Todo> resultado = service.listarTodos();
 
@@ -90,7 +107,8 @@ class TodoServiceTest {
         @DisplayName("deve retornar tarefas concluídas quando concluido=true")
         void deveRetornarConcluidas() {
             todo.setConcluido(true);
-            when(repository.findByConcluidoOrderByDataCriacaoDesc(true)).thenReturn(List.of(todo));
+            when(repository.findByOrganizationIdAndConcluidoOrderByDataCriacaoDesc(ORG_ID, true))
+                    .thenReturn(List.of(todo));
 
             List<Todo> resultado = service.listarPorStatus(true);
 
@@ -101,7 +119,8 @@ class TodoServiceTest {
         @Test
         @DisplayName("deve retornar tarefas pendentes quando concluido=false")
         void deveRetornarPendentes() {
-            when(repository.findByConcluidoOrderByDataCriacaoDesc(false)).thenReturn(List.of(todo));
+            when(repository.findByOrganizationIdAndConcluidoOrderByDataCriacaoDesc(ORG_ID, false))
+                    .thenReturn(List.of(todo));
 
             List<Todo> resultado = service.listarPorStatus(false);
 
@@ -117,7 +136,7 @@ class TodoServiceTest {
         @Test
         @DisplayName("deve retornar tarefa quando ID existe")
         void deveRetornarTarefaQuandoExiste() {
-            when(repository.findById(1L)).thenReturn(Optional.of(todo));
+            when(repository.findByIdAndOrganizationId(1L, ORG_ID)).thenReturn(Optional.of(todo));
 
             Todo resultado = service.buscarPorId(1L);
 
@@ -129,7 +148,7 @@ class TodoServiceTest {
         @Test
         @DisplayName("deve lançar exceção quando ID não existe")
         void deveLancarExcecaoQuandoNaoExiste() {
-            when(repository.findById(999L)).thenReturn(Optional.empty());
+            when(repository.findByIdAndOrganizationId(999L, ORG_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.buscarPorId(999L))
                     .isInstanceOf(TodoNaoEncontradoException.class)
@@ -161,6 +180,8 @@ class TodoServiceTest {
             assertThat(resultado.getTitulo()).isEqualTo("Comprar pão");
             assertThat(resultado.getConcluido()).isFalse();
             assertThat(resultado.getDataCriacao()).isNotNull();
+            assertThat(resultado.getOrganizationId()).isEqualTo(ORG_ID);
+            assertThat(resultado.getCriadoPor()).isEqualTo(USER_ID);
         }
     }
 
@@ -174,7 +195,7 @@ class TodoServiceTest {
             todoInput.setTitulo("Comprar leite");
             todoInput.setDescricao("No supermercado");
 
-            when(repository.findById(1L)).thenReturn(Optional.of(todo));
+            when(repository.findByIdAndOrganizationId(1L, ORG_ID)).thenReturn(Optional.of(todo));
             when(repository.save(any(Todo.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             Todo resultado = service.atualizar(1L, todoInput);
@@ -186,7 +207,7 @@ class TodoServiceTest {
         @Test
         @DisplayName("deve lançar exceção quando tarefa não existe")
         void deveLancarExcecaoQuandoNaoExiste() {
-            when(repository.findById(999L)).thenReturn(Optional.empty());
+            when(repository.findByIdAndOrganizationId(999L, ORG_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.atualizar(999L, todoInput))
                     .isInstanceOf(TodoNaoEncontradoException.class);
@@ -200,7 +221,7 @@ class TodoServiceTest {
         @Test
         @DisplayName("deve excluir tarefa existente")
         void deveExcluirComSucesso() {
-            when(repository.findById(1L)).thenReturn(Optional.of(todo));
+            when(repository.findByIdAndOrganizationId(1L, ORG_ID)).thenReturn(Optional.of(todo));
 
             service.excluir(1L);
 
@@ -210,7 +231,7 @@ class TodoServiceTest {
         @Test
         @DisplayName("deve lançar exceção quando tarefa não existe")
         void deveLancarExcecaoQuandoNaoExiste() {
-            when(repository.findById(999L)).thenReturn(Optional.empty());
+            when(repository.findByIdAndOrganizationId(999L, ORG_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.excluir(999L))
                     .isInstanceOf(TodoNaoEncontradoException.class);
@@ -224,7 +245,7 @@ class TodoServiceTest {
         @Test
         @DisplayName("deve marcar tarefa como concluída")
         void deveMarcarComoConcluida() {
-            when(repository.findById(1L)).thenReturn(Optional.of(todo));
+            when(repository.findByIdAndOrganizationId(1L, ORG_ID)).thenReturn(Optional.of(todo));
             when(repository.save(any(Todo.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             Todo resultado = service.marcarConcluido(1L);
@@ -244,7 +265,7 @@ class TodoServiceTest {
             todo.setConcluido(true);
             todo.setDataConclusao(LocalDateTime.now());
 
-            when(repository.findById(1L)).thenReturn(Optional.of(todo));
+            when(repository.findByIdAndOrganizationId(1L, ORG_ID)).thenReturn(Optional.of(todo));
             when(repository.save(any(Todo.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             Todo resultado = service.reabrir(1L);

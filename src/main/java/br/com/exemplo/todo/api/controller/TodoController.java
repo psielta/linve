@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -28,6 +29,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("todos")
+@PreAuthorize("@tenantSecurity.isMember()")
 public class TodoController implements TodoControllerOpenApi {
 
     private final TodoService todoService;

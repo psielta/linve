@@ -1,0 +1,254 @@
+package br.com.exemplo.todo.domain.service;
+
+import br.com.exemplo.todo.api.dto.auth.*;
+import br.com.exemplo.todo.config.JwtConfig;
+import br.com.exemplo.todo.domain.exception.AccountLockedException;
+import br.com.exemplo.todo.domain.exception.EmailAlreadyExistsException;
+import br.com.exemplo.todo.domain.exception.InvalidCredentialsException;
+import br.com.exemplo.todo.domain.exception.InvalidRefreshTokenException;
+import br.com.exemplo.todo.domain.model.entity.*;
+import br.com.exemplo.todo.domain.model.enums.MembershipRole;
+import br.com.exemplo.todo.domain.repository.*;
+import br.com.exemplo.todo.security.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class AuthService {
+
+    private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
+    private final OrganizationRepository organizationRepository;
+    private final MembershipRepository membershipRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final JwtConfig jwtConfig;
+
+    @Transactional
+    public AuthResponse register(RegisterInput input, HttpServletRequest request) {
+        // Verifica se email ja existe
+        if (userRepository.existsByEmail(input.email())) {
+            throw new EmailAlreadyExistsException(input.email());
+        }
+
+        // Cria usuario
+        User user = new User();
+        user.setNome(input.nome());
+        user.setEmail(input.email());
+        user.setAtivo(true);
+        user.setDataCriacao(LocalDateTime.now());
+        user.setDataAtualizacao(LocalDateTime.now());
+        user = userRepository.save(user);
+
+        // Cria account com senha
+        Account account = new Account();
+        account.setUser(user);
+        account.setProvider("local");
+        account.setSenhaHash(passwordEncoder.encode(input.senha()));
+        account.setBloqueado(false);
+        account.setTentativasFalha(0);
+        account.setDataCriacao(LocalDateTime.now());
+        accountRepository.save(account);
+
+        // Cria organizacao inicial
+        String orgName = StringUtils.hasText(input.nomeOrganizacao())
+                ? input.nomeOrganizacao()
+                : "Organizacao de " + input.nome();
+
+        Organization organization = new Organization();
+        organization.setNome(orgName);
+        organization.setSlug(generateSlug(orgName));
+        organization.setAtiva(true);
+        organization.setDataCriacao(LocalDateTime.now());
+        organization.setDataAtualizacao(LocalDateTime.now());
+        organization = organizationRepository.save(organization);
+
+        // Cria membership como OWNER
+        Membership membership = new Membership();
+        membership.setUser(user);
+        membership.setOrganization(organization);
+        membership.setPapel(MembershipRole.OWNER);
+        membership.setAtivo(true);
+        membership.setDataIngresso(LocalDateTime.now());
+        membershipRepository.save(membership);
+
+        log.info("Novo usuario registrado: userId={}, email={}", user.getId(), user.getEmail());
+
+        return generateAuthResponse(user, request);
+    }
+
+    @Transactional
+    public AuthResponse login(LoginInput input, HttpServletRequest request) {
+        // Busca usuario
+        User user = userRepository.findByEmail(input.email())
+                .orElseThrow(InvalidCredentialsException::new);
+
+        // Busca account local
+        Account account = accountRepository.findByUserIdAndProvider(user.getId(), "local")
+                .orElseThrow(InvalidCredentialsException::new);
+
+        // Verifica bloqueio
+        if (Boolean.TRUE.equals(account.getBloqueado())) {
+            log.warn("Tentativa de login em conta bloqueada: userId={}", user.getId());
+            throw new AccountLockedException();
+        }
+
+        // Verifica senha
+        if (!passwordEncoder.matches(input.senha(), account.getSenhaHash())) {
+            boolean shouldBlock = account.incrementarTentativasFalha();
+            if (shouldBlock) {
+                account.bloquear();
+            }
+            accountRepository.save(account);
+            log.warn("Senha incorreta para usuario: userId={}, tentativas={}",
+                    user.getId(), account.getTentativasFalha());
+            throw new InvalidCredentialsException();
+        }
+
+        // Reset tentativas de login
+        account.resetarTentativasFalha();
+        accountRepository.save(account);
+
+        // Atualiza ultimo acesso
+        user.setUltimoAcesso(LocalDateTime.now());
+        userRepository.save(user);
+
+        log.info("Login realizado: userId={}, email={}", user.getId(), user.getEmail());
+
+        return generateAuthResponse(user, request);
+    }
+
+    @Transactional
+    public AuthResponse refresh(RefreshTokenInput input, HttpServletRequest request) {
+        String tokenHash = jwtService.hashToken(input.refreshToken());
+
+        RefreshToken storedToken = refreshTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(InvalidRefreshTokenException::new);
+
+        // Verifica se token esta valido
+        if (Boolean.TRUE.equals(storedToken.getRevogado()) || storedToken.isExpirado()) {
+            // Possivelmente roubo de token - revoga toda a familia
+            if (!Boolean.TRUE.equals(storedToken.getRevogado())) {
+                revokeTokenFamily(storedToken.getFamiliaId());
+                log.warn("Possivel roubo de refresh token detectado: familyId={}",
+                        storedToken.getFamiliaId());
+            }
+            throw new InvalidRefreshTokenException();
+        }
+
+        User user = storedToken.getUser();
+
+        // Revoga token atual (rotacao)
+        storedToken.revogar();
+        refreshTokenRepository.save(storedToken);
+
+        log.debug("Refresh token renovado para userId={}", user.getId());
+
+        // Gera novos tokens com mesmo familyId
+        return generateAuthResponse(user, request, storedToken.getFamiliaId());
+    }
+
+    @Transactional
+    public void logout(String refreshToken) {
+        if (!StringUtils.hasText(refreshToken)) {
+            return;
+        }
+
+        String tokenHash = jwtService.hashToken(refreshToken);
+        refreshTokenRepository.findByTokenHash(tokenHash)
+                .ifPresent(token -> {
+                    // Revoga toda a familia de tokens
+                    revokeTokenFamily(token.getFamiliaId());
+                    log.debug("Logout realizado: userId={}", token.getUser().getId());
+                });
+    }
+
+    private AuthResponse generateAuthResponse(User user, HttpServletRequest request) {
+        return generateAuthResponse(user, request, UUID.randomUUID().toString());
+    }
+
+    private AuthResponse generateAuthResponse(User user, HttpServletRequest request, String familyId) {
+        // Gera access token
+        String accessToken = jwtService.generateAccessToken(user);
+
+        // Gera refresh token
+        String rawRefreshToken = jwtService.generateRefreshToken();
+        String tokenHash = jwtService.hashToken(rawRefreshToken);
+
+        // Persiste refresh token
+        RefreshToken refreshTokenEntity = new RefreshToken();
+        refreshTokenEntity.setUser(user);
+        refreshTokenEntity.setTokenHash(tokenHash);
+        refreshTokenEntity.setDataExpiracao(LocalDateTime.now().plusDays(jwtConfig.getRefreshToken().getExpirationDays()));
+        refreshTokenEntity.setRevogado(false);
+        refreshTokenEntity.setFamiliaId(familyId);
+        refreshTokenEntity.setDeviceInfo(extractDeviceInfo(request));
+        refreshTokenEntity.setIpAddress(extractIpAddress(request));
+        refreshTokenEntity.setDataCriacao(LocalDateTime.now());
+        refreshTokenRepository.save(refreshTokenEntity);
+
+        // Busca memberships do usuario
+        List<MembershipOutput> memberships = membershipRepository
+                .findByUserIdAndAtivoTrueOrderByDataIngressoAsc(user.getId())
+                .stream()
+                .map(MembershipOutput::from)
+                .toList();
+
+        return new AuthResponse(
+                accessToken,
+                rawRefreshToken,
+                jwtConfig.getAccessToken().getExpirationMs() / 1000,
+                UserOutput.from(user),
+                memberships
+        );
+    }
+
+    private void revokeTokenFamily(String familyId) {
+        refreshTokenRepository.revokeByFamiliaId(familyId);
+    }
+
+    private String generateSlug(String name) {
+        String baseSlug = name.toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .replaceAll("\\s+", "-")
+                .replaceAll("-+", "-")
+                .replaceAll("^-|-$", "");
+
+        if (baseSlug.isEmpty()) {
+            baseSlug = "org";
+        }
+
+        // Adiciona sufixo se ja existir
+        String slug = baseSlug;
+        int counter = 1;
+        while (organizationRepository.existsBySlug(slug)) {
+            slug = baseSlug + "-" + counter++;
+        }
+        return slug;
+    }
+
+    private String extractDeviceInfo(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        return userAgent != null ? userAgent.substring(0, Math.min(userAgent.length(), 255)) : null;
+    }
+
+    private String extractIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (StringUtils.hasText(xForwardedFor)) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
+    }
+}

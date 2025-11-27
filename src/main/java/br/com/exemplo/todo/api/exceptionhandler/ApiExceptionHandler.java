@@ -1,5 +1,11 @@
 package br.com.exemplo.todo.api.exceptionhandler;
 
+import br.com.exemplo.todo.domain.exception.AccountLockedException;
+import br.com.exemplo.todo.domain.exception.AuthenticationException;
+import br.com.exemplo.todo.domain.exception.EmailAlreadyExistsException;
+import br.com.exemplo.todo.domain.exception.InvalidCredentialsException;
+import br.com.exemplo.todo.domain.exception.InvalidRefreshTokenException;
+import br.com.exemplo.todo.domain.exception.OrganizationAccessDeniedException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -9,6 +15,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -78,6 +85,69 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
         HttpStatus status = HttpStatus.NOT_FOUND;
         ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Object> handleInvalidCredentialsException(
+            InvalidCredentialsException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(AccountLockedException.class)
+    public ResponseEntity<Object> handleAccountLockedException(
+            AccountLockedException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.LOCKED;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<Object> handleInvalidRefreshTokenException(
+            InvalidRefreshTokenException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<Object> handleEmailAlreadyExistsException(
+            EmailAlreadyExistsException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.CONFLICT;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(OrganizationAccessDeniedException.class)
+    public ResponseEntity<Object> handleOrganizationAccessDeniedException(
+            OrganizationAccessDeniedException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Object> handleAccessDeniedException(
+            AccessDeniedException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, "Acesso negado");
+        problemDetail.setType(ProblemType.ACESSO_NEGADO_ORGANIZACAO.getURI());
+        problemDetail.setTitle("Acesso negado");
+        problemDetail.setProperty("timestamp", Instant.now());
 
         return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
     }

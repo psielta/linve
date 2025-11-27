@@ -4,6 +4,7 @@ import br.com.exemplo.todo.api.model.input.TodoInput;
 import br.com.exemplo.todo.domain.model.entity.Todo;
 import br.com.exemplo.todo.domain.repository.TodoRepository;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
+import br.com.exemplo.todo.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -22,55 +23,62 @@ public class TodoService {
     private final ModelMapper modelMapper;
 
     /**
-     * Lista todas as tarefas ordenadas por data de criação (mais recentes primeiro).
+     * Lista todas as tarefas da organizacao atual ordenadas por data de criacao.
      *
      * @return lista de tarefas
      */
     public List<Todo> listarTodos() {
-        log.debug("Listando todas as tarefas");
-        return repository.findAllByOrderByDataCriacaoDesc();
+        Long orgId = TenantContext.getOrganizationId();
+        log.debug("Listando tarefas da organizacao {}", orgId);
+        return repository.findByOrganizationIdOrderByDataCriacaoDesc(orgId);
     }
 
     /**
-     * Lista tarefas filtrando por status de conclusão.
+     * Lista tarefas da organizacao atual filtrando por status de conclusao.
      *
-     * @param concluido true para tarefas concluídas, false para pendentes
+     * @param concluido true para tarefas concluidas, false para pendentes
      * @return lista de tarefas filtradas
      */
     public List<Todo> listarPorStatus(Boolean concluido) {
-        log.debug("Listando tarefas com status concluido={}", concluido);
-        return repository.findByConcluidoOrderByDataCriacaoDesc(concluido);
+        Long orgId = TenantContext.getOrganizationId();
+        log.debug("Listando tarefas da organizacao {} com status concluido={}", orgId, concluido);
+        return repository.findByOrganizationIdAndConcluidoOrderByDataCriacaoDesc(orgId, concluido);
     }
 
     /**
-     * Busca uma tarefa pelo ID.
+     * Busca uma tarefa pelo ID dentro da organizacao atual.
      *
      * @param id ID da tarefa
      * @return a tarefa encontrada
-     * @throws TodoNaoEncontradoException se a tarefa não existir
+     * @throws TodoNaoEncontradoException se a tarefa nao existir na organizacao
      */
     public Todo buscarPorId(Long id) {
-        log.debug("Buscando tarefa com ID {}", id);
-        return repository.findById(id)
+        Long orgId = TenantContext.getOrganizationId();
+        log.debug("Buscando tarefa {} na organizacao {}", id, orgId);
+        return repository.findByIdAndOrganizationId(id, orgId)
                 .orElseThrow(() -> new TodoNaoEncontradoException(id));
     }
 
     /**
-     * Cria uma nova tarefa.
+     * Cria uma nova tarefa na organizacao atual.
      *
      * @param input dados da tarefa a ser criada
      * @return a tarefa criada
      */
     @Transactional
     public Todo criar(TodoInput input) {
-        log.debug("Criando nova tarefa: {}", input.getTitulo());
+        Long orgId = TenantContext.getOrganizationId();
+        Long userId = TenantContext.getUserId();
+        log.debug("Criando nova tarefa na organizacao {}: {}", orgId, input.getTitulo());
 
         Todo todo = modelMapper.map(input, Todo.class);
+        todo.setOrganizationId(orgId);
+        todo.setCriadoPor(userId);
         todo.setDataCriacao(LocalDateTime.now());
         todo.setConcluido(false);
 
         Todo salvo = repository.save(todo);
-        log.info("Tarefa criada com ID {}", salvo.getId());
+        log.info("Tarefa criada com ID {} na organizacao {}", salvo.getId(), orgId);
 
         return salvo;
     }

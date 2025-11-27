@@ -41,4 +41,11 @@ public class Todo {
     @Column(name = "TODO_DATA_CONCLUSAO")
     private LocalDateTime dataConclusao;
 
+    // Multi-tenancy fields
+    @Column(name = "TODO_ORG_ID")
+    private Long organizationId;
+
+    @Column(name = "TODO_CRIADO_POR")
+    private Long criadoPor;
+
 }

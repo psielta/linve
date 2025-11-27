@@ -87,3 +87,19 @@ management:
       base-path: "/"
       path-mapping:
         prometheus: "metrics"
+
+# Security Configuration
+security:
+  jwt:
+    secret: ${JWT_SECRET:chave-secreta-desenvolvimento-minimo-32-caracteres-segura}
+    access-token:
+      expiration-ms: 900000  # 15 minutes
+    refresh-token:
+      expiration-days: 30
+  bcrypt:
+    strength: 12
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:4200
+    allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+    allowed-headers: Authorization,Content-Type,X-Organization-Id
+    max-age: 3600
