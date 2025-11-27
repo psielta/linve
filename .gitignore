@@ -12,3 +12,7 @@ desktop.ini
 .env
 .env.local
 .env.*.local
+
+# READMEs internos (pessoais/locais)
+backend/README.md
+frontend/README.md
