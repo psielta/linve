@@ -3,214 +3,116 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ThemeService } from '../../../../core/services/theme.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
-    <div class="auth-container">
-      <div class="auth-card">
-        <h1>Login</h1>
-        <p class="subtitle">Entre na sua conta para gerenciar suas tarefas</p>
+    <div class="auth-wrapper">
+      <!-- Theme Toggle -->
+      <button class="theme-toggle position-fixed top-0 end-0 m-3" (click)="themeService.cycle()" type="button">
+        <i class="fa-solid" [ngClass]="themeService.getIcon()"></i>
+      </button>
+
+      <div class="auth-card animate__animated animate__fadeIn">
+        <div class="text-center mb-4">
+          <h1 class="mb-2">Login</h1>
+          <p class="text-muted mb-0">Entre na sua conta para gerenciar suas tarefas</p>
+        </div>
 
         @if (error()) {
-          <div class="error-message">{{ error() }}</div>
+          <div class="alert alert-danger d-flex align-items-center" role="alert">
+            <i class="fa-solid fa-circle-exclamation me-2"></i>
+            <span>{{ error() }}</span>
+          </div>
         }
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()">
-          <div class="form-group">
-            <label for="email">E-mail</label>
-            <input
-              type="email"
-              id="email"
-              formControlName="email"
-              placeholder="seu@email.com"
-              [class.invalid]="f['email'].touched && f['email'].invalid"
-            />
+          <div class="mb-3">
+            <label for="email" class="form-label">E-mail</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fa-solid fa-envelope"></i>
+              </span>
+              <input
+                type="email"
+                id="email"
+                class="form-control"
+                formControlName="email"
+                placeholder="seu@email.com"
+                [class.is-invalid]="f['email'].touched && f['email'].invalid"
+              />
+            </div>
             @if (f['email'].touched && f['email'].errors?.['required']) {
-              <span class="error">E-mail é obrigatório</span>
+              <div class="invalid-feedback d-block">E-mail é obrigatório</div>
             }
             @if (f['email'].touched && f['email'].errors?.['email']) {
-              <span class="error">E-mail inválido</span>
+              <div class="invalid-feedback d-block">E-mail inválido</div>
             }
           </div>
 
-          <div class="form-group">
-            <label for="senha">Senha</label>
-            <input
-              type="password"
-              id="senha"
-              formControlName="senha"
-              placeholder="••••••••"
-              [class.invalid]="f['senha'].touched && f['senha'].invalid"
-            />
+          <div class="mb-4">
+            <label for="senha" class="form-label">Senha</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fa-solid fa-lock"></i>
+              </span>
+              <input
+                [type]="showPassword() ? 'text' : 'password'"
+                id="senha"
+                class="form-control"
+                formControlName="senha"
+                placeholder="Digite sua senha"
+                [class.is-invalid]="f['senha'].touched && f['senha'].invalid"
+              />
+              <button
+                class="btn btn-light"
+                type="button"
+                (click)="showPassword.set(!showPassword())"
+              >
+                <i class="fa-solid" [ngClass]="showPassword() ? 'fa-eye-slash' : 'fa-eye'"></i>
+              </button>
+            </div>
             @if (f['senha'].touched && f['senha'].errors?.['required']) {
-              <span class="error">Senha é obrigatória</span>
+              <div class="invalid-feedback d-block">Senha é obrigatória</div>
             }
             @if (f['senha'].touched && f['senha'].errors?.['minlength']) {
-              <span class="error">Mínimo 6 caracteres</span>
+              <div class="invalid-feedback d-block">Mínimo 6 caracteres</div>
             }
           </div>
 
-          <button type="submit" [disabled]="loading()" class="btn-primary">
+          <button type="submit" class="btn btn-primary w-100 py-2" [disabled]="loading()">
             @if (loading()) {
-              <span class="spinner"></span> Entrando...
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Entrando...
             } @else {
+              <i class="fa-solid fa-right-to-bracket me-2"></i>
               Entrar
             }
           </button>
         </form>
 
-        <p class="switch-auth">
-          Não tem uma conta? <a routerLink="/auth/register">Criar conta</a>
-        </p>
+        <div class="text-center mt-4">
+          <span class="text-muted">Não tem uma conta?</span>
+          <a routerLink="/auth/register" class="ms-1 fw-semibold">Criar conta</a>
+        </div>
       </div>
     </div>
-  `,
-  styles: [`
-    .auth-container {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 20px;
-    }
-
-    .auth-card {
-      background: white;
-      padding: 40px;
-      border-radius: 16px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-      width: 100%;
-      max-width: 400px;
-    }
-
-    h1 {
-      margin: 0 0 8px 0;
-      color: #333;
-      font-size: 28px;
-      font-weight: 700;
-    }
-
-    .subtitle {
-      color: #666;
-      margin: 0 0 24px 0;
-    }
-
-    .error-message {
-      background: #fee;
-      color: #c00;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      font-size: 14px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 6px;
-      color: #444;
-      font-weight: 500;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 16px;
-      transition: border-color 0.2s;
-      box-sizing: border-box;
-
-      &:focus {
-        outline: none;
-        border-color: #667eea;
-      }
-
-      &.invalid {
-        border-color: #e53935;
-      }
-    }
-
-    .error {
-      color: #e53935;
-      font-size: 12px;
-      margin-top: 4px;
-      display: block;
-    }
-
-    .btn-primary {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-
-      &:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-      }
-
-      &:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-      }
-    }
-
-    .spinner {
-      width: 18px;
-      height: 18px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .switch-auth {
-      text-align: center;
-      margin-top: 24px;
-      color: #666;
-
-      a {
-        color: #667eea;
-        text-decoration: none;
-        font-weight: 600;
-
-        &:hover {
-          text-decoration: underline;
-        }
-      }
-    }
-  `]
+  `
 })
 export class LoginComponent {
   form: FormGroup;
   loading = signal(false);
   error = signal<string | null>(null);
+  showPassword = signal(false);
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    public themeService: ThemeService
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Todo, TodoInput } from '../../../../core/models/todo.model';
@@ -8,45 +8,63 @@ import { Todo, TodoInput } from '../../../../core/models/todo.model';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="modal-backdrop" (click)="onBackdropClick($event)">
-      <div class="modal">
+    <div class="modal-overlay animate__animated animate__fadeIn" (click)="onBackdropClick($event)">
+      <div class="modal-container animate__animated animate__fadeInUp animate__faster">
         <div class="modal-header">
-          <h2>{{ isEditing ? 'Editar Tarefa' : 'Nova Tarefa' }}</h2>
-          <button type="button" class="close-btn" (click)="onCancel()">×</button>
+          <h5 class="modal-title">
+            <i class="fa-solid me-2" [ngClass]="isEditing ? 'fa-pen-to-square' : 'fa-plus'"></i>
+            {{ isEditing ? 'Editar Tarefa' : 'Nova Tarefa' }}
+          </h5>
+          <button type="button" class="btn-close" (click)="onCancel()" aria-label="Fechar"></button>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()">
-          <div class="form-group">
-            <label for="titulo">Título</label>
-            <input
-              type="text"
-              id="titulo"
-              formControlName="titulo"
-              placeholder="O que você precisa fazer?"
-              [class.invalid]="f['titulo'].touched && f['titulo'].invalid"
-              autofocus
-            />
-            @if (f['titulo'].touched && f['titulo'].errors?.['required']) {
-              <span class="error">Título é obrigatório</span>
-            }
-            @if (f['titulo'].touched && f['titulo'].errors?.['maxlength']) {
-              <span class="error">Máximo 200 caracteres</span>
-            }
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="titulo" class="form-label">Título</label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="fa-solid fa-heading"></i>
+                </span>
+                <input
+                  type="text"
+                  id="titulo"
+                  class="form-control"
+                  formControlName="titulo"
+                  placeholder="O que você precisa fazer?"
+                  [class.is-invalid]="f['titulo'].touched && f['titulo'].invalid"
+                  autofocus
+                />
+              </div>
+              @if (f['titulo'].touched && f['titulo'].errors?.['required']) {
+                <div class="invalid-feedback d-block">Título é obrigatório</div>
+              }
+              @if (f['titulo'].touched && f['titulo'].errors?.['maxlength']) {
+                <div class="invalid-feedback d-block">Máximo 200 caracteres</div>
+              }
+            </div>
+
+            <div class="mb-0">
+              <label for="descricao" class="form-label">
+                Descrição
+                <span class="text-muted fw-normal">(opcional)</span>
+              </label>
+              <textarea
+                id="descricao"
+                class="form-control"
+                formControlName="descricao"
+                placeholder="Adicione mais detalhes..."
+                rows="4"
+              ></textarea>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label for="descricao">Descrição <span class="optional">(opcional)</span></label>
-            <textarea
-              id="descricao"
-              formControlName="descricao"
-              placeholder="Adicione mais detalhes..."
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" (click)="onCancel()">Cancelar</button>
-            <button type="submit" class="btn-primary" [disabled]="form.invalid">
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" (click)="onCancel()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
+              <i class="fa-solid me-2" [ngClass]="isEditing ? 'fa-check' : 'fa-plus'"></i>
               {{ isEditing ? 'Salvar' : 'Criar' }}
             </button>
           </div>
@@ -55,163 +73,57 @@ import { Todo, TodoInput } from '../../../../core/models/todo.model';
     </div>
   `,
   styles: [`
-    .modal-backdrop {
+    .modal-overlay {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.5);
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
-      padding: 20px;
-      animation: fadeIn 0.2s ease;
+      z-index: 1050;
+      padding: 1rem;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .modal {
-      background: white;
-      border-radius: 16px;
+    .modal-container {
+      background: var(--bg-card);
+      border-radius: 0.625rem;
       width: 100%;
       max-width: 500px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      animation: slideIn 0.2s ease;
-    }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      box-shadow: 0 0 50px 0 var(--shadow-color);
+      overflow: hidden;
     }
 
     .modal-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 20px 24px;
-      border-bottom: 1px solid #eee;
 
-      h2 {
+      .modal-title {
         margin: 0;
-        font-size: 20px;
-        color: #333;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+
+        i {
+          color: var(--primary);
+        }
       }
     }
 
-    .close-btn {
-      background: none;
-      border: none;
-      font-size: 28px;
-      color: #999;
-      cursor: pointer;
-      padding: 0;
-      line-height: 1;
-
-      &:hover {
-        color: #333;
-      }
+    .modal-body {
+      padding: 2rem;
     }
 
-    form {
-      padding: 24px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 6px;
-      color: #444;
-      font-weight: 500;
-    }
-
-    .optional {
-      color: #999;
-      font-weight: 400;
-      font-size: 13px;
-    }
-
-    input, textarea {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 16px;
-      font-family: inherit;
-      transition: border-color 0.2s;
-      box-sizing: border-box;
-      resize: vertical;
-
-      &:focus {
-        outline: none;
-        border-color: #667eea;
-      }
-
-      &.invalid {
-        border-color: #e53935;
-      }
-    }
-
-    .error {
-      color: #e53935;
-      font-size: 12px;
-      margin-top: 4px;
-      display: block;
-    }
-
-    .modal-actions {
+    .modal-footer {
+      padding: 1.5rem 2rem;
+      border-top: 1px solid var(--border-color);
       display: flex;
-      gap: 12px;
       justify-content: flex-end;
-      padding-top: 8px;
-    }
-
-    .btn-secondary {
-      padding: 12px 24px;
-      background: #f5f5f5;
-      color: #666;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-
-      &:hover {
-        background: #eee;
-      }
-    }
-
-    .btn-primary {
-      padding: 12px 24px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-
-      &:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
+      gap: 0.75rem;
+      background: var(--bg-secondary);
     }
   `]
 })
@@ -252,7 +164,7 @@ export class TodoFormComponent implements OnInit {
   }
 
   onBackdropClick(event: MouseEvent): void {
-    if ((event.target as HTMLElement).classList.contains('modal-backdrop')) {
+    if ((event.target as HTMLElement).classList.contains('modal-overlay')) {
       this.onCancel();
     }
   }

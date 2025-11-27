@@ -2,8 +2,10 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TodoService } from '../../../../core/services/todo.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ThemeService } from '../../../../core/services/theme.service';
 import { Todo, TodoInput } from '../../../../core/models/todo.model';
 import { TodoFormComponent } from '../todo-form/todo-form.component';
+import Swal from 'sweetalert2';
 
 type FilterType = 'todas' | 'pendentes' | 'concluidas';
 
@@ -12,90 +14,174 @@ type FilterType = 'todas' | 'pendentes' | 'concluidas';
   standalone: true,
   imports: [CommonModule, TodoFormComponent],
   template: `
-    <div class="todo-container">
-      <header class="header">
-        <div class="header-content">
-          <div class="brand">
-            <h1>📋 Minhas Tarefas</h1>
+    <div class="app-wrapper">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="d-flex align-items-center gap-3">
+          <i class="fa-solid fa-list-check fs-4 text-primary"></i>
+          <div>
+            <h1 class="h5 mb-0 fw-bold">Minhas Tarefas</h1>
             @if (authService.currentUser; as user) {
-              <span class="user-info">{{ user.nome }} • {{ authService.organizationName }}</span>
+              <small class="text-muted">{{ user.nome }} &bull; {{ authService.organizationName }}</small>
             }
           </div>
-          <button class="btn-logout" (click)="logout()">Sair</button>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <!-- Theme Toggle -->
+          <button class="theme-toggle" (click)="themeService.cycle()" type="button" title="Alternar tema">
+            <i class="fa-solid" [ngClass]="themeService.getIcon()"></i>
+          </button>
+
+          <!-- User Menu -->
+          <div class="dropdown">
+            <button class="btn btn-light btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-solid fa-user"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><span class="dropdown-item-text text-muted">{{ authService.currentUser?.email }}</span></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item" href="javascript:void(0)" (click)="logout()">
+                  <i class="fa-solid fa-right-from-bracket me-2"></i>Sair
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </header>
 
-      <main class="main">
-        <div class="toolbar">
-          <div class="filters">
+      <!-- Content -->
+      <main class="app-content">
+        <!-- Toolbar -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+          <div class="btn-group" role="group">
             <button
-              class="filter-btn"
-              [class.active]="filter() === 'todas'"
+              type="button"
+              class="btn"
+              [class.btn-primary]="filter() === 'todas'"
+              [class.btn-light]="filter() !== 'todas'"
               (click)="onFilterChange('todas')"
-            >Todas</button>
+            >
+              Todas
+            </button>
             <button
-              class="filter-btn"
-              [class.active]="filter() === 'pendentes'"
+              type="button"
+              class="btn"
+              [class.btn-primary]="filter() === 'pendentes'"
+              [class.btn-light]="filter() !== 'pendentes'"
               (click)="onFilterChange('pendentes')"
-            >Pendentes</button>
+            >
+              Pendentes
+            </button>
             <button
-              class="filter-btn"
-              [class.active]="filter() === 'concluidas'"
+              type="button"
+              class="btn"
+              [class.btn-primary]="filter() === 'concluidas'"
+              [class.btn-light]="filter() !== 'concluidas'"
               (click)="onFilterChange('concluidas')"
-            >Concluídas</button>
+            >
+              Concluídas
+            </button>
           </div>
-          <button class="btn-add" (click)="openNewForm()">+ Nova Tarefa</button>
+
+          <button class="btn btn-primary" (click)="openNewForm()">
+            <i class="fa-solid fa-plus me-2"></i>Nova Tarefa
+          </button>
         </div>
 
+        <!-- Error Alert -->
         @if (error()) {
-          <div class="error-message">{{ error() }}</div>
+          <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+            <i class="fa-solid fa-circle-exclamation me-2"></i>
+            <span>{{ error() }}</span>
+          </div>
         }
 
+        <!-- Loading -->
         @if (loading()) {
-          <div class="loading">
-            <div class="spinner"></div>
-            <span>Carregando tarefas...</span>
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status">
+              <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="text-muted">Carregando tarefas...</p>
           </div>
         } @else if (todos().length === 0) {
-          <div class="empty-state">
-            <div class="empty-icon">📝</div>
-            <h3>Nenhuma tarefa encontrada</h3>
-            <p>Clique em "Nova Tarefa" para começar</p>
+          <!-- Empty State -->
+          <div class="card">
+            <div class="card-body text-center py-5">
+              <i class="fa-solid fa-clipboard-list fa-4x text-muted mb-4"></i>
+              <h4>Nenhuma tarefa encontrada</h4>
+              <p class="text-muted mb-4">Clique em "Nova Tarefa" para começar a organizar suas atividades</p>
+              <button class="btn btn-primary" (click)="openNewForm()">
+                <i class="fa-solid fa-plus me-2"></i>Criar primeira tarefa
+              </button>
+            </div>
           </div>
         } @else {
-          <div class="todo-list">
+          <!-- Todo List -->
+          <div class="d-flex flex-column gap-3">
             @for (todo of todos(); track todo.id) {
-              <div class="todo-item" [class.completed]="todo.concluido">
-                <button
-                  class="checkbox"
-                  [class.checked]="todo.concluido"
-                  (click)="toggleConcluido(todo)"
-                  [attr.aria-label]="todo.concluido ? 'Marcar como pendente' : 'Marcar como concluída'"
-                >
-                  @if (todo.concluido) {
-                    <span class="check-icon">✓</span>
-                  }
-                </button>
+              <div class="card todo-card" [class.completed]="todo.concluido">
+                <div class="card-body d-flex align-items-start gap-3">
+                  <!-- Checkbox -->
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      [checked]="todo.concluido"
+                      (change)="toggleConcluido(todo)"
+                      [id]="'todo-' + todo.id"
+                    >
+                  </div>
 
-                <div class="todo-content" (click)="openEditForm(todo)">
-                  <h3 class="todo-title">{{ todo.titulo }}</h3>
-                  @if (todo.descricao) {
-                    <p class="todo-description">{{ todo.descricao }}</p>
-                  }
-                  <span class="todo-date">
-                    {{ todo.concluido ? 'Concluída em ' + formatDate(todo.dataConclusao) : 'Criada em ' + formatDate(todo.dataCriacao) }}
-                  </span>
+                  <!-- Content -->
+                  <div class="flex-grow-1 cursor-pointer" (click)="openEditForm(todo)">
+                    <h6 class="mb-1 todo-title" [class.text-decoration-line-through]="todo.concluido">
+                      {{ todo.titulo }}
+                    </h6>
+                    @if (todo.descricao) {
+                      <p class="text-muted small mb-2">{{ todo.descricao }}</p>
+                    }
+                    <small class="text-muted">
+                      <i class="fa-regular fa-clock me-1"></i>
+                      {{ todo.concluido ? 'Concluída em ' + formatDate(todo.dataConclusao) : 'Criada em ' + formatDate(todo.dataCriacao) }}
+                    </small>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="dropdown">
+                    <button class="btn btn-light btn-sm btn-icon" type="button" data-bs-toggle="dropdown">
+                      <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li>
+                        <a class="dropdown-item" href="javascript:void(0)" (click)="openEditForm(todo)">
+                          <i class="fa-solid fa-pen me-2"></i>Editar
+                        </a>
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href="javascript:void(0)" (click)="toggleConcluido(todo)">
+                          <i class="fa-solid me-2" [ngClass]="todo.concluido ? 'fa-rotate-left' : 'fa-check'"></i>
+                          {{ todo.concluido ? 'Reabrir' : 'Concluir' }}
+                        </a>
+                      </li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li>
+                        <a class="dropdown-item text-danger" href="javascript:void(0)" (click)="delete(todo)">
+                          <i class="fa-solid fa-trash me-2"></i>Excluir
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-
-                <button class="btn-delete" (click)="delete(todo)" aria-label="Excluir tarefa">
-                  🗑️
-                </button>
               </div>
             }
           </div>
         }
       </main>
 
+      <!-- Form Modal -->
       @if (showForm()) {
         <app-todo-form
           [todo]="editingTodo()"
@@ -106,259 +192,31 @@ type FilterType = 'todas' | 'pendentes' | 'concluidas';
     </div>
   `,
   styles: [`
-    .todo-container {
-      min-height: 100vh;
-      background: #f5f7fa;
-    }
-
-    .header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px;
-    }
-
-    .header-content {
-      max-width: 800px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .brand {
-      h1 {
-        margin: 0;
-        font-size: 24px;
-        font-weight: 700;
-      }
-    }
-
-    .user-info {
-      font-size: 14px;
-      opacity: 0.9;
-    }
-
-    .btn-logout {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background 0.2s;
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.3);
-      }
-    }
-
-    .main {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 24px 20px;
-    }
-
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .filters {
-      display: flex;
-      gap: 8px;
-    }
-
-    .filter-btn {
-      background: white;
-      border: 1px solid #ddd;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-
-      &:hover {
-        border-color: #667eea;
-        color: #667eea;
-      }
-
-      &.active {
-        background: #667eea;
-        border-color: #667eea;
-        color: white;
-      }
-    }
-
-    .btn-add {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
+    .todo-card {
       transition: transform 0.2s, box-shadow 0.2s;
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-      }
-    }
-
-    .error-message {
-      background: #fee;
-      color: #c00;
-      padding: 12px 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 60px 20px;
-      color: #666;
-
-      .spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid #eee;
-        border-top-color: #667eea;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin: 0 auto 16px;
-      }
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-      .empty-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-      }
-
-      h3 {
-        margin: 0 0 8px 0;
-        color: #333;
-      }
-
-      p {
-        margin: 0;
-        color: #666;
-      }
-    }
-
-    .todo-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .todo-item {
-      background: white;
-      border-radius: 12px;
-      padding: 16px;
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      transition: transform 0.2s, box-shadow 0.2s;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
       }
 
       &.completed {
         opacity: 0.7;
-
-        .todo-title {
-          text-decoration: line-through;
-          color: #888;
-        }
       }
-    }
-
-    .checkbox {
-      width: 24px;
-      height: 24px;
-      min-width: 24px;
-      border: 2px solid #ddd;
-      border-radius: 50%;
-      background: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-      margin-top: 2px;
-
-      &:hover {
-        border-color: #667eea;
-      }
-
-      &.checked {
-        background: #667eea;
-        border-color: #667eea;
-      }
-
-      .check-icon {
-        color: white;
-        font-size: 14px;
-        font-weight: bold;
-      }
-    }
-
-    .todo-content {
-      flex: 1;
-      cursor: pointer;
-      min-width: 0;
     }
 
     .todo-title {
-      margin: 0 0 4px 0;
-      font-size: 16px;
-      color: #333;
-      word-break: break-word;
+      color: var(--text-primary);
     }
 
-    .todo-description {
-      margin: 0 0 8px 0;
-      font-size: 14px;
-      color: #666;
-      word-break: break-word;
-    }
-
-    .todo-date {
-      font-size: 12px;
-      color: #999;
-    }
-
-    .btn-delete {
-      background: none;
-      border: none;
-      font-size: 18px;
+    .form-check-input {
+      width: 1.25rem;
+      height: 1.25rem;
+      margin-top: 0;
       cursor: pointer;
-      opacity: 0.5;
-      transition: opacity 0.2s;
-      padding: 4px;
 
-      &:hover {
-        opacity: 1;
+      &:checked {
+        background-color: var(--primary);
+        border-color: var(--primary);
       }
     }
   `]
@@ -373,7 +231,8 @@ export class TodoListComponent implements OnInit {
 
   constructor(
     private todoService: TodoService,
-    public authService: AuthService
+    public authService: AuthService,
+    public themeService: ThemeService
   ) {}
 
   ngOnInit(): void {
@@ -431,6 +290,14 @@ export class TodoListComponent implements OnInit {
         next: () => {
           this.closeForm();
           this.loadTodos();
+          Swal.fire({
+            icon: 'success',
+            title: 'Tarefa atualizada!',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000
+          });
         },
         error: (err) => console.error(err)
       });
@@ -439,6 +306,14 @@ export class TodoListComponent implements OnInit {
         next: () => {
           this.closeForm();
           this.loadTodos();
+          Swal.fire({
+            icon: 'success',
+            title: 'Tarefa criada!',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000
+          });
         },
         error: (err) => console.error(err)
       });
@@ -457,12 +332,32 @@ export class TodoListComponent implements OnInit {
   }
 
   delete(todo: Todo): void {
-    if (confirm(`Deseja excluir "${todo.titulo}"?`)) {
-      this.todoService.excluir(todo.id).subscribe({
-        next: () => this.loadTodos(),
-        error: (err) => console.error(err)
-      });
-    }
+    Swal.fire({
+      title: 'Excluir tarefa?',
+      text: `Deseja excluir "${todo.titulo}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: 'var(--danger)',
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Sim, excluir'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.todoService.excluir(todo.id).subscribe({
+          next: () => {
+            this.loadTodos();
+            Swal.fire({
+              icon: 'success',
+              title: 'Tarefa excluída!',
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 2000
+            });
+          },
+          error: (err) => console.error(err)
+        });
+      }
+    });
   }
 
   logout(): void {
