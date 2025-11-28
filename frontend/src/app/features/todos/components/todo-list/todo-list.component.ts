@@ -2,7 +2,6 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TodoService } from '../../../../core/services/todo.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import { ThemeService } from '../../../../core/services/theme.service';
 import { TodoOutput, TodoInput } from '../../../../core/api';
 import { TodoFormComponent } from '../todo-form/todo-form.component';
 import Swal from 'sweetalert2';
@@ -14,64 +13,28 @@ type FilterType = 'todas' | 'pendentes' | 'concluidas';
   standalone: true,
   imports: [CommonModule, TodoFormComponent],
   template: `
-    <div class="app-wrapper">
-      <!-- Header -->
-      <header class="app-header">
-        <div class="d-flex align-items-center gap-3">
-          <i class="fa-solid fa-list-check fs-4 text-primary"></i>
-          <div>
-            <h1 class="h5 mb-0 fw-bold">Minhas Tarefas</h1>
-            @if (authService.currentUser; as user) {
-              <small class="text-muted">{{ user.nome }} &bull; {{ authService.organizationName }}</small>
-            }
-          </div>
-        </div>
-
-        <div class="d-flex align-items-center gap-2">
-          <!-- Theme Toggle -->
-          <button class="theme-toggle" (click)="themeService.cycle()" type="button" title="Alternar tema">
-            <i class="fa-solid" [ngClass]="themeService.getIcon()"></i>
-          </button>
-
-          <!-- User Menu -->
-          <div class="dropdown">
-            <button class="btn btn-light btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="fa-solid fa-user"></i>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li><span class="dropdown-item-text text-muted">{{ authService.currentUser?.email }}</span></li>
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                <a class="dropdown-item" href="javascript:void(0)" (click)="logout()">
-                  <i class="fa-solid fa-right-from-bracket me-2"></i>Sair
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </header>
-
-      <!-- Content -->
-      <main class="app-content">
-        <!-- Toolbar -->
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div class="todo-list-container">
+      <!-- Toolbar -->
+      <div class="todo-toolbar">
+        <div class="toolbar-left">
           <div class="btn-group" role="group">
             <button
               type="button"
               class="btn"
               [class.btn-primary]="filter() === 'todas'"
               [class.btn-light]="filter() !== 'todas'"
-              (click)="onFilterChange('todas')"
-            >
+              (click)="onFilterChange('todas')">
               Todas
+              <span class="badge ms-1" [class.bg-white]="filter() === 'todas'" [class.text-primary]="filter() === 'todas'" [class.bg-secondary]="filter() !== 'todas'">
+                {{ totalCount() }}
+              </span>
             </button>
             <button
               type="button"
               class="btn"
               [class.btn-primary]="filter() === 'pendentes'"
               [class.btn-light]="filter() !== 'pendentes'"
-              (click)="onFilterChange('pendentes')"
-            >
+              (click)="onFilterChange('pendentes')">
               Pendentes
             </button>
             <button
@@ -79,107 +42,106 @@ type FilterType = 'todas' | 'pendentes' | 'concluidas';
               class="btn"
               [class.btn-primary]="filter() === 'concluidas'"
               [class.btn-light]="filter() !== 'concluidas'"
-              (click)="onFilterChange('concluidas')"
-            >
+              (click)="onFilterChange('concluidas')">
               Concluídas
             </button>
           </div>
-
-          <button class="btn btn-primary" (click)="openNewForm()">
-            <i class="fa-solid fa-plus me-2"></i>Nova Tarefa
-          </button>
         </div>
 
-        <!-- Error Alert -->
-        @if (error()) {
-          <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
-            <i class="fa-solid fa-circle-exclamation me-2"></i>
-            <span>{{ error() }}</span>
-          </div>
-        }
+        <button class="btn btn-primary" (click)="openNewForm()">
+          <i class="fa-solid fa-plus me-2"></i>Nova Tarefa
+        </button>
+      </div>
 
-        <!-- Loading -->
-        @if (loading()) {
-          <div class="text-center py-5">
-            <div class="spinner-border text-primary mb-3" role="status">
-              <span class="visually-hidden">Carregando...</span>
-            </div>
-            <p class="text-muted">Carregando tarefas...</p>
-          </div>
-        } @else if (todos().length === 0) {
-          <!-- Empty State -->
-          <div class="card">
-            <div class="card-body text-center py-5">
-              <i class="fa-solid fa-clipboard-list fa-4x text-muted mb-4"></i>
-              <h4>Nenhuma tarefa encontrada</h4>
-              <p class="text-muted mb-4">Clique em "Nova Tarefa" para começar a organizar suas atividades</p>
-              <button class="btn btn-primary" (click)="openNewForm()">
-                <i class="fa-solid fa-plus me-2"></i>Criar primeira tarefa
-              </button>
-            </div>
-          </div>
-        } @else {
-          <!-- Todo List -->
-          <div class="d-flex flex-column gap-3">
-            @for (todo of todos(); track todo.id) {
-              <div class="card todo-card" [class.completed]="todo.concluido">
-                <div class="card-body d-flex align-items-start gap-3">
-                  <!-- Checkbox -->
-                  <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      [checked]="todo.concluido"
-                      (change)="toggleConcluido(todo)"
-                      [id]="'todo-' + todo.id"
-                    >
-                  </div>
+      <!-- Error Alert -->
+      @if (error()) {
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+          <i class="fa-solid fa-circle-exclamation me-2"></i>
+          <span>{{ error() }}</span>
+        </div>
+      }
 
-                  <!-- Content -->
-                  <div class="flex-grow-1 cursor-pointer" (click)="openEditForm(todo)">
-                    <h6 class="mb-1 todo-title" [class.text-decoration-line-through]="todo.concluido">
-                      {{ todo.titulo }}
-                    </h6>
-                    @if (todo.descricao) {
-                      <p class="text-muted small mb-2">{{ todo.descricao }}</p>
-                    }
-                    <small class="text-muted">
-                      <i class="fa-regular fa-clock me-1"></i>
-                      {{ todo.concluido ? 'Concluída em ' + formatDate(todo.dataConclusao) : 'Criada em ' + formatDate(todo.dataCriacao) }}
-                    </small>
-                  </div>
+      <!-- Loading -->
+      @if (loading()) {
+        <div class="loading-state">
+          <div class="spinner-border text-primary mb-3" role="status">
+            <span class="visually-hidden">Carregando...</span>
+          </div>
+          <p class="text-muted">Carregando tarefas...</p>
+        </div>
+      } @else if (todos().length === 0) {
+        <!-- Empty State -->
+        <div class="empty-state-card">
+          <div class="empty-state-icon">
+            <i class="fa-solid fa-clipboard-list"></i>
+          </div>
+          <h4>Nenhuma tarefa encontrada</h4>
+          <p class="text-muted">Clique em "Nova Tarefa" para começar a organizar suas atividades</p>
+          <button class="btn btn-primary" (click)="openNewForm()">
+            <i class="fa-solid fa-plus me-2"></i>Criar primeira tarefa
+          </button>
+        </div>
+      } @else {
+        <!-- Todo List -->
+        <div class="todo-list">
+          @for (todo of todos(); track todo.id) {
+            <div class="todo-card" [class.completed]="todo.concluido">
+              <!-- Checkbox -->
+              <div class="todo-checkbox">
+                <input
+                  type="checkbox"
+                  [checked]="todo.concluido"
+                  (change)="toggleConcluido(todo)"
+                  [id]="'todo-' + todo.id" />
+              </div>
 
-                  <!-- Actions -->
-                  <div class="dropdown">
-                    <button class="btn btn-light btn-sm btn-icon" type="button" data-bs-toggle="dropdown">
-                      <i class="fa-solid fa-ellipsis-vertical"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                      <li>
-                        <a class="dropdown-item" href="javascript:void(0)" (click)="openEditForm(todo)">
-                          <i class="fa-solid fa-pen me-2"></i>Editar
-                        </a>
-                      </li>
-                      <li>
-                        <a class="dropdown-item" href="javascript:void(0)" (click)="toggleConcluido(todo)">
-                          <i class="fa-solid me-2" [ngClass]="todo.concluido ? 'fa-rotate-left' : 'fa-check'"></i>
-                          {{ todo.concluido ? 'Reabrir' : 'Concluir' }}
-                        </a>
-                      </li>
-                      <li><hr class="dropdown-divider"></li>
-                      <li>
-                        <a class="dropdown-item text-danger" href="javascript:void(0)" (click)="delete(todo)">
-                          <i class="fa-solid fa-trash me-2"></i>Excluir
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
+              <!-- Content -->
+              <div class="todo-content" (click)="openEditForm(todo)">
+                <h6 class="todo-title" [class.completed]="todo.concluido">
+                  {{ todo.titulo }}
+                </h6>
+                @if (todo.descricao) {
+                  <p class="todo-description">{{ todo.descricao }}</p>
+                }
+                <div class="todo-meta">
+                  <span class="todo-date">
+                    <i class="fa-regular fa-clock me-1"></i>
+                    {{ todo.concluido ? 'Concluída em ' + formatDate(todo.dataConclusao) : 'Criada em ' + formatDate(todo.dataCriacao) }}
+                  </span>
                 </div>
               </div>
-            }
-          </div>
-        }
-      </main>
+
+              <!-- Actions -->
+              <div class="todo-actions">
+                <div class="dropdown">
+                  <button class="btn btn-light btn-sm btn-icon" type="button" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="javascript:void(0)" (click)="openEditForm(todo)">
+                        <i class="fa-solid fa-pen me-2"></i>Editar
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="javascript:void(0)" (click)="toggleConcluido(todo)">
+                        <i class="fa-solid me-2" [ngClass]="todo.concluido ? 'fa-rotate-left' : 'fa-check'"></i>
+                        {{ todo.concluido ? 'Reabrir' : 'Concluir' }}
+                      </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <a class="dropdown-item text-danger" href="javascript:void(0)" (click)="delete(todo)">
+                        <i class="fa-solid fa-trash me-2"></i>Excluir
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
 
       <!-- Form Modal -->
       @if (showForm()) {
@@ -192,11 +154,87 @@ type FilterType = 'todas' | 'pendentes' | 'concluidas';
     </div>
   `,
   styles: [`
+    .todo-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .todo-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .empty-state-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      padding: 60px 40px;
+      text-align: center;
+    }
+
+    .empty-state-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(var(--primary-rgb), 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+
+      i {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+      }
+    }
+
+    .empty-state-card h4 {
+      margin: 0 0 10px;
+      color: var(--text-color);
+    }
+
+    .empty-state-card p {
+      margin-bottom: 20px;
+    }
+
+    .todo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .todo-card {
-      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      background: var(--card-bg);
+      border-radius: 10px;
+      box-shadow: var(--shadow-sm);
+      padding: 16px 20px;
+      transition: all 0.2s ease;
 
       &:hover {
         transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
       }
 
       &.completed {
@@ -204,25 +242,75 @@ type FilterType = 'todas' | 'pendentes' | 'concluidas';
       }
     }
 
-    .todo-title {
-      color: var(--text-primary);
+    .todo-checkbox {
+      padding-top: 2px;
+
+      input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: var(--primary-color);
+      }
     }
 
-    .form-check-input {
-      width: 1.25rem;
-      height: 1.25rem;
-      margin-top: 0;
+    .todo-content {
+      flex: 1;
+      min-width: 0;
       cursor: pointer;
+    }
 
-      &:checked {
-        background-color: var(--primary);
-        border-color: var(--primary);
+    .todo-title {
+      margin: 0 0 4px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-color);
+      transition: all 0.2s ease;
+
+      &.completed {
+        text-decoration: line-through;
+        color: var(--text-muted);
       }
+    }
+
+    .todo-description {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .todo-meta {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .todo-date {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .todo-actions {
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
     }
   `]
 })
 export class TodoListComponent implements OnInit {
   todos = signal<TodoOutput[]>([]);
+  totalCount = signal(0);
   loading = signal(false);
   filter = signal<FilterType>('todas');
   showForm = signal(false);
@@ -231,8 +319,7 @@ export class TodoListComponent implements OnInit {
 
   constructor(
     private todoService: TodoService,
-    public authService: AuthService,
-    public themeService: ThemeService
+    public authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -253,6 +340,9 @@ export class TodoListComponent implements OnInit {
     this.todoService.listar(concluido).subscribe({
       next: (todos) => {
         this.todos.set(todos);
+        if (this.filter() === 'todas') {
+          this.totalCount.set(todos.length);
+        }
         this.loading.set(false);
       },
       error: (err) => {
@@ -358,10 +448,6 @@ export class TodoListComponent implements OnInit {
         });
       }
     });
-  }
-
-  logout(): void {
-    this.authService.logout();
   }
 
   formatDate(date: string | null | undefined): string {

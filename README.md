@@ -69,9 +69,16 @@ linve/
 │   │   │   ├── api/                 # Clientes gerados (ng-openapi-gen)
 │   │   │   ├── guards/              # Guards de rota (auth, guest)
 │   │   │   ├── interceptors/        # Interceptors HTTP (JWT)
+│   │   │   ├── models/              # Interfaces (MenuItem, Notification)
 │   │   │   └── services/            # Serviços (auth, todo, theme)
+│   │   ├── layouts/                 # Layouts da aplicação
+│   │   │   └── admin-layout/        # Admin Dashboard Metronic-style
+│   │   │       ├── config/          # Configuração do menu
+│   │   │       ├── services/        # Sidebar, Menu, Breadcrumb
+│   │   │       └── components/      # Sidebar, Header, Breadcrumb
 │   │   ├── features/                # Módulos de funcionalidades
 │   │   │   ├── auth/                # Login e registro
+│   │   │   ├── dashboard/           # Dashboard com stats cards
 │   │   │   └── todos/               # CRUD de tarefas
 │   │   └── environments/            # Configurações por ambiente
 │   ├── ng-openapi-gen.json          # Config do gerador de clientes
@@ -107,6 +114,12 @@ linve/
 - **Sistema de Temas** (Light/Dark/System)
 - **Geração automática de clientes** via ng-openapi-gen
 - **Interceptors** para JWT e refresh automático
+- **Admin Dashboard** completo estilo Metronic:
+  - Sidebar colapsável com menus hierárquicos
+  - Header modular (busca, notificações, org switcher, user menu)
+  - Breadcrumbs automáticos
+  - Dashboard com stats cards
+  - Filtro de menu por roles
 
 ## Configuração do Ambiente
 
@@ -204,20 +217,35 @@ Após o primeiro registro, você terá acesso ao sistema. Alternativamente:
   - [x] Formulários reativos com validação
   - [x] CRUD de tarefas (Todo) - tela de exemplo/validação
 
-### Fase 2: Admin Dashboard
+### Fase 2: Admin Dashboard (Concluído)
 
-- [ ] **Layout Metronic-Style**
-  - [ ] Sidebar colapsável com menu hierárquico
-  - [ ] Header com notificações e perfil
-  - [ ] Breadcrumbs automáticos
-  - [ ] Cards de estatísticas no dashboard
+- [x] **Layout Metronic-Style**
+  - [x] Sidebar colapsável com menu hierárquico e animações
+  - [x] Header completo (busca, notificações, ações rápidas, org switcher, user menu)
+  - [x] Breadcrumbs automáticos baseados nas rotas
+  - [x] Cards de estatísticas no dashboard com variações de cor
+  - [x] Sistema de temas light/dark integrado
+  - [x] Responsividade desktop-first com drawer mobile
 
-- [ ] **Gestão de Usuários**
+- [x] **Menu e Navegação**
+  - [x] Configuração de menu via TypeScript com tipagem
+  - [x] Suporte a submenus hierárquicos infinitos
+  - [x] Filtro automático por role (OWNER, ADMIN, MEMBER)
+  - [x] Badges dinâmicos nos itens de menu
+  - [x] Persistência de estado no localStorage
+
+- [x] **Sistema de Temas Harmonizado**
+  - [x] Paleta de cores Slate consistente (Tailwind-inspired)
+  - [x] Páginas de autenticação com visual moderno
+  - [x] Variáveis CSS organizadas para fácil customização
+  - [x] Transições suaves entre temas
+
+- [ ] **Gestão de Usuários** (próxima fase)
   - [ ] CRUD de usuários por organização
   - [ ] Definição de roles (Owner, Admin, Member)
   - [ ] Convites por email
 
-- [ ] **Gestão de Organizações**
+- [ ] **Gestão de Organizações** (próxima fase)
   - [ ] Configurações da organização
   - [ ] Logo e branding customizado
   - [ ] Planos e assinaturas
