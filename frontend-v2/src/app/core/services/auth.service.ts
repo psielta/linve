@@ -16,6 +16,7 @@ const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 const USER_KEY = 'user';
 const ORGANIZATIONS_KEY = 'organizations';
+const REMEMBER_ME_KEY = 'remember_me';
 
 @Injectable({
   providedIn: 'root'
@@ -26,6 +27,10 @@ export class AuthService {
   private _user = signal<UserOutput | null>(this.loadUser());
   private _organizations = signal<MembershipOutput[]>(this.loadOrganizations());
   private _isAuthenticated = signal<boolean>(this.hasValidToken());
+
+  private get storage(): Storage {
+    return localStorage.getItem(REMEMBER_ME_KEY) === 'true' ? localStorage : sessionStorage;
+  }
 
   readonly user = this._user.asReadonly();
   readonly organizations = this._organizations.asReadonly();
@@ -38,11 +43,19 @@ export class AuthService {
     private router: Router
   ) {}
 
-  login(credentials: LoginInput): Observable<AuthResponse> {
+  login(credentials: LoginInput, rememberMe: boolean = false): Observable<AuthResponse> {
+    // Salva preferência de rememberMe ANTES de processar resposta
+    if (rememberMe) {
+      localStorage.setItem(REMEMBER_ME_KEY, 'true');
+    } else {
+      localStorage.removeItem(REMEMBER_ME_KEY);
+    }
+
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
       tap(response => this.handleAuthResponse(response)),
       catchError(error => {
         console.error('Login error:', error);
+        localStorage.removeItem(REMEMBER_ME_KEY);
         return throwError(() => error);
       })
     );
@@ -86,12 +99,40 @@ export class AuthService {
     this.router.navigate(['/auth/login']);
   }
 
+  /**
+   * Solicita envio do magic link por email.
+   * O backend não revela se o email existe ou não (segurança).
+   */
+  requestMagicLink(email: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/auth/magic-link`, { email });
+  }
+
+  /**
+   * Confirma magic link e autentica o usuário.
+   */
+  confirmMagicLink(token: string, rememberMe: boolean = false): Observable<AuthResponse> {
+    if (rememberMe) {
+      localStorage.setItem(REMEMBER_ME_KEY, 'true');
+    } else {
+      localStorage.removeItem(REMEMBER_ME_KEY);
+    }
+
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/magic-link/confirm`, { token }).pipe(
+      tap(response => this.handleAuthResponse(response)),
+      catchError(error => {
+        console.error('Magic link confirm error:', error);
+        localStorage.removeItem(REMEMBER_ME_KEY);
+        return throwError(() => error);
+      })
+    );
+  }
+
   getAccessToken(): string | null {
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
+    return this.storage.getItem(ACCESS_TOKEN_KEY);
   }
 
   getRefreshToken(): string | null {
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
+    return this.storage.getItem(REFRESH_TOKEN_KEY);
   }
 
   isLoggedIn(): boolean {
@@ -101,7 +142,7 @@ export class AuthService {
   addOrganization(membership: MembershipOutput): void {
     const current = this._organizations();
     const updated = [...current, membership];
-    localStorage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
+    this.storage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
     this._organizations.set(updated);
   }
 
@@ -112,12 +153,12 @@ export class AuthService {
         ? { ...m, organization: { ...m.organization, nome: updatedOrg.nome } }
         : m
     );
-    localStorage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
+    this.storage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
     this._organizations.set(updated);
   }
 
   updateUser(user: UserOutput): void {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    this.storage.setItem(USER_KEY, JSON.stringify(user));
     this._user.set(user);
   }
 
@@ -125,7 +166,7 @@ export class AuthService {
     const currentUser = this._user();
     if (currentUser) {
       const updatedUser = { ...currentUser, avatar };
-      localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+      this.storage.setItem(USER_KEY, JSON.stringify(updatedUser));
       this._user.set(updatedUser);
     }
   }
@@ -137,7 +178,7 @@ export class AuthService {
         ? { ...m, organization: { ...m.organization, nome: org.nome, logo: org.logo } }
         : m
     );
-    localStorage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
+    this.storage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
     this._organizations.set(updated);
   }
 
@@ -148,15 +189,15 @@ export class AuthService {
         ? { ...m, organization: { ...m.organization, logo } }
         : m
     );
-    localStorage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
+    this.storage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
     this._organizations.set(updated);
   }
 
   private handleAuthResponse(response: AuthResponse): void {
-    localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
-    localStorage.setItem(USER_KEY, JSON.stringify(response.user));
-    localStorage.setItem(ORGANIZATIONS_KEY, JSON.stringify(response.organizations));
+    this.storage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
+    this.storage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
+    this.storage.setItem(USER_KEY, JSON.stringify(response.user));
+    this.storage.setItem(ORGANIZATIONS_KEY, JSON.stringify(response.organizations));
 
     this._user.set(response.user);
     this._organizations.set(response.organizations);
@@ -164,10 +205,17 @@ export class AuthService {
   }
 
   private clearAuth(): void {
+    // Limpa ambos storages para garantir logout completo
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(ORGANIZATIONS_KEY);
+    localStorage.removeItem(REMEMBER_ME_KEY);
+
+    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+    sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+    sessionStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem(ORGANIZATIONS_KEY);
 
     this._user.set(null);
     this._organizations.set([]);
@@ -175,11 +223,13 @@ export class AuthService {
   }
 
   private hasValidToken(): boolean {
-    return !!localStorage.getItem(ACCESS_TOKEN_KEY);
+    // Verifica em ambos storages
+    return !!(localStorage.getItem(ACCESS_TOKEN_KEY) || sessionStorage.getItem(ACCESS_TOKEN_KEY));
   }
 
   private loadUser(): UserOutput | null {
-    const userStr = localStorage.getItem(USER_KEY);
+    // Verifica em ambos storages
+    const userStr = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY);
     if (userStr) {
       try {
         return JSON.parse(userStr);
@@ -191,7 +241,8 @@ export class AuthService {
   }
 
   private loadOrganizations(): MembershipOutput[] {
-    const orgsStr = localStorage.getItem(ORGANIZATIONS_KEY);
+    // Verifica em ambos storages
+    const orgsStr = localStorage.getItem(ORGANIZATIONS_KEY) || sessionStorage.getItem(ORGANIZATIONS_KEY);
     if (orgsStr) {
       try {
         return JSON.parse(orgsStr);

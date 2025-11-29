@@ -29,6 +29,7 @@ public class JwtConfig {
 
     private AccessToken accessToken = new AccessToken();
     private RefreshToken refreshToken = new RefreshToken();
+    private MagicLink magicLink = new MagicLink();
 
     @Getter
     @Setter
@@ -40,6 +41,15 @@ public class JwtConfig {
     @Setter
     public static class RefreshToken {
         private int expirationDays = 30;
+    }
+
+    @Getter
+    @Setter
+    public static class MagicLink {
+        /**
+         * Tempo de expiracao do magic link em minutos.
+         */
+        private long expirationMinutes = 15;
     }
 
     /**

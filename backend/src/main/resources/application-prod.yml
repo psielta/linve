@@ -1,0 +1,13 @@
+security:
+  jwt:
+    # Em producao, configure via variavel de ambiente JWT_SECRET
+    access-token:
+      expiration-ms: 900000
+    refresh-token:
+      expiration-days: 30
+
+mailgun:
+  domain: ${MAILGUN_DOMAIN:seu-dominio.mailgun.org}
+  api-key: ${MAILGUN_API_KEY:changeme}
+  from: ${MAILGUN_FROM:no-reply@seu-dominio.com}
+

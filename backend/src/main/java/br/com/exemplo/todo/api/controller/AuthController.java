@@ -91,4 +91,35 @@ public class AuthController {
         }
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(summary = "Solicitar magic link de login",
+            description = "Envia um link de login por email. Nao revela se o email existe ou nao.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Magic link enviado (se email existir)")
+    })
+    @PostMapping(value = "/magic-link", produces = "application/json")
+    public ResponseEntity<Void> solicitarMagicLink(
+            @Valid @RequestBody MagicLinkLoginInput input,
+            HttpServletRequest request) {
+
+        authService.enviarMagicLink(input.email(), request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Login via magic link",
+            description = "Confirma o magic link enviado por email e retorna tokens JWT.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Login realizado com sucesso",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Magic link invalido ou expirado",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)))
+    })
+    @PostMapping(value = "/magic-link/confirm", produces = "application/json")
+    public ResponseEntity<AuthResponse> confirmarMagicLink(
+            @Valid @RequestBody MagicLinkConfirmInput input,
+            HttpServletRequest request) {
+
+        AuthResponse response = authService.loginViaMagicLink(input.token(), request);
+        return ResponseEntity.ok(response);
+    }
 }

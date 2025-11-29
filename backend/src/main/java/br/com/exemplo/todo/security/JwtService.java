@@ -52,6 +52,27 @@ public class JwtService {
     }
 
     /**
+     * Gera token JWT para magic link de login.
+     */
+    public String generateMagicLoginToken(User user) {
+        Instant now = Instant.now();
+        Instant expiration = now.plusSeconds(jwtConfig.getMagicLink().getExpirationMinutes() * 60);
+
+        return Jwts.builder()
+                .header()
+                    .type("JWT")
+                    .and()
+                .subject(user.getId().toString())
+                .issuer("todo-api-magic-link")
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiration))
+                .claim("email", user.getEmail())
+                .claim("tipo", "MAGIC_LOGIN")
+                .signWith(jwtConfig.getSecretKey(), Jwts.SIG.HS256)
+                .compact();
+    }
+
+    /**
      * Gera refresh token (string opaca aleatoria).
      */
     public String generateRefreshToken() {
@@ -91,6 +112,32 @@ public class JwtService {
             throw e;
         } catch (JwtException e) {
             log.warn("Token JWT invalido: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Valida e extrai claims de um magic link.
+     */
+    public Optional<Claims> validateMagicLoginToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(jwtConfig.getSecretKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            String tipo = claims.get("tipo", String.class);
+            if (!"MAGIC_LOGIN".equals(tipo)) {
+                log.warn("Token JWT nao e de magic login");
+                return Optional.empty();
+            }
+            return Optional.of(claims);
+        } catch (ExpiredJwtException e) {
+            log.debug("Magic link expirado: {}", e.getMessage());
+            return Optional.empty();
+        } catch (JwtException e) {
+            log.warn("Magic link invalido: {}", e.getMessage());
             return Optional.empty();
         }
     }

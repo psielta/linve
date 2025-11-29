@@ -39,6 +39,17 @@ spring:
       fail-on-unknown-properties: false
     property-naming-strategy: LOWER_CAMEL_CASE
     default-property-inclusion: NON_NULL
+  mail:
+    host: localhost
+    port: 1025
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
 
 logging:
   level:
@@ -114,3 +125,7 @@ security:
     allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
     allowed-headers: Authorization,Content-Type,X-Organization-Id
     max-age: 3600
+
+auth:
+  magic-link:
+    base-url: http://localhost:4200/auth/magic-link

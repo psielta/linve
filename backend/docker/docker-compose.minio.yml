@@ -20,6 +20,15 @@ services:
       timeout: 10s
       retries: 5
 
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: linve-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # UI Web
+
+
 volumes:
   minio-data:
     driver: local

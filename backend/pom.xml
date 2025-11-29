@@ -139,6 +139,16 @@
 			<artifactId>minio</artifactId>
 			<version>${minio.version}</version>
 		</dependency>
+		<!-- Email / SMTP -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+		<!-- WebClient (Mailgun HTTP API) -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webflux</artifactId>
+		</dependency>
 	</dependencies>
 	<build>
 		<finalName>${project.name}</finalName>

@@ -2,6 +2,7 @@ package br.com.exemplo.todo.domain.service;
 
 import br.com.exemplo.todo.api.dto.auth.*;
 import br.com.exemplo.todo.config.JwtConfig;
+import br.com.exemplo.todo.config.AuthProperties;
 import br.com.exemplo.todo.domain.exception.AccountLockedException;
 import br.com.exemplo.todo.domain.exception.EmailAlreadyExistsException;
 import br.com.exemplo.todo.domain.exception.InvalidCredentialsException;
@@ -10,6 +11,7 @@ import br.com.exemplo.todo.domain.model.entity.*;
 import br.com.exemplo.todo.domain.model.enums.MembershipRole;
 import br.com.exemplo.todo.domain.repository.*;
 import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
+import br.com.exemplo.todo.infrastructure.email.EmailTemplateService;
 import br.com.exemplo.todo.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -37,6 +41,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final JwtConfig jwtConfig;
+    private final EmailService emailService;
+    private final EmailTemplateService emailTemplateService;
+    private final AuthProperties authProperties;
 
     @Transactional
     public AuthResponse register(RegisterInput input, HttpServletRequest request) {
@@ -192,6 +199,35 @@ public class AuthService {
         return generateAuthResponse(user, request, storedToken.getFamiliaId(), senhaExpirada);
     }
 
+    /**
+     * Envia um magic link de login para o email informado.
+     * Nao revela se o email existe ou nao no sistema.
+     */
+    @Transactional
+    public void enviarMagicLink(String email, HttpServletRequest request) {
+        if (!StringUtils.hasText(email)) {
+            return;
+        }
+
+        userRepository.findByEmail(email).ifPresent(user -> {
+            String token = jwtService.generateMagicLoginToken(user);
+
+            String baseUrl = authProperties.getBaseUrl();
+            String magicUrl = baseUrl + "?token=" + java.net.URLEncoder.encode(token, java.nio.charset.StandardCharsets.UTF_8);
+
+            // Prepara variaveis do template
+            Map<String, String> variables = new HashMap<>();
+            variables.put("userName", user.getNome());
+            variables.put("magicLink", magicUrl);
+            variables.put("expirationMinutes", String.valueOf(jwtConfig.getMagicLink().getExpirationMinutes()));
+
+            String html = emailTemplateService.processTemplate("magic-link.html", variables);
+
+            emailService.send(user.getEmail(), "Seu link de acesso - Linve", html);
+            log.info("Magic link enviado para {}", user.getEmail());
+        });
+    }
+
     @Transactional
     public void logout(String refreshToken) {
         if (!StringUtils.hasText(refreshToken)) {
@@ -205,6 +241,48 @@ public class AuthService {
                     revokeTokenFamily(token.getFamiliaId());
                     log.debug("Logout realizado: userId={}", token.getUser().getId());
                 });
+    }
+
+    /**
+     * Realiza login usando um magic link enviado por e-mail.
+     */
+    @Transactional
+    public AuthResponse loginViaMagicLink(String token, HttpServletRequest request) {
+        var claimsOpt = jwtService.validateMagicLoginToken(token);
+        if (claimsOpt.isEmpty()) {
+            throw new InvalidCredentialsException("Magic link invalido ou expirado");
+        }
+
+        var claims = claimsOpt.get();
+        Long userId = jwtService.extractUserId(claims);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new InvalidCredentialsException("Usuario nao encontrado para magic link"));
+
+        Account account = accountRepository.findByUserIdAndProvider(user.getId(), "local").orElse(null);
+
+        // Verifica bloqueio
+        if (account != null && Boolean.TRUE.equals(account.getBloqueado())) {
+            log.warn("Tentativa de login via magic link em conta bloqueada: userId={}", user.getId());
+            throw new AccountLockedException();
+        }
+
+        // Verifica se usuario esta ativo
+        if (!Boolean.TRUE.equals(user.getAtivo())) {
+            log.warn("Tentativa de login via magic link em conta inativa: userId={}", user.getId());
+            throw new InvalidCredentialsException("Usuario inativo");
+        }
+
+        // Registra tentativa de sucesso
+        registrarTentativaLogin(user, true, extractIpAddress(request), extractDeviceInfo(request), "MAGIC_LINK");
+
+        // Atualiza ultimo acesso
+        user.setUltimoAcesso(LocalDateTime.now());
+        userRepository.save(user);
+
+        boolean senhaExpirada = account != null && Boolean.TRUE.equals(account.getSenhaExpirada());
+
+        return generateAuthResponse(user, request, senhaExpirada);
     }
 
     private AuthResponse generateAuthResponse(User user, HttpServletRequest request) {

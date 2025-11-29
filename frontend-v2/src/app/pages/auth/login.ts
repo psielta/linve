@@ -8,6 +8,7 @@ import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
 import { MessageModule } from 'primeng/message';
 import { FluidModule } from 'primeng/fluid';
+import { DividerModule } from 'primeng/divider';
 import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -24,6 +25,7 @@ import { AuthService } from '../../core/services/auth.service';
         RippleModule,
         MessageModule,
         FluidModule,
+        DividerModule,
         AppFloatingConfigurator
     ],
     template: `
@@ -47,31 +49,63 @@ import { AuthService } from '../../core/services/auth.service';
                             <p-message severity="error" [text]="errorMessage()" styleClass="w-full mb-6" />
                         }
 
+                        @if (magicLinkSent()) {
+                            <p-message severity="success" text="Link de acesso enviado! Verifique seu email." styleClass="w-full mb-6" />
+                        }
+
                         <p-fluid>
-                            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
-                                <div class="flex flex-col gap-2">
-                                    <label for="email" class="text-surface-900 dark:text-surface-0 font-medium">Email</label>
-                                    <input pInputText id="email" type="email" placeholder="Digite seu email" formControlName="email" />
-                                    @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
-                                        <small class="text-red-500">Email é obrigatório</small>
-                                    }
-                                </div>
+                            @if (!showMagicLinkForm()) {
+                                <!-- Formulário de login com senha -->
+                                <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+                                    <div class="flex flex-col gap-2">
+                                        <label for="email" class="text-surface-900 dark:text-surface-0 font-medium">Email</label>
+                                        <input pInputText id="email" type="email" placeholder="Digite seu email" formControlName="email" />
+                                        @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+                                            <small class="text-red-500">Email é obrigatório</small>
+                                        }
+                                    </div>
 
-                                <div class="flex flex-col gap-2">
-                                    <label for="password" class="text-surface-900 dark:text-surface-0 font-medium">Senha</label>
-                                    <p-password id="password" formControlName="senha" placeholder="Digite sua senha" [toggleMask]="true" [feedback]="false" />
-                                    @if (loginForm.get('senha')?.invalid && loginForm.get('senha')?.touched) {
-                                        <small class="text-red-500">Senha é obrigatória</small>
-                                    }
-                                </div>
+                                    <div class="flex flex-col gap-2">
+                                        <label for="password" class="text-surface-900 dark:text-surface-0 font-medium">Senha</label>
+                                        <p-password id="password" formControlName="senha" placeholder="Digite sua senha" [toggleMask]="true" [feedback]="false" />
+                                        @if (loginForm.get('senha')?.invalid && loginForm.get('senha')?.touched) {
+                                            <small class="text-red-500">Senha é obrigatória</small>
+                                        }
+                                    </div>
 
-                                <div class="flex items-center gap-2">
-                                    <p-checkbox formControlName="rememberMe" id="rememberme" binary />
-                                    <label for="rememberme">Lembrar de mim</label>
-                                </div>
+                                    <div class="flex items-center gap-2">
+                                        <p-checkbox formControlName="rememberMe" id="rememberme" binary />
+                                        <label for="rememberme">Lembrar de mim</label>
+                                    </div>
 
-                                <p-button type="submit" label="Entrar" [loading]="loading()" [disabled]="loginForm.invalid || loading()" />
-                            </form>
+                                    <p-button type="submit" label="Entrar" [loading]="loading()" [disabled]="loginForm.invalid || loading()" />
+                                </form>
+
+                                <p-divider align="center">
+                                    <span class="text-muted-color text-sm">ou</span>
+                                </p-divider>
+
+                                <p-button label="Entrar com Magic Link" icon="pi pi-envelope" [outlined]="true" styleClass="w-full" (onClick)="toggleMagicLinkForm()" />
+                            } @else {
+                                <!-- Formulário de Magic Link -->
+                                <form [formGroup]="magicLinkForm" (ngSubmit)="onRequestMagicLink()" class="flex flex-col gap-4">
+                                    <div class="flex flex-col gap-2">
+                                        <label for="magicEmail" class="text-surface-900 dark:text-surface-0 font-medium">Email</label>
+                                        <input pInputText id="magicEmail" type="email" placeholder="Digite seu email" formControlName="email" />
+                                        @if (magicLinkForm.get('email')?.invalid && magicLinkForm.get('email')?.touched) {
+                                            <small class="text-red-500">Email é obrigatório</small>
+                                        }
+                                    </div>
+
+                                    <p-button type="submit" label="Enviar Link de Acesso" icon="pi pi-send" [loading]="magicLinkLoading()" [disabled]="magicLinkForm.invalid || magicLinkLoading()" />
+                                </form>
+
+                                <div class="mt-4 text-center">
+                                    <a (click)="toggleMagicLinkForm()" class="text-primary font-medium cursor-pointer">
+                                        <i class="pi pi-arrow-left mr-2"></i>Voltar ao login com senha
+                                    </a>
+                                </div>
+                            }
                         </p-fluid>
 
                         <div class="mt-6 text-center">
@@ -87,8 +121,14 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class Login {
     loginForm: FormGroup;
+    magicLinkForm: FormGroup;
     loading = signal(false);
     errorMessage = signal('');
+
+    // Magic Link states
+    showMagicLinkForm = signal(false);
+    magicLinkSent = signal(false);
+    magicLinkLoading = signal(false);
 
     constructor(
         private fb: FormBuilder,
@@ -99,6 +139,10 @@ export class Login {
             email: ['', [Validators.required, Validators.email]],
             senha: ['', [Validators.required]],
             rememberMe: [false]
+        });
+
+        this.magicLinkForm = this.fb.group({
+            email: ['', [Validators.required, Validators.email]]
         });
     }
 
@@ -111,9 +155,9 @@ export class Login {
         this.loading.set(true);
         this.errorMessage.set('');
 
-        const { email, senha } = this.loginForm.value;
+        const { email, senha, rememberMe } = this.loginForm.value;
 
-        this.authService.login({ email, senha }).subscribe({
+        this.authService.login({ email, senha }, rememberMe).subscribe({
             next: () => {
                 this.loading.set(false);
                 this.router.navigate(['/app']);
@@ -127,6 +171,37 @@ export class Login {
                 } else {
                     this.errorMessage.set('Erro ao fazer login. Tente novamente.');
                 }
+            }
+        });
+    }
+
+    toggleMagicLinkForm(): void {
+        this.showMagicLinkForm.update(v => !v);
+        this.errorMessage.set('');
+        this.magicLinkSent.set(false);
+    }
+
+    onRequestMagicLink(): void {
+        if (this.magicLinkForm.invalid) {
+            this.magicLinkForm.markAllAsTouched();
+            return;
+        }
+
+        this.magicLinkLoading.set(true);
+        this.errorMessage.set('');
+        this.magicLinkSent.set(false);
+
+        const { email } = this.magicLinkForm.value;
+
+        this.authService.requestMagicLink(email).subscribe({
+            next: () => {
+                this.magicLinkLoading.set(false);
+                this.magicLinkSent.set(true);
+            },
+            error: () => {
+                this.magicLinkLoading.set(false);
+                // Por segurança, sempre mostra sucesso mesmo se email não existe
+                this.magicLinkSent.set(true);
             }
         });
     }
