@@ -32,17 +32,16 @@ Fornecer uma plataforma completa para estabelecimentos de delivery que desejam:
 | ModelMapper | 3.2.5 | Mapeamento entre objetos |
 | BCrypt | - | Hash seguro de senhas |
 
-### Frontend (Angular)
+### Frontend (Angular + Sakai PrimeNG Template)
 
 | Tecnologia | Versão | Propósito |
 |------------|--------|-----------|
 | Angular | 20 | Framework frontend |
-| TypeScript | 5.9 | Linguagem de programação |
-| Bootstrap | 5.3 | Framework CSS responsivo |
-| PrimeNG | 20 | Componentes UI avançados |
-| ngx-bootstrap | 20 | Componentes Bootstrap para Angular |
-| SweetAlert2 | 11 | Modais e alertas elegantes |
-| ng-openapi-gen | 1.0.5 | Geração de clientes TypeScript |
+| TypeScript | 5.8 | Linguagem de programação |
+| PrimeNG | 19 | Componentes UI avançados |
+| PrimeFlex | 4 | Utility-first CSS |
+| Sakai Template | - | Template admin PrimeNG oficial |
+| Tailwind CSS | 4 | Framework CSS utility-first |
 | RxJS | 7.8 | Programação reativa |
 
 ## Estrutura do Projeto
@@ -63,25 +62,24 @@ linve/
 │   ├── flyway/sql/                  # Migrations do banco
 │   └── pom.xml                      # Dependências Maven
 │
-├── frontend/                        # SPA Angular
+├── frontend-v2/                     # SPA Angular (Sakai PrimeNG Template)
 │   ├── src/app/
 │   │   ├── core/                    # Serviços singleton, guards, interceptors
-│   │   │   ├── api/                 # Clientes gerados (ng-openapi-gen)
-│   │   │   ├── guards/              # Guards de rota (auth, guest)
-│   │   │   ├── interceptors/        # Interceptors HTTP (JWT)
-│   │   │   ├── models/              # Interfaces (MenuItem, Notification)
-│   │   │   └── services/            # Serviços (auth, todo, theme)
-│   │   ├── layouts/                 # Layouts da aplicação
-│   │   │   └── admin-layout/        # Admin Dashboard Metronic-style
-│   │   │       ├── config/          # Configuração do menu
-│   │   │       ├── services/        # Sidebar, Menu, Breadcrumb
-│   │   │       └── components/      # Sidebar, Header, Breadcrumb
-│   │   ├── features/                # Módulos de funcionalidades
+│   │   │   ├── guards/              # Guards de rota (auth, guest, admin)
+│   │   │   ├── interceptors/        # Interceptors HTTP (JWT, tenant)
+│   │   │   ├── models/              # Interfaces TypeScript
+│   │   │   └── services/            # Serviços (auth, tenant, organization)
+│   │   ├── layout/                  # Layout Sakai (sidebar, topbar, footer)
+│   │   │   ├── component/           # AppTopbar, AppSidebar, AppMenu
+│   │   │   └── service/             # LayoutService (tema, sidebar state)
+│   │   ├── pages/                   # Páginas principais
 │   │   │   ├── auth/                # Login e registro
+│   │   │   ├── account/             # Página "Minha Conta"
+│   │   │   └── notfound/            # Página 404
+│   │   ├── features/                # Módulos de funcionalidades
 │   │   │   ├── dashboard/           # Dashboard com stats cards
 │   │   │   └── todos/               # CRUD de tarefas
 │   │   └── environments/            # Configurações por ambiente
-│   ├── ng-openapi-gen.json          # Config do gerador de clientes
 │   └── package.json                 # Dependências npm
 │
 └── README.md                        # Este arquivo
@@ -109,17 +107,21 @@ linve/
 
 ### Frontend
 
+- **Sakai PrimeNG Template** - Template admin oficial da PrimeTek
 - **Standalone Components** (Angular 20)
-- **Signals** para gerenciamento de estado
-- **Sistema de Temas** (Light/Dark/System)
-- **Geração automática de clientes** via ng-openapi-gen
+- **Signals** para gerenciamento de estado reativo
+- **Sistema de Temas** (Light/Dark com color presets)
 - **Interceptors** para JWT e refresh automático
-- **Admin Dashboard** completo estilo Metronic:
+- **Multi-Tenancy** no frontend:
+  - Seletor de organização no header
+  - Troca de contexto reativa (signals/effects)
+  - Dados recarregados automaticamente ao trocar org
+- **Admin Dashboard** baseado no Sakai:
   - Sidebar colapsável com menus hierárquicos
-  - Header modular (busca, notificações, org switcher, user menu)
-  - Breadcrumbs automáticos
+  - Header com theme toggle, color picker e user menu
+  - Página "Minha Conta" com gestão de organizações
   - Dashboard com stats cards
-  - Filtro de menu por roles
+  - CRUD completo com tabelas PrimeNG
 
 ## Configuração do Ambiente
 
@@ -153,21 +155,12 @@ O backend estará disponível em:
 ### Passo 3: Executar o Frontend
 
 ```bash
-cd frontend
+cd frontend-v2
 npm install
 npm start
 ```
 
 O frontend estará disponível em http://localhost:4200
-
-### Passo 4: Gerar Clientes TypeScript (opcional)
-
-Com o backend rodando:
-
-```bash
-cd frontend
-npm run generate-api
-```
 
 ## Testando o Sistema
 
@@ -219,13 +212,14 @@ Após o primeiro registro, você terá acesso ao sistema. Alternativamente:
   - [x] OpenAPI otimizado para geração de clientes TypeScript
   - [x] Tratamento global de exceções (ProblemDetail RFC 7807)
 
-- [ ] **Frontend Angular**
-  - [ ] Standalone components
-  - [ ] Sistema de temas (Light/Dark/System)
-  - [ ] Geração automática de clientes TypeScript via ng-openapi-gen
-  - [ ] Guards e interceptors (auth, JWT refresh)
-  - [ ] Formulários reativos com validação
-  - [ ] CRUD de tarefas (Todo) - tela de exemplo/validação
+- [x] **Frontend Angular** (Sakai PrimeNG Template)
+  - [x] Standalone components com Angular 20
+  - [x] Guards e interceptors (auth, JWT refresh, tenant)
+  - [x] Tela de Login / Registro
+  - [x] Variação de organização (Header X-Organization-Id + seletor)
+  - [x] Página "Minha Conta" com gestão de organizações
+  - [x] CRUD de tarefas (Todo) - tela de exemplo/validação
+  - [x] Sistema de temas (Light/Dark/Color presets)
 
 ### Fase 2: Admin Dashboard
 
@@ -316,11 +310,13 @@ Após o primeiro registro, você terá acesso ao sistema. Alternativamente:
 
 ### Frontend
 
-- **Standalone Components**: Sem NgModules
-- **Signals**: Estado reativo sem RxJS onde possível
+- **Sakai Template**: Template admin oficial da PrimeTek para Angular
+- **Standalone Components**: Sem NgModules, imports declarativos
+- **Signals + Effects**: Estado reativo com Angular Signals
 - **Functional Guards**: Abordagem moderna do Angular
 - **Control Flow**: Novo syntax `@if`, `@for`, `@switch`
-- **Type Safety**: Tipos gerados automaticamente do OpenAPI
+- **Layout Responsivo**: Sidebar colapsável, adaptável para mobile
+- **Temas Dinâmicos**: Light/Dark mode com color presets persistidos
 
 ### Multi-Tenancy
 

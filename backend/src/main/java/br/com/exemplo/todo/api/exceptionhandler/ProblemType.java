@@ -7,6 +7,7 @@ import br.com.exemplo.todo.domain.exception.EmailAlreadyExistsException;
 import br.com.exemplo.todo.domain.exception.InvalidCredentialsException;
 import br.com.exemplo.todo.domain.exception.InvalidRefreshTokenException;
 import br.com.exemplo.todo.domain.exception.OrganizationAccessDeniedException;
+import br.com.exemplo.todo.domain.exception.OrganizationNotFoundException;
 import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
 import br.com.exemplo.todo.domain.exception.UserNotFoundException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
@@ -39,6 +40,9 @@ public enum ProblemType {
 
     ACESSO_NEGADO_ORGANIZACAO(OrganizationAccessDeniedException.class,
             "Acesso negado a organizacao", "acesso-negado-organizacao"),
+
+    ORGANIZACAO_NAO_ENCONTRADA(OrganizationNotFoundException.class,
+            "Organizacao nao encontrada", "organizacao-nao-encontrada"),
 
     USUARIO_NAO_ENCONTRADO(UserNotFoundException.class,
             "Usuario nao encontrado", "usuario-nao-encontrado"),
