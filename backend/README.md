@@ -3279,6 +3279,81 @@ public class CorsConfig {
         };
     }
 }
+
+
+## Armazenamento de Arquivos (MinIO)
+
+O backend inclui um serviço genérico de mídia para armazenar imagens, PDFs, planilhas ou qualquer arquivo binário usando MinIO (S3 compatível).
+
+### Subir o MinIO em Docker
+
+```bash
+cd backend
+docker compose -f docker/docker-compose.minio.yml up -d
+```
+
+Serviços:
+- API S3: http://localhost:9000
+- Console web: http://localhost:9001 (login: MINIO_ROOT_USER / MINIO_ROOT_PASSWORD)
+
+Variáveis padrão (sobreponha conforme ambiente):
+- MINIO_ENDPOINT=http://localhost:9000
+- MINIO_ACCESS_KEY=linve
+- MINIO_SECRET_KEY=linve123456
+- MINIO_BUCKET=linve-media
+
+### Configuração no Spring
+
+`application.yml` já contém:
+
+```yaml
+storage:
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:linve}
+    secret-key: ${MINIO_SECRET_KEY:linve123456}
+    bucket: ${MINIO_BUCKET:linve-media}
+    secure: false
+spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+```
+
+### Endpoints de mídia
+
+- POST /api/media (multipart/form-data)
+  - params: ownerType (ORGANIZATION|USER|PRODUCT|OTHER), ownerId (opcional)
+  - part: file (arquivo)
+- GET /api/media/{id} – download/stream
+- DELETE /api/media/{id} – remove arquivo e metadados
+
+Isolamento multi-tenant: somente arquivos do `X-Organization-Id` atual são acessíveis.
+
+### Exemplo de upload via curl
+
+```bash
+curl -X POST "http://localhost:8080/api/media?ownerType=ORGANIZATION&ownerId=1" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "X-Organization-Id: 1" \
+  -F "file=@./logo.png"
+```
+
+Resposta:
+
+```json
+{
+  "id": "UUID",
+  "filename": "logo.png",
+  "contentType": "image/png",
+  "size": 12345,
+  "ownerType": "ORGANIZATION",
+  "ownerId": 1,
+  "url": "/api/media/UUID",
+  "createdAt": "2025-11-29T12:34:56"
+}
+```
 ```
 
 

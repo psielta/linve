@@ -8,6 +8,8 @@ import br.com.exemplo.todo.domain.exception.InvalidCredentialsException;
 import br.com.exemplo.todo.domain.exception.InvalidRefreshTokenException;
 import br.com.exemplo.todo.domain.exception.OrganizationAccessDeniedException;
 import br.com.exemplo.todo.domain.exception.OrganizationNotFoundException;
+import br.com.exemplo.todo.domain.exception.StoredFileNotFoundException;
+import br.com.exemplo.todo.domain.exception.StorageException;
 import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
 import br.com.exemplo.todo.domain.exception.UserNotFoundException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
@@ -46,6 +48,12 @@ public enum ProblemType {
 
     USUARIO_NAO_ENCONTRADO(UserNotFoundException.class,
             "Usuario nao encontrado", "usuario-nao-encontrado"),
+
+    ARQUIVO_NAO_ENCONTRADO(StoredFileNotFoundException.class,
+            "Arquivo nao encontrado", "arquivo-nao-encontrado"),
+
+    ERRO_ARMAZENAMENTO(StorageException.class,
+            "Erro ao acessar o armazenamento de arquivos", "erro-armazenamento"),
 
     NAO_PODE_MODIFICAR_OWNER(CannotModifyOwnerException.class,
             "Nao e permitido modificar o proprietario", "nao-pode-modificar-owner"),

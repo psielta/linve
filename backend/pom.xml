@@ -21,6 +21,7 @@
 		<openapi.version>2.8.9</openapi.version>
 		<modelmapper.version>3.2.5</modelmapper.version>
 		<jjwt.version>0.12.6</jjwt.version>
+		<minio.version>8.5.7</minio.version>
 	</properties>
 	<dependencies>
 		<!-- Spring Boot Core -->
@@ -131,6 +132,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
+		</dependency>
+		<!-- Object Storage (S3-compatible) -->
+		<dependency>
+			<groupId>io.minio</groupId>
+			<artifactId>minio</artifactId>
+			<version>${minio.version}</version>
 		</dependency>
 	</dependencies>
 	<build>

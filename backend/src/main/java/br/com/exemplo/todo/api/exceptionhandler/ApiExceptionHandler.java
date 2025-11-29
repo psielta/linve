@@ -8,6 +8,8 @@ import br.com.exemplo.todo.domain.exception.EmailAlreadyExistsException;
 import br.com.exemplo.todo.domain.exception.InvalidCredentialsException;
 import br.com.exemplo.todo.domain.exception.InvalidRefreshTokenException;
 import br.com.exemplo.todo.domain.exception.OrganizationAccessDeniedException;
+import br.com.exemplo.todo.domain.exception.StoredFileNotFoundException;
+import br.com.exemplo.todo.domain.exception.StorageException;
 import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
 import br.com.exemplo.todo.domain.exception.UserNotFoundException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
@@ -178,6 +180,25 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             PasswordExpiredException ex, WebRequest request) {
 
         HttpStatus status = HttpStatus.FORBIDDEN;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(StoredFileNotFoundException.class)
+    public ResponseEntity<Object> handleStoredFileNotFoundException(
+            StoredFileNotFoundException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(StorageException.class)
+    public ResponseEntity<Object> handleStorageException(StorageException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.BAD_GATEWAY;
         ProblemDetail problemDetail = createProblem(ex, status);
 
         return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);

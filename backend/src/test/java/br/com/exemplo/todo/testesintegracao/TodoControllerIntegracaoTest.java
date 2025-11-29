@@ -113,7 +113,7 @@ class TodoControllerIntegracaoTest {
         @DisplayName("deve retornar lista vazia quando não há tarefas")
         void deveRetornarListaVazia() {
             ResponseEntity<TodoOutput[]> response = restTemplate.exchange(
-                    "/todos",
+                    "/api/todos",
                     HttpMethod.GET,
                     new HttpEntity<>(authHeaders),
                     TodoOutput[].class);
@@ -129,7 +129,7 @@ class TodoControllerIntegracaoTest {
             criarTodoNoBanco("Tarefa 2", "Descrição 2");
 
             ResponseEntity<TodoOutput[]> response = restTemplate.exchange(
-                    "/todos",
+                    "/api/todos",
                     HttpMethod.GET,
                     new HttpEntity<>(authHeaders),
                     TodoOutput[].class);
@@ -145,7 +145,7 @@ class TodoControllerIntegracaoTest {
             criarTodoNoBanco("Concluída", "Desc", true);
 
             ResponseEntity<TodoOutput[]> response = restTemplate.exchange(
-                    "/todos?concluido=false",
+                    "/api/todos?concluido=false",
                     HttpMethod.GET,
                     new HttpEntity<>(authHeaders),
                     TodoOutput[].class);
@@ -166,7 +166,7 @@ class TodoControllerIntegracaoTest {
             Todo todo = criarTodoNoBanco("Minha Tarefa", "Descrição");
 
             ResponseEntity<TodoOutput> response = restTemplate.exchange(
-                    "/todos/" + todo.getId(),
+                    "/api/todos/" + todo.getId(),
                     HttpMethod.GET,
                     new HttpEntity<>(authHeaders),
                     TodoOutput.class);
@@ -180,14 +180,14 @@ class TodoControllerIntegracaoTest {
         @DisplayName("deve retornar 404 quando ID não existe")
         void deveRetornar404QuandoNaoExiste() {
             ResponseEntity<ProblemDetail> response = restTemplate.exchange(
-                    "/todos/999",
+                    "/api/todos/999",
                     HttpMethod.GET,
                     new HttpEntity<>(authHeaders),
                     ProblemDetail.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getTitle()).isEqualTo("Tarefa não encontrada");
+            assertThat(response.getBody().getTitle()).isEqualTo("Tarefa nao encontrada");
         }
     }
 
@@ -204,7 +204,7 @@ class TodoControllerIntegracaoTest {
 
             HttpEntity<TodoInput> request = new HttpEntity<>(input, authHeaders);
             ResponseEntity<TodoOutput> response = restTemplate.postForEntity(
-                    "/todos", request, TodoOutput.class);
+                    "/api/todos", request, TodoOutput.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(response.getBody()).isNotNull();
@@ -222,11 +222,11 @@ class TodoControllerIntegracaoTest {
 
             HttpEntity<TodoInput> request = new HttpEntity<>(input, authHeaders);
             ResponseEntity<ProblemDetail> response = restTemplate.postForEntity(
-                    "/todos", request, ProblemDetail.class);
+                    "/api/todos", request, ProblemDetail.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getTitle()).isEqualTo("Campos inválidos.");
+            assertThat(response.getBody().getTitle()).isEqualTo("Campos invalidos.");
         }
     }
 
@@ -244,7 +244,7 @@ class TodoControllerIntegracaoTest {
             input.setDescricao("Descrição Atualizada");
 
             ResponseEntity<TodoOutput> response = restTemplate.exchange(
-                    "/todos/" + todo.getId(),
+                    "/api/todos/" + todo.getId(),
                     HttpMethod.PUT,
                     new HttpEntity<>(input, authHeaders),
                     TodoOutput.class);
@@ -265,7 +265,7 @@ class TodoControllerIntegracaoTest {
             Todo todo = criarTodoNoBanco("Para Excluir", "Descrição");
 
             ResponseEntity<Void> response = restTemplate.exchange(
-                    "/todos/" + todo.getId(),
+                    "/api/todos/" + todo.getId(),
                     HttpMethod.DELETE,
                     new HttpEntity<>(authHeaders),
                     Void.class);
@@ -285,7 +285,7 @@ class TodoControllerIntegracaoTest {
             Todo todo = criarTodoNoBanco("Tarefa Pendente", "Descrição");
 
             ResponseEntity<TodoOutput> response = restTemplate.exchange(
-                    "/todos/" + todo.getId() + "/concluir",
+                    "/api/todos/" + todo.getId() + "/concluir",
                     HttpMethod.PATCH,
                     new HttpEntity<>(authHeaders),
                     TodoOutput.class);
@@ -307,7 +307,7 @@ class TodoControllerIntegracaoTest {
             Todo todo = criarTodoNoBanco("Tarefa Concluída", "Descrição", true);
 
             ResponseEntity<TodoOutput> response = restTemplate.exchange(
-                    "/todos/" + todo.getId() + "/reabrir",
+                    "/api/todos/" + todo.getId() + "/reabrir",
                     HttpMethod.PATCH,
                     new HttpEntity<>(authHeaders),
                     TodoOutput.class);

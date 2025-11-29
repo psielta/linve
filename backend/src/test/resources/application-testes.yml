@@ -6,7 +6,7 @@ spring:
     virtual:
       enabled: true
   datasource:
-    url: jdbc:sqlite:file:./todo/db/todo-test.db?date_class=TEXT&date_string_format=yyyy-MM-dd HH:mm:ss
+    url: jdbc:sqlite::memory:?date_class=TEXT&date_string_format=yyyy-MM-dd HH:mm:ss
     username: sa
     password:
     driverClassName: org.sqlite.JDBC
@@ -21,9 +21,12 @@ spring:
       hibernate:
         "[format_sql]": false
 
-server:
-  servlet:
-    context-path: /api
+# Removido context-path pois controllers ja usam /api/...
+
+# Desabilita MinIO nos testes
+storage:
+  minio:
+    enabled: false
 
 logging:
   level:
