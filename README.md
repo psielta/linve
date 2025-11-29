@@ -195,6 +195,16 @@ Após o primeiro registro, você terá acesso ao sistema. Alternativamente:
 | DELETE | /api/todos/{id} | Excluir tarefa |
 | PATCH | /api/todos/{id}/concluir | Marcar como concluída |
 | PATCH | /api/todos/{id}/reabrir | Reabrir tarefa |
+| GET | /api/admin/users | Listar usuários da organização |
+| POST | /api/admin/users | Criar novo usuário |
+| GET | /api/admin/users/{id} | Buscar usuário por ID |
+| PUT | /api/admin/users/{id} | Atualizar usuário |
+| PATCH | /api/admin/users/{id}/ativar | Ativar usuário |
+| PATCH | /api/admin/users/{id}/desativar | Desativar usuário |
+| PATCH | /api/admin/users/{id}/role | Alterar papel do usuário |
+| POST | /api/admin/users/{id}/reset-password | Resetar senha |
+| POST | /api/admin/users/{id}/unlock | Desbloquear conta |
+| GET | /api/admin/users/{id}/login-history | Histórico de login |
 
 ## Roadmap
 
@@ -209,41 +219,24 @@ Após o primeiro registro, você terá acesso ao sistema. Alternativamente:
   - [x] OpenAPI otimizado para geração de clientes TypeScript
   - [x] Tratamento global de exceções (ProblemDetail RFC 7807)
 
-- [x] **Frontend Angular**
-  - [x] Standalone components
-  - [x] Sistema de temas (Light/Dark/System)
-  - [x] Geração automática de clientes TypeScript via ng-openapi-gen
-  - [x] Guards e interceptors (auth, JWT refresh)
-  - [x] Formulários reativos com validação
-  - [x] CRUD de tarefas (Todo) - tela de exemplo/validação
+- [ ] **Frontend Angular**
+  - [ ] Standalone components
+  - [ ] Sistema de temas (Light/Dark/System)
+  - [ ] Geração automática de clientes TypeScript via ng-openapi-gen
+  - [ ] Guards e interceptors (auth, JWT refresh)
+  - [ ] Formulários reativos com validação
+  - [ ] CRUD de tarefas (Todo) - tela de exemplo/validação
 
-### Fase 2: Admin Dashboard (Concluído)
+### Fase 2: Admin Dashboard
 
-- [x] **Layout Metronic-Style**
-  - [x] Sidebar colapsável com menu hierárquico e animações
-  - [x] Header completo (busca, notificações, ações rápidas, org switcher, user menu)
-  - [x] Breadcrumbs automáticos baseados nas rotas
-  - [x] Cards de estatísticas no dashboard com variações de cor
-  - [x] Sistema de temas light/dark integrado
-  - [x] Responsividade desktop-first com drawer mobile
-
-- [x] **Menu e Navegação**
-  - [x] Configuração de menu via TypeScript com tipagem
-  - [x] Suporte a submenus hierárquicos infinitos
-  - [x] Filtro automático por role (OWNER, ADMIN, MEMBER)
-  - [x] Badges dinâmicos nos itens de menu
-  - [x] Persistência de estado no localStorage
-
-- [x] **Sistema de Temas Harmonizado**
-  - [x] Paleta de cores Slate consistente (Tailwind-inspired)
-  - [x] Páginas de autenticação com visual moderno
-  - [x] Variáveis CSS organizadas para fácil customização
-  - [x] Transições suaves entre temas
-
-- [ ] **Gestão de Usuários** (próxima fase)
+- [ ] **Gestão de Usuários** (Concluído)
   - [ ] CRUD de usuários por organização
   - [ ] Definição de roles (Owner, Admin, Member)
-  - [ ] Convites por email
+  - [ ] Reset de senha com senha temporária
+  - [ ] Histórico de tentativas de login
+  - [ ] Bloqueio/desbloqueio de contas
+  - [ ] Filtros avançados (status, role, busca)
+  - [ ] Soft delete (ativar/desativar)
 
 - [ ] **Gestão de Organizações** (próxima fase)
   - [ ] Configurações da organização

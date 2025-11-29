@@ -9,6 +9,7 @@ import br.com.exemplo.todo.domain.exception.InvalidRefreshTokenException;
 import br.com.exemplo.todo.domain.model.entity.*;
 import br.com.exemplo.todo.domain.model.enums.MembershipRole;
 import br.com.exemplo.todo.domain.repository.*;
+import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
 import br.com.exemplo.todo.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class AuthService {
     private final OrganizationRepository organizationRepository;
     private final MembershipRepository membershipRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final LoginAttemptRepository loginAttemptRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final JwtConfig jwtConfig;
@@ -91,9 +93,15 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginInput input, HttpServletRequest request) {
+        String ipAddress = extractIpAddress(request);
+        String userAgent = extractDeviceInfo(request);
+
         // Busca usuario
         User user = userRepository.findByEmail(input.email())
-                .orElseThrow(InvalidCredentialsException::new);
+                .orElseThrow(() -> {
+                    log.warn("Tentativa de login com email inexistente: {}", input.email());
+                    return new InvalidCredentialsException();
+                });
 
         // Busca account local
         Account account = accountRepository.findByUserIdAndProvider(user.getId(), "local")
@@ -101,8 +109,16 @@ public class AuthService {
 
         // Verifica bloqueio
         if (Boolean.TRUE.equals(account.getBloqueado())) {
+            registrarTentativaLogin(user, false, ipAddress, userAgent, "ACCOUNT_LOCKED");
             log.warn("Tentativa de login em conta bloqueada: userId={}", user.getId());
             throw new AccountLockedException();
+        }
+
+        // Verifica se usuario esta ativo
+        if (!Boolean.TRUE.equals(user.getAtivo())) {
+            registrarTentativaLogin(user, false, ipAddress, userAgent, "USER_INACTIVE");
+            log.warn("Tentativa de login em conta inativa: userId={}", user.getId());
+            throw new InvalidCredentialsException("Usuario inativo");
         }
 
         // Verifica senha
@@ -112,6 +128,7 @@ public class AuthService {
                 account.bloquear();
             }
             accountRepository.save(account);
+            registrarTentativaLogin(user, false, ipAddress, userAgent, "INVALID_PASSWORD");
             log.warn("Senha incorreta para usuario: userId={}, tentativas={}",
                     user.getId(), account.getTentativasFalha());
             throw new InvalidCredentialsException();
@@ -121,13 +138,24 @@ public class AuthService {
         account.resetarTentativasFalha();
         accountRepository.save(account);
 
+        // Registra tentativa de sucesso
+        registrarTentativaLogin(user, true, ipAddress, userAgent, null);
+
         // Atualiza ultimo acesso
         user.setUltimoAcesso(LocalDateTime.now());
         userRepository.save(user);
 
         log.info("Login realizado: userId={}, email={}", user.getId(), user.getEmail());
 
-        return generateAuthResponse(user, request);
+        // Verifica se senha esta expirada
+        boolean senhaExpirada = Boolean.TRUE.equals(account.getSenhaExpirada());
+
+        return generateAuthResponse(user, request, senhaExpirada);
+    }
+
+    private void registrarTentativaLogin(User user, boolean sucesso, String ipAddress, String userAgent, String motivoFalha) {
+        LoginAttempt attempt = new LoginAttempt(user, sucesso, ipAddress, userAgent, motivoFalha);
+        loginAttemptRepository.save(attempt);
     }
 
     @Transactional
@@ -156,8 +184,12 @@ public class AuthService {
 
         log.debug("Refresh token renovado para userId={}", user.getId());
 
+        // Verifica se senha esta expirada
+        Account account = accountRepository.findByUserIdAndProvider(user.getId(), "local").orElse(null);
+        boolean senhaExpirada = account != null && Boolean.TRUE.equals(account.getSenhaExpirada());
+
         // Gera novos tokens com mesmo familyId
-        return generateAuthResponse(user, request, storedToken.getFamiliaId());
+        return generateAuthResponse(user, request, storedToken.getFamiliaId(), senhaExpirada);
     }
 
     @Transactional
@@ -176,10 +208,14 @@ public class AuthService {
     }
 
     private AuthResponse generateAuthResponse(User user, HttpServletRequest request) {
-        return generateAuthResponse(user, request, UUID.randomUUID().toString());
+        return generateAuthResponse(user, request, UUID.randomUUID().toString(), false);
     }
 
-    private AuthResponse generateAuthResponse(User user, HttpServletRequest request, String familyId) {
+    private AuthResponse generateAuthResponse(User user, HttpServletRequest request, boolean senhaExpirada) {
+        return generateAuthResponse(user, request, UUID.randomUUID().toString(), senhaExpirada);
+    }
+
+    private AuthResponse generateAuthResponse(User user, HttpServletRequest request, String familyId, boolean senhaExpirada) {
         // Gera access token
         String accessToken = jwtService.generateAccessToken(user);
 
@@ -211,7 +247,8 @@ public class AuthService {
                 rawRefreshToken,
                 jwtConfig.getAccessToken().getExpirationMs() / 1000,
                 UserOutput.from(user),
-                memberships
+                memberships,
+                senhaExpirada
         );
     }
 

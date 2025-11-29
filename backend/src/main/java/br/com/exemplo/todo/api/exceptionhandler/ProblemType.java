@@ -1,10 +1,14 @@
 package br.com.exemplo.todo.api.exceptionhandler;
 
 import br.com.exemplo.todo.domain.exception.AccountLockedException;
+import br.com.exemplo.todo.domain.exception.CannotModifyOwnerException;
+import br.com.exemplo.todo.domain.exception.CannotModifySelfException;
 import br.com.exemplo.todo.domain.exception.EmailAlreadyExistsException;
 import br.com.exemplo.todo.domain.exception.InvalidCredentialsException;
 import br.com.exemplo.todo.domain.exception.InvalidRefreshTokenException;
 import br.com.exemplo.todo.domain.exception.OrganizationAccessDeniedException;
+import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
+import br.com.exemplo.todo.domain.exception.UserNotFoundException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
 import lombok.Getter;
 import lombok.NonNull;
@@ -16,28 +20,40 @@ import java.util.stream.Stream;
 public enum ProblemType {
 
     TODO_NAO_ENCONTRADO(TodoNaoEncontradoException.class,
-            "Tarefa não encontrada", "todo-nao-encontrado"),
+            "Tarefa nao encontrada", "todo-nao-encontrado"),
 
     CAMPO_INVALIDO(IllegalArgumentException.class,
-            "Campo inválido", "campo-invalido"),
+            "Campo invalido", "campo-invalido"),
 
     CREDENCIAIS_INVALIDAS(InvalidCredentialsException.class,
-            "Credenciais inválidas", "credenciais-invalidas"),
+            "Credenciais invalidas", "credenciais-invalidas"),
 
     CONTA_BLOQUEADA(AccountLockedException.class,
             "Conta bloqueada", "conta-bloqueada"),
 
     TOKEN_INVALIDO(InvalidRefreshTokenException.class,
-            "Token inválido", "token-invalido"),
+            "Token invalido", "token-invalido"),
 
     EMAIL_JA_CADASTRADO(EmailAlreadyExistsException.class,
-            "Email já cadastrado", "email-ja-cadastrado"),
+            "Email ja cadastrado", "email-ja-cadastrado"),
 
     ACESSO_NEGADO_ORGANIZACAO(OrganizationAccessDeniedException.class,
-            "Acesso negado à organização", "acesso-negado-organizacao"),
+            "Acesso negado a organizacao", "acesso-negado-organizacao"),
+
+    USUARIO_NAO_ENCONTRADO(UserNotFoundException.class,
+            "Usuario nao encontrado", "usuario-nao-encontrado"),
+
+    NAO_PODE_MODIFICAR_OWNER(CannotModifyOwnerException.class,
+            "Nao e permitido modificar o proprietario", "nao-pode-modificar-owner"),
+
+    NAO_PODE_MODIFICAR_SI_MESMO(CannotModifySelfException.class,
+            "Nao e permitido modificar sua propria conta", "nao-pode-modificar-si-mesmo"),
+
+    SENHA_EXPIRADA(PasswordExpiredException.class,
+            "Senha expirada", "senha-expirada"),
 
     ERRO_SISTEMA(Exception.class,
-            "Erro de sistema não previsto", "erro-de-sistema-nao-previsto");
+            "Erro de sistema nao previsto", "erro-de-sistema-nao-previsto");
 
     private final Class<? extends Exception> classeErro;
     private final String titulo;

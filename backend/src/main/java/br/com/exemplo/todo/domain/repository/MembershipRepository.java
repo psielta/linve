@@ -2,7 +2,12 @@ package br.com.exemplo.todo.domain.repository;
 
 import br.com.exemplo.todo.domain.model.entity.Membership;
 import br.com.exemplo.todo.domain.model.enums.MembershipRole;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,7 +20,7 @@ import java.util.Optional;
  * Repository para acesso a dados de Membership.
  */
 @Repository
-public interface MembershipRepository extends JpaRepository<Membership, Long> {
+public interface MembershipRepository extends JpaRepository<Membership, Long>, JpaSpecificationExecutor<Membership> {
 
     /**
      * Busca membership ativa de um usuario em uma organizacao.
@@ -36,6 +41,18 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
      * Lista membros de uma organizacao.
      */
     List<Membership> findByOrganizationIdAndAtivoTrueOrderByDataIngressoAsc(Long organizationId);
+
+    @Override
+    @EntityGraph(attributePaths = {"user"})
+    List<Membership> findAll();
+
+    @Override
+    @EntityGraph(attributePaths = {"user"})
+    List<Membership> findAll(Specification<Membership> spec);
+
+    @Override
+    @EntityGraph(attributePaths = {"user"})
+    Page<Membership> findAll(Specification<Membership> spec, Pageable pageable);
 
     /**
      * Verifica se usuario e membro de uma organizacao.

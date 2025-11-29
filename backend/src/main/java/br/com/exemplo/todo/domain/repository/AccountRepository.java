@@ -4,6 +4,7 @@ import br.com.exemplo.todo.domain.model.entity.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.Optional;
 
 /**
@@ -40,4 +41,9 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
      * Verifica se usuario tem conta local.
      */
     boolean existsByUserIdAndProvider(Long userId, String provider);
+
+    /**
+     * Busca contas de uma lista de usuarios para um provider.
+     */
+    java.util.List<Account> findByUserIdInAndProvider(Collection<Long> userIds, String provider);
 }

@@ -2,10 +2,14 @@ package br.com.exemplo.todo.api.exceptionhandler;
 
 import br.com.exemplo.todo.domain.exception.AccountLockedException;
 import br.com.exemplo.todo.domain.exception.AuthenticationException;
+import br.com.exemplo.todo.domain.exception.CannotModifyOwnerException;
+import br.com.exemplo.todo.domain.exception.CannotModifySelfException;
 import br.com.exemplo.todo.domain.exception.EmailAlreadyExistsException;
 import br.com.exemplo.todo.domain.exception.InvalidCredentialsException;
 import br.com.exemplo.todo.domain.exception.InvalidRefreshTokenException;
 import br.com.exemplo.todo.domain.exception.OrganizationAccessDeniedException;
+import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
+import br.com.exemplo.todo.domain.exception.UserNotFoundException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -33,7 +37,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleExceptionInternal(@NonNull Exception ex, @Nullable Object body,
             @NonNull HttpHeaders headers, @NonNull HttpStatusCode statusCode, @NonNull WebRequest request) {
 
-        // Estratégia de log: 5xx = ERROR (erros reais), 4xx = INFO (erros de cliente)
+        // Estrategia de log: 5xx = ERROR (erros reais), 4xx = INFO (erros de cliente)
         if (statusCode.is5xxServerError()) {
             log.error("Erro interno: ", ex);
         } else {
@@ -52,14 +56,14 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
         HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
 
-        log.info("Validação falhou: {} campos inválidos | URI: {}",
+        log.info("Validacao falhou: {} campos invalidos | URI: {}",
                 ex.getBindingResult().getErrorCount(),
                 request.getDescription(false));
 
         ProblemDetail problemDetail = createProblem(ex, httpStatus);
-        problemDetail.setTitle("Campos inválidos.");
+        problemDetail.setTitle("Campos invalidos.");
 
-        StringBuilder detailMessage = new StringBuilder("Um ou mais campos são inválidos - ");
+        StringBuilder detailMessage = new StringBuilder("Um ou mais campos sao invalidos - ");
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 detailMessage.append(String.format("[%s: %s] ", error.getField(), error.getDefaultMessage()))
         );
@@ -74,7 +78,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
         HttpStatus status = HttpStatus.BAD_REQUEST;
         ProblemDetail problemDetail = createProblem(ex, status);
-        problemDetail.setDetail(String.format("Parâmetro inválido [%s: %s] ", ex.getPropertyName(), ex.getValue()));
+        problemDetail.setDetail(String.format("Parametro invalido [%s: %s] ", ex.getPropertyName(), ex.getValue()));
 
         return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
     }
@@ -139,6 +143,46 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Object> handleUserNotFoundException(
+            UserNotFoundException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(CannotModifyOwnerException.class)
+    public ResponseEntity<Object> handleCannotModifyOwnerException(
+            CannotModifyOwnerException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(CannotModifySelfException.class)
+    public ResponseEntity<Object> handleCannotModifySelfException(
+            CannotModifySelfException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(PasswordExpiredException.class)
+    public ResponseEntity<Object> handlePasswordExpiredException(
+            PasswordExpiredException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDeniedException(
             AccessDeniedException ex, WebRequest request) {
@@ -170,3 +214,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
 }
+
+
+
+
+

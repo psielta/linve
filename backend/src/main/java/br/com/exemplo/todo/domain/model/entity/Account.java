@@ -62,6 +62,9 @@ public class Account {
     @Column(name = "ACC_DATA_ALTERACAO_SENHA")
     private LocalDateTime dataAlteracaoSenha;
 
+    @Column(name = "ACC_SENHA_EXPIRADA")
+    private Boolean senhaExpirada = false;
+
     /**
      * Incrementa contador de tentativas falhas.
      * @return true se a conta deve ser bloqueada (5+ tentativas)

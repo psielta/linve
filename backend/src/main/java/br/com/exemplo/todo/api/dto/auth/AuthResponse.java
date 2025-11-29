@@ -22,10 +22,18 @@ public record AuthResponse(
         UserOutput user,
 
         @Schema(description = "Organizacoes do usuario")
-        List<MembershipOutput> organizations
+        List<MembershipOutput> organizations,
+
+        @Schema(description = "Indica se a senha esta expirada e precisa ser trocada")
+        Boolean senhaExpirada
 ) {
     public AuthResponse(String accessToken, String refreshToken, long expiresIn,
                         UserOutput user, List<MembershipOutput> organizations) {
-        this(accessToken, refreshToken, "Bearer", expiresIn, user, organizations);
+        this(accessToken, refreshToken, "Bearer", expiresIn, user, organizations, false);
+    }
+
+    public AuthResponse(String accessToken, String refreshToken, long expiresIn,
+                        UserOutput user, List<MembershipOutput> organizations, Boolean senhaExpirada) {
+        this(accessToken, refreshToken, "Bearer", expiresIn, user, organizations, senhaExpirada);
     }
 }
