@@ -20,7 +20,14 @@ Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-back
 10. [Exemplos de Requisições](#exemplos-de-requisições)
 11. [Banco de Dados](#banco-de-dados)
 12. [Testes](#testes)
-13. [Comparação com o Projeto Base](#comparação-com-o-projeto-base)
+13. [Módulo de Administração de Usuários](#módulo-de-administração-de-usuários-user-admin)
+14. [Comparação com o Projeto Base](#comparação-com-o-projeto-base)
+15. [Guia Prático: Passo a Passo](#guia-prático-passo-a-passo)
+16. [Resumo: Checklist para Novo CRUD](#resumo-checklist-para-novo-crud)
+17. [OpenAPI/Swagger para Geração de Clientes](#openapiswagger-para-geração-de-clientes)
+18. [Frontend (Interface Web)](#frontend-interface-web)
+19. [Armazenamento de Arquivos (MinIO)](#armazenamento-de-arquivos-minio)
+20. [Fotos de Organização e Usuário](#fotos-de-organizacao-e-usuario)
 
 ---
 
@@ -3283,7 +3290,44 @@ public class CorsConfig {
 
 ## Armazenamento de Arquivos (MinIO)
 
-O backend inclui um serviço genérico de mídia para armazenar imagens, PDFs, planilhas ou qualquer arquivo binário usando MinIO (S3 compatível).
+O backend inclui um sistema completo de armazenamento de arquivos usando **MinIO** (S3 compatível). O backend atua como **proxy** entre o frontend e o MinIO, nunca expondo URLs diretas do storage.
+
+### Arquitetura do Sistema
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         ARQUITETURA DE STORAGE                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   ┌──────────┐        ┌───────────────────┐        ┌──────────────┐        │
+│   │ Frontend │ ─────► │   Backend (API)   │ ─────► │    MinIO     │        │
+│   │          │        │   (Proxy Layer)   │        │   (Storage)  │        │
+│   └──────────┘        └───────────────────┘        └──────────────┘        │
+│        │                      │                           │                │
+│        │                      │                           │                │
+│        │                      ▼                           │                │
+│        │              ┌───────────────────┐               │                │
+│        │              │     Database      │               │                │
+│        │              │   (StoredFile)    │               │                │
+│        │              └───────────────────┘               │                │
+│        │                                                                    │
+│   IMPORTANTE:                                                               │
+│   - Frontend NUNCA acessa MinIO diretamente                                 │
+│   - URLs sempre são /api/media/{uuid} (relativas ao backend)                │
+│   - Backend faz proxy/stream do conteúdo                                    │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Por que o Backend atua como Proxy?
+
+1. **Segurança**: Credenciais do MinIO nunca são expostas ao cliente
+2. **Controle de Acesso**: Backend pode validar permissões antes de servir arquivos
+3. **Multi-Tenancy**: Isolamento por organização no banco de dados
+4. **Flexibilidade**: Pode trocar MinIO por S3/GCS sem alterar frontend
+5. **URLs Estáveis**: `/api/media/{uuid}` funciona mesmo se mudar o storage
+
+---
 
 ### Subir o MinIO em Docker
 
@@ -3301,6 +3345,8 @@ Variáveis padrão (sobreponha conforme ambiente):
 - MINIO_ACCESS_KEY=linve
 - MINIO_SECRET_KEY=linve123456
 - MINIO_BUCKET=linve-media
+
+---
 
 ### Configuração no Spring
 
@@ -3321,47 +3367,284 @@ spring:
       max-request-size: 5MB
 ```
 
-### Endpoints de mídia
+---
 
-- POST /api/media (multipart/form-data)
-  - params: ownerType (ORGANIZATION|USER|PRODUCT|OTHER), ownerId (opcional)
-  - part: file (arquivo)
-- GET /api/media/{id} – download/stream
-- DELETE /api/media/{id} – remove arquivo e metadados
+### Endpoints de Mídia
 
-Isolamento multi-tenant: somente arquivos do `X-Organization-Id` atual são acessíveis.
+| Endpoint | Método | Auth | Descrição |
+|----------|--------|------|-----------|
+| `/api/media` | POST | Sim | Upload genérico de arquivo |
+| `/api/media/{id}` | GET | **Não** (público) | Download/stream do arquivo |
+| `/api/media/{id}` | DELETE | Sim | Remove arquivo e metadados |
 
-### Exemplo de upload via curl
+**Importante sobre autenticação:**
+- **GET /api/media/{id}** é **público** (sem JWT) para que tags `<img src="...">` funcionem no browser
+- **POST e DELETE** requerem autenticação + header `X-Organization-Id`
 
+---
+
+### Fluxo de Upload
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            FLUXO DE UPLOAD                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. Cliente envia POST /api/media com multipart/form-data                   │
+│     Headers: Authorization: Bearer {token}, X-Organization-Id: 1            │
+│                                                                             │
+│  2. TenantFilter valida JWT e extrai organizationId                         │
+│                                                                             │
+│  3. MinioFileStorageService.store():                                        │
+│     a) Valida arquivo (não vazio)                                           │
+│     b) Gera storageKey: {orgId}/{ownerType}/{ownerId}/{uuid}-{filename}     │
+│     c) Faz upload para MinIO via putObject()                                │
+│     d) Salva metadados na tabela stored_file                                │
+│                                                                             │
+│  4. Retorna StoredFileResponse com URL relativa /api/media/{uuid}           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Fluxo de Download (Proxy Pattern)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       FLUXO DE DOWNLOAD (PROXY)                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. Browser/Frontend requisita GET /api/media/{uuid}                        │
+│     (sem Authorization header - endpoint público)                           │
+│                                                                             │
+│  2. MediaController.download():                                             │
+│     a) Busca StoredFile por UUID no banco                                   │
+│     b) Não valida tenant (acesso público por UUID)                          │
+│                                                                             │
+│  3. MinioFileStorageService.getContent():                                   │
+│     a) Recupera metadados (contentType, filename)                           │
+│     b) Abre InputStream do MinIO via getObject()                            │
+│                                                                             │
+│  4. Controller faz stream para o response:                                  │
+│     - Content-Type: {contentType do arquivo}                                │
+│     - Content-Disposition: inline; filename="{filename}"                    │
+│     - Cache-Control: public, max-age=31536000, immutable (1 ano)            │
+│                                                                             │
+│  SEGURANÇA:                                                                 │
+│  - UUID é praticamente impossível de adivinhar (128 bits)                   │
+│  - Sem listagem de arquivos (precisa saber o UUID)                          │
+│  - Para arquivos sensíveis, usar endpoints autenticados específicos         │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Entidade StoredFile
+
+```java
+@Entity
+@Table(name = "stored_file")
+public class StoredFile {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;                    // UUID público (usado na URL)
+
+    @Column(nullable = false)
+    private Long organizationId;        // Multi-tenancy
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MediaOwnerType ownerType;   // ORGANIZATION, USER, PRODUCT, OTHER
+
+    private Long ownerId;               // ID do dono (org, user, etc)
+
+    @Column(nullable = false)
+    private String filename;            // Nome original do arquivo
+
+    private String contentType;         // MIME type (image/png, etc)
+
+    private Long size;                  // Tamanho em bytes
+
+    @Column(nullable = false)
+    private String storageKey;          // Caminho no MinIO
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    private Long createdBy;             // userId que fez upload
+}
+```
+
+**Storage Key Format**: `{orgId}/{ownerType}/{ownerId}/{uuid}-{filename}`
+
+Exemplo: `1/organization/1/a1b2c3d4-logo.png`
+
+---
+
+### Componentes Principais
+
+| Componente | Arquivo | Propósito |
+|------------|---------|-----------|
+| `MinioFileStorageService` | domain/service/ | Implementação do storage com MinIO |
+| `FileStorageService` | domain/service/ | Interface para abstração do storage |
+| `MediaController` | api/controller/ | Endpoints REST de mídia |
+| `StoredFile` | domain/model/entity/ | Entidade JPA dos metadados |
+| `StoredFileRepository` | domain/repository/ | Acesso ao banco |
+| `StorageProperties` | config/ | Configurações do MinIO |
+| `StorageConfig` | config/ | Bean do MinioClient |
+
+---
+
+### Segurança: Público vs Autenticado
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           MATRIZ DE SEGURANÇA                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ENDPOINTS PÚBLICOS (sem JWT):                                              │
+│  ├── GET /api/media/{id}     → Download por UUID (imagens em <img>)         │
+│  └── GET /api/auth/**        → Login, registro, refresh token               │
+│                                                                             │
+│  ENDPOINTS AUTENTICADOS (JWT + X-Organization-Id):                          │
+│  ├── POST /api/media         → Upload genérico                              │
+│  ├── DELETE /api/media/{id}  → Remover arquivo                              │
+│  ├── POST/DELETE /api/account/avatar    → Avatar próprio                    │
+│  └── POST/DELETE /api/organizations/{id}/logo → Logo da org (OWNER/ADMIN)   │
+│                                                                             │
+│  VALIDAÇÃO DE ROLE:                                                         │
+│  ├── Logo de organização: requer OWNER ou ADMIN na org alvo                 │
+│  ├── Avatar de outro usuário (admin): requer ADMIN na org                   │
+│  └── Avatar próprio: qualquer usuário autenticado                           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Configuração no SecurityConfig.java:**
+```java
+.authorizeHttpRequests(auth -> auth
+    .requestMatchers("/api/auth/**").permitAll()
+    .requestMatchers("/api/media/**").permitAll()  // Download público
+    // ...
+    .anyRequest().authenticated())
+```
+
+---
+
+### Exemplos de Requisições
+
+**Upload genérico:**
 ```bash
 curl -X POST "http://localhost:8080/api/media?ownerType=ORGANIZATION&ownerId=1" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "X-Organization-Id: 1" \
+  -F "file=@./documento.pdf"
+```
+
+**Download (público, sem auth):**
+```bash
+curl http://localhost:8080/api/media/550e8400-e29b-41d4-a716-446655440000
+
+# Ou simplesmente no browser/img tag:
+# <img src="/api/media/550e8400-e29b-41d4-a716-446655440000" />
+```
+
+**Delete:**
+```bash
+curl -X DELETE http://localhost:8080/api/media/550e8400-e29b-41d4-a716-446655440000 \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "X-Organization-Id: 1"
+```
+
+**Resposta de Upload:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "filename": "documento.pdf",
+  "contentType": "application/pdf",
+  "size": 12345,
+  "ownerType": "ORGANIZATION",
+  "ownerId": 1,
+  "url": "/api/media/550e8400-e29b-41d4-a716-446655440000",
+  "createdAt": "2025-11-29T12:34:56"
+}
+```
+
+## Fotos de Organizacao e Usuario
+
+Endpoints especializados que usam o sistema de storage para gerenciar imagens de perfil.
+
+### Endpoints de Logo de Organização
+
+| Endpoint | Método | Auth | Role | Descrição |
+|----------|--------|------|------|-----------|
+| `/api/organizations/{id}/logo` | POST | Sim | OWNER/ADMIN | Upload/substituição do logo |
+| `/api/organizations/{id}/logo` | DELETE | Sim | OWNER/ADMIN | Remove o logo |
+
+**Formatos aceitos**: PNG, JPEG, WEBP
+
+**Comportamento importante**: O usuário pode editar o logo de **qualquer organização** onde seja OWNER ou ADMIN, mesmo que não seja a organização atual (do header `X-Organization-Id`). Isso permite que administradores de múltiplas organizações gerenciem logos sem trocar de contexto.
+
+### Endpoints de Avatar de Usuário
+
+| Endpoint | Método | Auth | Role | Descrição |
+|----------|--------|------|------|-----------|
+| `/api/account/avatar` | POST | Sim | Qualquer | Usuário atualiza seu próprio avatar |
+| `/api/account/avatar` | DELETE | Sim | Qualquer | Usuário remove seu próprio avatar |
+| `/api/admin/users/{userId}/avatar` | POST | Sim | ADMIN | Admin atualiza avatar de outro usuário |
+| `/api/admin/users/{userId}/avatar` | DELETE | Sim | ADMIN | Admin remove avatar de outro usuário |
+
+**Proteção especial**: ADMIN não pode alterar avatar de um OWNER.
+
+### Exemplos de Requisições
+
+**Upload de logo da organização:**
+```bash
+curl -X POST http://localhost:8080/api/organizations/1/logo \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "X-Organization-Id: 1" \
   -F "file=@./logo.png"
 ```
 
-Resposta:
+**Upload de avatar próprio:**
+```bash
+curl -X POST http://localhost:8080/api/account/avatar \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "X-Organization-Id: 1" \
+  -F "file=@./meu-avatar.jpg"
+```
+
+**Remover logo:**
+```bash
+curl -X DELETE http://localhost:8080/api/organizations/1/logo \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "X-Organization-Id: 1"
+```
+
+### Uso nos DTOs
+
+As URLs de avatar/logo são retornadas automaticamente nos DTOs de resposta:
 
 ```json
+// GET /api/organizations/1
 {
-  "id": "UUID",
-  "filename": "logo.png",
-  "contentType": "image/png",
-  "size": 12345,
-  "ownerType": "ORGANIZATION",
-  "ownerId": 1,
-  "url": "/api/media/UUID",
-  "createdAt": "2025-11-29T12:34:56"
+  "id": 1,
+  "nome": "Minha Empresa",
+  "logo": "/api/media/550e8400-e29b-41d4-a716-446655440000"
+}
+
+// GET /api/account (ou resposta de login)
+{
+  "id": 10,
+  "nome": "João Silva",
+  "avatar": "/api/media/660e8400-e29b-41d4-a716-446655440001"
 }
 ```
+
+O frontend pode usar essas URLs diretamente em tags `<img>`:
+```html
+<img [src]="organization.logo" alt="Logo" />
+<img [src]="user.avatar" alt="Avatar" />
 ```
-
-
-
-
-
-
-
-
-
-

@@ -12,9 +12,12 @@ public record UserOutput(
         String nome,
 
         @Schema(description = "Email do usuario")
-        String email
+        String email,
+
+        @Schema(description = "URL do avatar do usuario")
+        String avatar
 ) {
     public static UserOutput from(User user) {
-        return new UserOutput(user.getId(), user.getNome(), user.getEmail());
+        return new UserOutput(user.getId(), user.getNome(), user.getEmail(), user.getAvatar());
     }
 }

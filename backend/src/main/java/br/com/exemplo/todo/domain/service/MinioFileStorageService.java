@@ -74,8 +74,14 @@ public class MinioFileStorageService implements FileStorageService {
 
     @Override
     public StoredFile getMetadata(UUID id) {
-        Long orgId = TenantContext.getOrganizationId();
-        return storedFileRepository.findByIdAndOrganizationId(id, orgId)
+        // Se TenantContext estiver disponível, valida organização
+        if (TenantContext.isSet()) {
+            Long orgId = TenantContext.getOrganizationId();
+            return storedFileRepository.findByIdAndOrganizationId(id, orgId)
+                    .orElseThrow(() -> new StoredFileNotFoundException(id));
+        }
+        // Sem TenantContext (endpoint público), busca apenas pelo ID
+        return storedFileRepository.findById(id)
                 .orElseThrow(() -> new StoredFileNotFoundException(id));
     }
 

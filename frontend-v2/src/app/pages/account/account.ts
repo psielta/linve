@@ -1,24 +1,85 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
+import { AvatarModule } from 'primeng/avatar';
+import { FileUploadModule, FileSelectEvent } from 'primeng/fileupload';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 import { AuthService } from '../../core/services/auth.service';
 import { TenantService } from '../../core/services/tenant.service';
 import { OrganizationService } from '../../core/services/organization.service';
 import { MembershipOutput } from '../../core/models/auth.models';
+import { ApiConfiguration } from '../../core/api/api-configuration';
+import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
+import { atualizarAvatar1 } from '../../core/api/fn/conta/atualizar-avatar-1';
+import { removerAvatar1 } from '../../core/api/fn/conta/remover-avatar-1';
+import { map } from 'rxjs';
 
 @Component({
     selector: 'app-account',
     standalone: true,
-    imports: [CommonModule, FormsModule, TagModule, ButtonModule, DialogModule, InputTextModule],
+    imports: [
+        CommonModule,
+        FormsModule,
+        TagModule,
+        ButtonModule,
+        DialogModule,
+        InputTextModule,
+        AvatarModule,
+        FileUploadModule,
+        ToastModule,
+        MediaUrlPipe
+    ],
+    providers: [MessageService],
     template: `
+        <p-toast />
         <div class="grid grid-cols-12 gap-8">
+            <!-- Avatar e Informações Pessoais -->
             <div class="col-span-12 lg:col-span-6">
                 <div class="card">
-                    <div class="font-semibold text-xl mb-4">Informações Pessoais</div>
+                    <div class="font-semibold text-xl mb-6">Informações Pessoais</div>
+
+                    <!-- Seção Avatar -->
+                    <div class="flex items-center gap-6 mb-6 pb-6 border-b border-surface">
+                        <div class="relative">
+                            @if (userAvatar()) {
+                                <p-avatar [image]="$any(userAvatar() | mediaUrl)" size="xlarge" shape="circle" />
+                            } @else {
+                                <p-avatar [label]="userInitials()" size="xlarge" shape="circle"
+                                    styleClass="bg-primary text-primary-contrast text-2xl" />
+                            }
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <p-fileUpload
+                                mode="basic"
+                                accept="image/png,image/jpeg,image/webp"
+                                [maxFileSize]="5000000"
+                                chooseLabel="Alterar foto"
+                                chooseIcon="pi pi-camera"
+                                [auto]="true"
+                                [customUpload]="true"
+                                (uploadHandler)="onAvatarUpload($event)"
+                            />
+                            @if (userAvatar()) {
+                                <p-button
+                                    label="Remover foto"
+                                    icon="pi pi-trash"
+                                    severity="danger"
+                                    [text]="true"
+                                    size="small"
+                                    [loading]="isRemovingAvatar()"
+                                    (click)="removeAvatar()"
+                                />
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Dados do Usuário -->
                     <div class="flex flex-col gap-4">
                         <div>
                             <span class="text-surface-500 dark:text-surface-400 text-sm block mb-1">Nome</span>
@@ -40,6 +101,7 @@ import { MembershipOutput } from '../../core/models/auth.models';
                 </div>
             </div>
 
+            <!-- Organizações -->
             <div class="col-span-12 lg:col-span-6">
                 <div class="card">
                     <div class="flex items-center justify-between mb-4">
@@ -53,28 +115,65 @@ import { MembershipOutput } from '../../core/models/auth.models';
                     </div>
                     <ul class="list-none p-0 m-0">
                         @for (membership of organizations(); track membership.organization.id) {
-                            <li class="flex items-center justify-between py-3 border-b border-surface last:border-b-0">
-                                <div class="flex items-center gap-3">
-                                    <i class="pi pi-building text-surface-500"></i>
-                                    <div>
-                                        <span class="font-medium">{{ membership.organization.nome }}</span>
+                            <li class="flex items-center gap-4 py-4 border-b border-surface last:border-b-0">
+                                <!-- Logo da Organização -->
+                                <div class="relative flex-shrink-0">
+                                    @if (membership.organization.logo) {
+                                        <img [src]="membership.organization.logo | mediaUrl"
+                                             class="w-12 h-12 rounded-lg object-cover border border-surface" />
+                                    } @else {
+                                        <div class="w-12 h-12 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center border border-surface">
+                                            <i class="pi pi-building text-xl text-surface-500"></i>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Info da Organização -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-medium truncate">
+                                        {{ membership.organization.nome }}
                                         @if (isCurrentOrg(membership.organization.id)) {
-                                            <span class="text-primary text-xs ml-2">(atual)</span>
+                                            <span class="text-primary text-xs ml-1">(atual)</span>
                                         }
                                     </div>
+                                    <p-tag [value]="membership.role" [severity]="getRoleSeverity(membership.role)" class="mt-1" />
                                 </div>
-                                <div class="flex items-center gap-2">
+
+                                <!-- Ações -->
+                                <div class="flex items-center gap-1 flex-shrink-0">
                                     @if (canEdit(membership)) {
+                                        <p-fileUpload
+                                            mode="basic"
+                                            accept="image/png,image/jpeg,image/webp"
+                                            [maxFileSize]="5000000"
+                                            chooseLabel=""
+                                            chooseIcon="pi pi-image"
+                                            [auto]="true"
+                                            [customUpload]="true"
+                                            (uploadHandler)="onLogoUpload($event, membership.organization.id)"
+                                            styleClass="p-button-text p-button-secondary p-button-sm"
+                                        />
+                                        @if (membership.organization.logo) {
+                                            <p-button
+                                                icon="pi pi-trash"
+                                                [rounded]="true"
+                                                [text]="true"
+                                                severity="danger"
+                                                size="small"
+                                                pTooltip="Remover logo"
+                                                (click)="removeLogo(membership.organization.id)"
+                                            />
+                                        }
                                         <p-button
                                             icon="pi pi-pencil"
                                             [rounded]="true"
                                             [text]="true"
                                             severity="secondary"
                                             size="small"
+                                            pTooltip="Editar nome"
                                             (click)="openEditDialog(membership)"
                                         />
                                     }
-                                    <p-tag [value]="membership.role" [severity]="getRoleSeverity(membership.role)" />
                                 </div>
                             </li>
                         } @empty {
@@ -128,13 +227,26 @@ export class Account {
     private authService = inject(AuthService);
     private tenantService = inject(TenantService);
     private organizationService = inject(OrganizationService);
+    private messageService = inject(MessageService);
+    private http = inject(HttpClient);
+    private apiConfig = inject(ApiConfiguration);
 
     userName = computed(() => this.authService.user()?.nome ?? '');
     userEmail = computed(() => this.authService.user()?.email ?? '');
+    userAvatar = computed(() => this.authService.user()?.avatar);
     organizations = computed(() => this.authService.organizations());
     currentOrgId = computed(() => this.tenantService.currentOrganizationId());
     currentOrgName = computed(() => this.tenantService.currentOrganizationName() ?? '');
     currentRole = computed(() => this.tenantService.currentRole());
+
+    userInitials = computed(() => {
+        const nome = this.userName();
+        const parts = nome.split(' ').filter(p => p.length > 0);
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+        return nome.substring(0, 2).toUpperCase() || 'U';
+    });
 
     currentRoleLabel = computed(() => {
         const role = this.currentRole();
@@ -161,6 +273,7 @@ export class Account {
     orgName = '';
     editingOrgId: number | null = null;
     isLoading = signal(false);
+    isRemovingAvatar = signal(false);
 
     isCurrentOrg(orgId: number): boolean {
         return this.currentOrgId() === orgId;
@@ -179,6 +292,103 @@ export class Account {
         }
     }
 
+    // Avatar methods
+    onAvatarUpload(event: { files: File[] }): void {
+        const file = event.files[0];
+        if (!file) return;
+
+        atualizarAvatar1(this.http, this.apiConfig.rootUrl, { body: { file } }).pipe(
+            map(res => res.body)
+        ).subscribe({
+            next: (user) => {
+                this.authService.updateUser(user);
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Sucesso',
+                    detail: 'Foto atualizada com sucesso'
+                });
+            },
+            error: (err) => {
+                console.error('Erro ao atualizar avatar:', err);
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: 'Não foi possível atualizar a foto'
+                });
+            }
+        });
+    }
+
+    removeAvatar(): void {
+        this.isRemovingAvatar.set(true);
+
+        removerAvatar1(this.http, this.apiConfig.rootUrl).subscribe({
+            next: () => {
+                this.authService.updateUserAvatar(undefined);
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Sucesso',
+                    detail: 'Foto removida com sucesso'
+                });
+                this.isRemovingAvatar.set(false);
+            },
+            error: (err) => {
+                console.error('Erro ao remover avatar:', err);
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: 'Não foi possível remover a foto'
+                });
+                this.isRemovingAvatar.set(false);
+            }
+        });
+    }
+
+    // Logo methods
+    onLogoUpload(event: { files: File[] }, orgId: number): void {
+        const file = event.files[0];
+        if (!file) return;
+
+        this.organizationService.uploadLogo(orgId, file).subscribe({
+            next: () => {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Sucesso',
+                    detail: 'Logo atualizado com sucesso'
+                });
+            },
+            error: (err) => {
+                console.error('Erro ao atualizar logo:', err);
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: 'Não foi possível atualizar o logo'
+                });
+            }
+        });
+    }
+
+    removeLogo(orgId: number): void {
+        this.organizationService.removeLogo(orgId).subscribe({
+            next: () => {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Sucesso',
+                    detail: 'Logo removido com sucesso'
+                });
+            },
+            error: (err) => {
+                console.error('Erro ao remover logo:', err);
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: 'Não foi possível remover o logo'
+                });
+            }
+        });
+    }
+
+    // Organization dialog methods
     openCreateDialog(): void {
         this.isEditMode = false;
         this.orgName = '';
@@ -211,10 +421,20 @@ export class Account {
                     this.orgName = '';
                     this.editingOrgId = null;
                     this.isLoading.set(false);
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Sucesso',
+                        detail: 'Organização atualizada com sucesso'
+                    });
                 },
                 error: (err) => {
                     console.error('Erro ao atualizar organização:', err);
                     this.isLoading.set(false);
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Erro',
+                        detail: 'Não foi possível atualizar a organização'
+                    });
                 }
             });
         } else {
@@ -223,10 +443,20 @@ export class Account {
                     this.showDialog = false;
                     this.orgName = '';
                     this.isLoading.set(false);
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Sucesso',
+                        detail: 'Organização criada com sucesso'
+                    });
                 },
                 error: (err) => {
                     console.error('Erro ao criar organização:', err);
                     this.isLoading.set(false);
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Erro',
+                        detail: 'Não foi possível criar a organização'
+                    });
                 }
             });
         }

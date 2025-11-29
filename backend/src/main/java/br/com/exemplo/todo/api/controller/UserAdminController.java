@@ -3,6 +3,7 @@ package br.com.exemplo.todo.api.controller;
 import br.com.exemplo.todo.api.dto.admin.*;
 import br.com.exemplo.todo.api.openapi.UserAdminControllerOpenApi;
 import br.com.exemplo.todo.domain.service.UserAdminService;
+import br.com.exemplo.todo.domain.service.UserAvatarService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +13,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -24,6 +37,7 @@ import java.util.List;
 public class UserAdminController implements UserAdminControllerOpenApi {
 
     private final UserAdminService userAdminService;
+    private final UserAvatarService userAvatarService;
 
     @Override
     @GetMapping
@@ -106,6 +120,24 @@ public class UserAdminController implements UserAdminControllerOpenApi {
     public List<LoginAttemptOutput> historicoLogin(@PathVariable Long userId) {
         log.debug("GET /admin/users/{}/login-history", userId);
         return userAdminService.listarHistoricoLogin(userId);
+    }
+
+    @Override
+    @PostMapping(value = "/{userId}/avatar", consumes = "multipart/form-data")
+    public UserAdminOutput atualizarAvatar(@PathVariable Long userId,
+                                           @RequestPart("file") MultipartFile file) {
+        log.debug("POST /admin/users/{}/avatar - filename={}", userId,
+                file != null ? file.getOriginalFilename() : "null");
+        userAvatarService.atualizarAvatar(userId, file);
+        return userAdminService.buscarUsuario(userId);
+    }
+
+    @Override
+    @DeleteMapping("/{userId}/avatar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removerAvatar(@PathVariable Long userId) {
+        log.debug("DELETE /admin/users/{}/avatar", userId);
+        userAvatarService.removerAvatar(userId);
     }
 
     private Pageable buildPageable(int page, int size, String sort) {

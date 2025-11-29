@@ -48,4 +48,7 @@ public class User {
 
     @Column(name = "USR_ULTIMO_ACESSO")
     private LocalDateTime ultimoAcesso;
+
+    @Column(name = "USR_AVATAR", length = 500)
+    private String avatar;
 }

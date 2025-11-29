@@ -38,7 +38,10 @@ public record UserAdminOutput(
         Boolean senhaExpirada,
 
         @Schema(description = "Numero de tentativas de login falhas")
-        Integer tentativasFalha
+        Integer tentativasFalha,
+
+        @Schema(description = "URL do avatar do usuario")
+        String avatar
 ) {
     public static UserAdminOutput from(User user, Membership membership, Account account) {
         return new UserAdminOutput(
@@ -51,7 +54,8 @@ public record UserAdminOutput(
                 user.getUltimoAcesso(),
                 account != null && Boolean.TRUE.equals(account.getBloqueado()),
                 account != null && Boolean.TRUE.equals(account.getSenhaExpirada()),
-                account != null && account.getTentativasFalha() != null ? account.getTentativasFalha() : 0
+                account != null && account.getTentativasFalha() != null ? account.getTentativasFalha() : 0,
+                user.getAvatar()
         );
     }
 }

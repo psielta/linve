@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -99,4 +100,22 @@ public interface UserAdminControllerOpenApi {
             @ApiResponse(responseCode = "404", description = "Usuario nao encontrado", content = @Content)
     })
     List<LoginAttemptOutput> historicoLogin(@Parameter(description = "ID do usuario") Long userId);
+
+    @Operation(summary = "Atualizar avatar do usuario", description = "Atualiza a foto de perfil do usuario na organizacao")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Avatar atualizado"),
+            @ApiResponse(responseCode = "400", description = "Arquivo invalido", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Usuario nao encontrado", content = @Content)
+    })
+    UserAdminOutput atualizarAvatar(
+            @Parameter(description = "ID do usuario") Long userId,
+            @Parameter(description = "Arquivo de avatar (PNG/JPEG/WEBP)", required = true)
+            MultipartFile file);
+
+    @Operation(summary = "Remover avatar do usuario", description = "Remove a foto de perfil do usuario")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Avatar removido"),
+            @ApiResponse(responseCode = "404", description = "Usuario nao encontrado", content = @Content)
+    })
+    void removerAvatar(@Parameter(description = "ID do usuario") Long userId);
 }

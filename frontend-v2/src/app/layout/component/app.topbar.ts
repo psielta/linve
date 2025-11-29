@@ -1,4 +1,4 @@
-import { Component, effect } from '@angular/core';
+import { Component, computed, effect } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -7,10 +7,12 @@ import { MenuModule } from 'primeng/menu';
 import { SelectModule } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
+import { AvatarModule } from 'primeng/avatar';
 import { AppConfigurator } from './app.configurator';
 import { LayoutService } from '../service/layout.service';
 import { AuthService } from '../../core/services/auth.service';
 import { TenantService } from '../../core/services/tenant.service';
+import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
 
 @Component({
     selector: 'app-topbar',
@@ -23,7 +25,9 @@ import { TenantService } from '../../core/services/tenant.service';
         MenuModule,
         SelectModule,
         FormsModule,
-        ButtonModule
+        ButtonModule,
+        AvatarModule,
+        MediaUrlPipe
     ],
     template: `
         <div class="layout-topbar">
@@ -50,7 +54,28 @@ import { TenantService } from '../../core/services/tenant.service';
                         optionValue="value"
                         [style]="{ minWidth: '180px' }"
                         class="hidden lg:flex"
-                    />
+                    >
+                        <ng-template pTemplate="selectedItem" let-selected>
+                            <div class="flex items-center gap-2" *ngIf="selected">
+                                @if (selected.logo) {
+                                    <img [src]="selected.logo | mediaUrl" class="w-6 h-6 rounded object-cover" />
+                                } @else {
+                                    <i class="pi pi-building text-surface-500"></i>
+                                }
+                                <span>{{ selected.label }}</span>
+                            </div>
+                        </ng-template>
+                        <ng-template pTemplate="item" let-item>
+                            <div class="flex items-center gap-2">
+                                @if (item.logo) {
+                                    <img [src]="item.logo | mediaUrl" class="w-6 h-6 rounded object-cover" />
+                                } @else {
+                                    <i class="pi pi-building text-surface-500"></i>
+                                }
+                                <span>{{ item.label }}</span>
+                            </div>
+                        </ng-template>
+                    </p-select>
                 }
 
                 <!-- Theme Toggle, Colors & User Menu -->
@@ -73,7 +98,11 @@ import { TenantService } from '../../core/services/tenant.service';
                         <app-configurator />
                     </div>
                     <button type="button" class="layout-topbar-action" (click)="userMenu.toggle($event)">
-                        <i class="pi pi-user"></i>
+                        @if (userAvatar()) {
+                            <p-avatar [image]="$any(userAvatar() | mediaUrl)" shape="circle" />
+                        } @else {
+                            <p-avatar [label]="userInitials()" shape="circle" styleClass="bg-primary text-primary-contrast" />
+                        }
                     </button>
                 </div>
                 <p-menu #userMenu [popup]="true" [model]="userMenuItems"></p-menu>
@@ -83,6 +112,17 @@ import { TenantService } from '../../core/services/tenant.service';
 })
 export class AppTopbar {
     userMenuItems: MenuItem[] = [];
+
+    userAvatar = computed(() => this.authService.user()?.avatar);
+
+    userInitials = computed(() => {
+        const nome = this.authService.user()?.nome || '';
+        const parts = nome.split(' ').filter(p => p.length > 0);
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+        return nome.substring(0, 2).toUpperCase() || 'U';
+    });
 
     constructor(
         public layoutService: LayoutService,
@@ -110,7 +150,8 @@ export class AppTopbar {
     get orgOptions() {
         return this.authService.organizations().map(m => ({
             label: m.organization.nome,
-            value: m.organization.id
+            value: m.organization.id,
+            logo: m.organization.logo
         }));
     }
 

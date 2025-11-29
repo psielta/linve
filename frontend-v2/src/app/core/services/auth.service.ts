@@ -116,6 +116,42 @@ export class AuthService {
     this._organizations.set(updated);
   }
 
+  updateUser(user: UserOutput): void {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    this._user.set(user);
+  }
+
+  updateUserAvatar(avatar: string | undefined): void {
+    const currentUser = this._user();
+    if (currentUser) {
+      const updatedUser = { ...currentUser, avatar };
+      localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+      this._user.set(updatedUser);
+    }
+  }
+
+  updateOrganizationData(orgId: number, org: { nome: string; logo?: string }): void {
+    const current = this._organizations();
+    const updated = current.map(m =>
+      m.organization.id === orgId
+        ? { ...m, organization: { ...m.organization, nome: org.nome, logo: org.logo } }
+        : m
+    );
+    localStorage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
+    this._organizations.set(updated);
+  }
+
+  updateOrganizationLogo(orgId: number, logo: string | undefined): void {
+    const current = this._organizations();
+    const updated = current.map(m =>
+      m.organization.id === orgId
+        ? { ...m, organization: { ...m.organization, logo } }
+        : m
+    );
+    localStorage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
+    this._organizations.set(updated);
+  }
+
   private handleAuthResponse(response: AuthResponse): void {
     localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
