@@ -3648,3 +3648,175 @@ O frontend pode usar essas URLs diretamente em tags `<img>`:
 <img [src]="organization.logo" alt="Logo" />
 <img [src]="user.avatar" alt="Avatar" />
 ```
+
+## Envio de E-mails e Magic Link
+
+O backend implementa um sistema de envio de e-mails seguindo **Arquitetura Hexagonal (Ports & Adapters)** para suportar:
+- Entrega de e-mails em desenvolvimento via **MailHog** (SMTP local).
+- Entrega em producao via **Mailgun** (HTTP API).
+- Login via **magic link** (link de acesso enviado por e-mail).
+
+### Porta de E-mail (Domain)
+
+- Interface `EmailService` (`domain/service/EmailService.java`):
+  ```java
+  public interface EmailService {
+      void send(String to, String subject, String html);
+  }
+  ```
+
+Toda a aplicacao de dominio depende apenas dessa interface, sem conhecer SMTP/Mailgun.
+
+### Adapters
+
+**1) MailHogEmailService (default dev/testes)**
+
+- Classe: `infrastructure/email/MailHogEmailService.java`
+- Anotacao: `@Service` + `@Profile("!prod")`
+- Usa `JavaMailSender` configurado em `application.yml`:
+  ```yaml
+  spring:
+    mail:
+      host: localhost
+      port: 1025
+      username:
+      password:
+      properties:
+        mail:
+          smtp:
+            auth: false
+            starttls:
+              enable: false
+  ```
+- Remetente padrao (pode ser sobrescrito via `app.mail.from`, com default `no-reply@todo.local`).
+
+**2) MailgunEmailService (producao)**
+
+- Classe: `infrastructure/email/MailgunEmailService.java`
+- Anotacao: `@Service` + `@Profile("prod")`
+- Usa `WebClient` (bean `WebClient.Builder` em `TodoApplication`) para chamar:
+  - `POST https://api.mailgun.net/v3/{domain}/messages`
+- Configuracao em `application-prod.yml`:
+  ```yaml
+  mailgun:
+    domain: ${MAILGUN_DOMAIN:seu-dominio.mailgun.org}
+    api-key: ${MAILGUN_API_KEY:changeme}
+    from: ${MAILGUN_FROM:no-reply@seu-dominio.com}
+  ```
+
+### Subindo o MailHog em Docker
+
+O mesmo `docker-compose` usado para o MinIO tambem sobe o MailHog:
+
+```bash
+cd backend
+docker compose -f docker/docker-compose.minio.yml up -d
+```
+
+Servicos:
+- MinIO: `http://localhost:9000` (API), `http://localhost:9001` (console)
+- MailHog:
+  - SMTP: `localhost:1025`
+  - UI Web: `http://localhost:8025`
+
+### Magic Link de Login
+
+O sistema suporta login via **link enviado por e-mail**, alem de login tradicional por senha.
+
+#### Configuracao do Magic Link
+
+Em `application.yml`:
+
+```yaml
+auth:
+  magic-link:
+    base-url: http://localhost:4200/auth/magic-link
+```
+
+Essa URL aponta para a rota do frontend que recebera o token JWT do magic link. O backend gera um token JWT de curta duracao com claim `tipo = "MAGIC_LOGIN"` e o envia como query string:
+
+```
+http://localhost:4200/auth/magic-link?token=<JWT>
+```
+
+#### Endpoints de Magic Link
+
+| Metodo | Endpoint                    | Auth | Descricao                                   |
+|--------|-----------------------------|------|---------------------------------------------|
+| POST   | `/api/auth/magic-link`      | Nao  | Solicita envio do magic link por e-mail     |
+| POST   | `/api/auth/magic-link/confirm` | Nao  | Confirma magic link e retorna tokens JWT    |
+
+**Importante:** Ambos os endpoints sao **publicos** e **nao revelam** se o e-mail existe ou nao no sistema (prevencao de user enumeration).
+
+#### Fluxo Completo
+
+1. **Usuario solicita magic link**
+   - Request:
+     ```http
+     POST /api/auth/magic-link
+     Content-Type: application/json
+
+     {
+       "email": "usuario@exemplo.com"
+     }
+     ```
+   - Backend:
+     - Busca usuario por e-mail (se nao existir, nao faz nada).
+     - Gera token JWT de magic link.
+     - Monta URL: `auth.magic-link.base-url?token=<JWT>`.
+     - Envia e-mail HTML via `EmailService`.
+   - Resposta:
+     ```http
+     204 No Content
+     ```
+
+2. **Usuario clica no link recebido** (no frontend)
+   - Frontend extrai `token` da query string e envia para o backend:
+     ```http
+     POST /api/auth/magic-link/confirm
+     Content-Type: application/json
+
+     {
+       "token": "<JWT_MAGIC_LINK>"
+     }
+     ```
+
+3. **Backend confirma magic link**
+   - Valida token JWT (`tipo = MAGIC_LOGIN`, expiracao, assinatura).
+   - Busca usuario (id do `sub`).
+   - Verifica se conta esta ativa / nao bloqueada.
+   - Registra tentativa de login (`LoginAttempt` com motivo `MAGIC_LINK`.
+   - Atualiza `ultimoAcesso`.
+   - Gera `AuthResponse` normal (access token + refresh token + organizacoes).
+
+4. **Resposta:**
+   ```json
+   {
+     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+     "refreshToken": "rnd-base64...",
+     "tokenType": "Bearer",
+     "expiresIn": 900,
+     "user": {
+       "id": 1,
+       "nome": "Usuario Exemplo",
+       "email": "usuario@exemplo.com",
+       "avatar": "/api/media/..."
+     },
+     "organizations": [
+       {
+         "organizationId": 1,
+         "organizationName": "Minha Org",
+         "role": "OWNER"
+       }
+     ],
+     "senhaExpirada": false
+   }
+   ```
+
+#### Uso sugerido no Frontend
+
+- Rota `/auth/magic-link` do frontend:
+  1. Ler `token` da query string.
+  2. Enviar `POST /api/auth/magic-link/confirm` com `{ token }`.
+  3. Receber `AuthResponse`, salvar tokens e redirecionar para dashboard.
+  4. Tratar erros 401 como "link expirado ou invalido" e exibir opcao para reenviar magic link.

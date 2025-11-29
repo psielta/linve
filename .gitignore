@@ -15,3 +15,9 @@ desktop.ini
 
 # Claude
 .claude/
+/.claude
+
+# Temp files
+*.tmp
+NUL
+nul
