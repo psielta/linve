@@ -22,6 +22,7 @@ import br.com.exemplo.todo.domain.service.exception.ProdutoNaoEncontradoExceptio
 import br.com.exemplo.todo.domain.service.exception.ProdutoPrecoCategoriaInvalidaException;
 import br.com.exemplo.todo.domain.service.exception.ProdutoPrecoNaoEncontradoException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
+import br.com.exemplo.todo.domain.exception.UfNaoEncontradaException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -282,6 +283,16 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(CulinariaNotFoundException.class)
     public ResponseEntity<Object> handleCulinariaNotFoundException(
             CulinariaNotFoundException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(UfNaoEncontradaException.class)
+    public ResponseEntity<Object> handleUfNaoEncontradaException(
+            UfNaoEncontradaException ex, WebRequest request) {
 
         HttpStatus status = HttpStatus.NOT_FOUND;
         ProblemDetail problemDetail = createProblem(ex, status);

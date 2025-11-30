@@ -1,0 +1,30 @@
+package br.com.exemplo.todo.domain.service;
+
+import br.com.exemplo.todo.domain.model.entity.Municipio;
+import br.com.exemplo.todo.domain.repository.MunicipioRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class MunicipioService {
+
+    private final MunicipioRepository municipioRepository;
+
+    @Transactional(readOnly = true)
+    public List<Municipio> listarPorUf(String siglaUf) {
+        log.debug("Listando municipios da UF: {}", siglaUf);
+        return municipioRepository.findByUfSiglaIgnoreCaseOrderByNomeAsc(siglaUf);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Municipio> listarTodos() {
+        log.debug("Listando todos os municipios");
+        return municipioRepository.findAllByOrderByNomeAsc();
+    }
+}

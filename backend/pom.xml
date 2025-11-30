@@ -50,6 +50,11 @@
 			<groupId>org.xerial</groupId>
 			<artifactId>sqlite-jdbc</artifactId>
 		</dependency>
+		<!-- Flyway Migrations -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
 		<!-- Cache -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

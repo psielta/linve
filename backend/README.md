@@ -40,6 +40,7 @@ Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-back
 | Spring Security | 6.4.x | AutenticaÃ§Ã£o e autorizaÃ§Ã£o |
 | Spring Data JPA | 3.4.7 | AbstraÃ§Ã£o para acesso a dados |
 | SQLite | - | Banco de dados local (arquivo) |
+| Flyway | 10.x | Migrations de banco de dados |
 | Hibernate Community Dialects | - | Suporte SQLite no Hibernate |
 | JJWT | 0.12.6 | GeraÃ§Ã£o e validaÃ§Ã£o de tokens JWT |
 | SpringDoc OpenAPI | 2.8.9 | DocumentaÃ§Ã£o da API (Swagger) |
@@ -852,14 +853,63 @@ public class TodoApplication {
 2. Localize a classe `TodoApplication.java` em `src/main/java/br/com/exemplo/todo/`
 3. Clique com botÃ£o direito â†’ Run (ou use o atalho da IDE)
 
-### Banco de dados e migrations (SQLite)
+### Banco de dados e migrations (SQLite + Flyway)
 
-- **Sem servidor externo:** o SQLite cria o arquivo `./data/todo.db` automaticamente na primeira execuÃ§Ã£o.
-- **Schema automÃ¡tico:** o Hibernate estÃ¡ com `spring.jpa.hibernate.ddl-auto=update`, entÃ£o as tabelas sÃ£o criadas/ajustadas ao subir a aplicaÃ§Ã£o.
-- **Migrations Flyway (opcional/manual):**
-  - Scripts SQL ficam em `flyway/sql/`.
-  - Para aplicar manualmente: `mvn -Dflyway.configFiles=flyway/flyway.conf flyway:migrate`.
-  - Para recomeÃ§ar do zero, basta apagar o arquivo `data/todo.db` antes de rodar.
+- **Sem servidor externo:** o SQLite cria o arquivo `./data/todo.db` automaticamente na primeira execucao.
+- **Schema gerenciado pelo Flyway:** o Hibernate esta com `spring.jpa.hibernate.ddl-auto=none`, e o **Flyway** gerencia o schema automaticamente.
+- **Migrations Flyway (automatico no startup):**
+  - Scripts SQL ficam em `flyway/sql/` (ex: `V0001__criar_tabela_todo.sql`).
+  - **Executam automaticamente** ao iniciar a aplicacao Spring Boot.
+  - Para recomecar do zero, basta apagar o arquivo `data/todo.db` antes de rodar.
+  - O Flyway cria a tabela `flyway_schema_history` para controlar quais migrations ja foram aplicadas.
+
+#### Configuracao do Flyway (application.yml)
+
+```yaml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none  # Flyway gerencia o schema, nao o Hibernate
+  flyway:
+    enabled: true
+    locations: filesystem:./flyway/sql
+    baseline-on-migrate: true
+    baseline-version: 0
+```
+
+#### Lista de Migrations
+
+| Versao | Arquivo | Descricao |
+|--------|---------|-----------|
+| V0001 | `V0001__criar_tabela_todo.sql` | Tabela TODO |
+| V0002 | `V0002__criar_tabelas_autenticacao.sql` | Tabelas de autenticacao (ACCOUNT, ORGANIZATION, MEMBERSHIP, etc) |
+| V0003 | `V0003__adicionar_organizacao_todo.sql` | Adiciona ORG_ID a tabela TODO |
+| V0004 | `V0004__criar_tabela_login_attempt.sql` | Tabela de tentativas de login |
+| V0005 | `V0005__corrigir_account_null_values.sql` | Correcoes em ACCOUNT |
+| V0006 | `V0006__criar_tabela_stored_file.sql` | Tabela de arquivos armazenados |
+| V0007 | `V0007__adicionar_avatar_usuario.sql` | Campo avatar em usuario |
+| V0008 | `V0008__criar_tabela_culinaria.sql` | Tabela de culinarias |
+| V0009 | `V0009__criar_tabelas_categoria.sql` | Tabelas de categorias |
+| V0010 | `V0010__criar_tabelas_produto_e_preco.sql` | Tabelas de produtos e precos |
+| V0011 | `V0011__criar_tabelas_adicional.sql` | Tabelas de adicionais |
+| V0012 | `V0012__criar_tabelas_uf_municipio.sql` | Tabelas UF e MUNICIPIO (dados abertos) |
+
+#### Criar Nova Migration
+
+1. Crie um arquivo em `flyway/sql/` seguindo o padrao: `V{numero}__{descricao}.sql`
+   - Exemplo: `V0013__criar_tabela_pedido.sql`
+2. Escreva os comandos SQL (CREATE TABLE, INSERT, etc)
+3. Reinicie a aplicacao - o Flyway aplicara automaticamente
+
+#### Executar Flyway Manualmente (opcional)
+
+```bash
+# Aplicar migrations pendentes
+mvn flyway:migrate -Dflyway.url=jdbc:sqlite:file:./data/todo.db -Dflyway.locations=filesystem:./flyway/sql
+
+# Ver status das migrations
+mvn flyway:info -Dflyway.url=jdbc:sqlite:file:./data/todo.db -Dflyway.locations=filesystem:./flyway/sql
+```
 
 ### Executar via Terminal
 

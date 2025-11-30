@@ -12,6 +12,7 @@ import br.com.exemplo.todo.domain.exception.StoredFileNotFoundException;
 import br.com.exemplo.todo.domain.exception.StorageException;
 import br.com.exemplo.todo.domain.exception.CulinariaNotFoundException;
 import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
+import br.com.exemplo.todo.domain.exception.UfNaoEncontradaException;
 import br.com.exemplo.todo.domain.exception.UserNotFoundException;
 import br.com.exemplo.todo.domain.service.exception.CategoriaNaoEncontradaException;
 import br.com.exemplo.todo.domain.service.exception.CategoriaOpcaoNaoEncontradaException;
@@ -90,6 +91,9 @@ public enum ProblemType {
 
     CULINARIA_NAO_ENCONTRADA(CulinariaNotFoundException.class,
             "Culinaria nao encontrada", "culinaria-nao-encontrada"),
+
+    UF_NAO_ENCONTRADA(UfNaoEncontradaException.class,
+            "UF nao encontrada", "uf-nao-encontrada"),
 
     NAO_PODE_MODIFICAR_OWNER(CannotModifyOwnerException.class,
             "Nao e permitido modificar o proprietario", "nao-pode-modificar-owner"),

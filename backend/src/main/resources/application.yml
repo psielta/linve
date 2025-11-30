@@ -21,17 +21,22 @@ spring:
     driverClassName: org.sqlite.JDBC
   jpa:
     database-platform: org.hibernate.community.dialect.SQLiteDialect
-    defer-datasource-initialization: true
+    defer-datasource-initialization: false
     open-in-view: false
     show-sql: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     properties:
       hibernate:
         "[format_sql]": true
+  flyway:
+    enabled: true
+    locations: filesystem:./flyway/sql
+    baseline-on-migrate: true
+    baseline-version: 0
   sql:
     init:
-      mode: embedded
+      mode: never
   devtools:
     add-properties: false
   jackson:
