@@ -1,7 +1,7 @@
 package br.com.exemplo.todo.testesintegracao;
 
-import br.com.exemplo.todo.api.model.input.TodoInput;
-import br.com.exemplo.todo.api.model.output.TodoOutput;
+import br.com.exemplo.todo.api.dto.todo.TodoInput;
+import br.com.exemplo.todo.api.dto.todo.TodoOutput;
 import br.com.exemplo.todo.domain.model.entity.Membership;
 import br.com.exemplo.todo.domain.model.entity.Organization;
 import br.com.exemplo.todo.domain.model.entity.Todo;

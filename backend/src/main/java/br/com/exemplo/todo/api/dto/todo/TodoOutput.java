@@ -1,4 +1,4 @@
-package br.com.exemplo.todo.api.model.output;
+package br.com.exemplo.todo.api.dto.todo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;

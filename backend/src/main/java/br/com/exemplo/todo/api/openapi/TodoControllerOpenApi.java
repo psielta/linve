@@ -1,7 +1,7 @@
 package br.com.exemplo.todo.api.openapi;
 
-import br.com.exemplo.todo.api.model.input.TodoInput;
-import br.com.exemplo.todo.api.model.output.TodoOutput;
+import br.com.exemplo.todo.api.dto.todo.TodoInput;
+import br.com.exemplo.todo.api.dto.todo.TodoOutput;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

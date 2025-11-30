@@ -1,6 +1,6 @@
 package br.com.exemplo.todo.domain.service;
 
-import br.com.exemplo.todo.api.model.input.TodoInput;
+import br.com.exemplo.todo.api.dto.todo.TodoInput;
 import br.com.exemplo.todo.domain.model.entity.Todo;
 import br.com.exemplo.todo.domain.repository.TodoRepository;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
