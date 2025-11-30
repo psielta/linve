@@ -1,17 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map, tap } from 'rxjs';
-import { AuthService } from './auth.service';
 import { ApiConfiguration } from '../api/api-configuration';
-import { MembershipOutput, OrganizationOutput } from '../api/models';
-import { criar1 } from '../api/fn/organizations/criar-1';
-import { atualizar1 } from '../api/fn/organizations/atualizar-1';
+import { MembershipOutput, OrganizationOutput, OrganizationInput } from '../api/models';
+import { AuthService } from './auth.service';
+import { criar2 } from '../api/fn/organizations/criar-2';
+import { atualizar2 } from '../api/fn/organizations/atualizar-2';
 import { atualizarLogo } from '../api/fn/organizations/atualizar-logo';
 import { removerLogo } from '../api/fn/organizations/remover-logo';
-
-export interface OrganizationInput {
-  nome: string;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -24,23 +20,23 @@ export class OrganizationService {
   ) {}
 
   criar(input: OrganizationInput): Observable<MembershipOutput> {
-    return criar1(this.http, this.apiConfig.rootUrl, { body: input }).pipe(
-      map(res => res.body),
-      tap(membership => this.authService.addOrganization(membership))
+    return criar2(this.http, this.apiConfig.rootUrl, { body: input }).pipe(
+      map((res) => res.body as MembershipOutput),
+      tap((membership) => this.authService.addOrganization(membership))
     );
   }
 
   atualizar(id: number, input: OrganizationInput): Observable<OrganizationOutput> {
-    return atualizar1(this.http, this.apiConfig.rootUrl, { id, body: input }).pipe(
-      map(res => res.body),
-      tap(org => this.authService.updateOrganizationData(id, org))
+    return atualizar2(this.http, this.apiConfig.rootUrl, { id, body: input }).pipe(
+      map((res) => res.body as OrganizationOutput),
+      tap((org) => this.authService.updateOrganizationData(id, org))
     );
   }
 
   uploadLogo(orgId: number, file: File): Observable<OrganizationOutput> {
     return atualizarLogo(this.http, this.apiConfig.rootUrl, { id: orgId, body: { file } }).pipe(
-      map(res => res.body),
-      tap(org => this.authService.updateOrganizationData(orgId, org))
+      map((res) => res.body as OrganizationOutput),
+      tap((org) => this.authService.updateOrganizationData(orgId, org))
     );
   }
 

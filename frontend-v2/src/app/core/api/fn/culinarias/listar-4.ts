@@ -7,20 +7,16 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { UserAdminOutput } from '../../models/user-admin-output';
+import { CulinariaOutput } from '../../models/culinaria-output';
 
-export interface Buscar2$Params {
-
-/**
- * ID do usuario
- */
-  userId: number;
+export interface Listar4$Params {
+  meioMeio?: boolean;
 }
 
-export function buscar2(http: HttpClient, rootUrl: string, params: Buscar2$Params, context?: HttpContext): Observable<StrictHttpResponse<UserAdminOutput>> {
-  const rb = new RequestBuilder(rootUrl, buscar2.PATH, 'get');
+export function listar4(http: HttpClient, rootUrl: string, params?: Listar4$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<CulinariaOutput>>> {
+  const rb = new RequestBuilder(rootUrl, listar4.PATH, 'get');
   if (params) {
-    rb.path('userId', params.userId, {});
+    rb.query('meioMeio', params.meioMeio, {});
   }
 
   return http.request(
@@ -28,9 +24,9 @@ export function buscar2(http: HttpClient, rootUrl: string, params: Buscar2$Param
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<UserAdminOutput>;
+      return r as StrictHttpResponse<Array<CulinariaOutput>>;
     })
   );
 }
 
-buscar2.PATH = '/api/admin/users/{userId}';
+listar4.PATH = '/api/culinarias';

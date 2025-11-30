@@ -7,14 +7,14 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { MembershipOutput } from '../../models/membership-output';
-import { OrganizationInput } from '../../models/organization-input';
+import { ProdutoInput } from '../../models/produto-input';
+import { ProdutoOutput } from '../../models/produto-output';
 
 export interface Criar1$Params {
-      body: OrganizationInput
+      body: ProdutoInput
 }
 
-export function criar1(http: HttpClient, rootUrl: string, params: Criar1$Params, context?: HttpContext): Observable<StrictHttpResponse<MembershipOutput>> {
+export function criar1(http: HttpClient, rootUrl: string, params: Criar1$Params, context?: HttpContext): Observable<StrictHttpResponse<ProdutoOutput>> {
   const rb = new RequestBuilder(rootUrl, criar1.PATH, 'post');
   if (params) {
     rb.body(params.body, 'application/json');
@@ -25,9 +25,9 @@ export function criar1(http: HttpClient, rootUrl: string, params: Criar1$Params,
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<MembershipOutput>;
+      return r as StrictHttpResponse<ProdutoOutput>;
     })
   );
 }
 
-criar1.PATH = '/api/organizations';
+criar1.PATH = '/api/produtos';

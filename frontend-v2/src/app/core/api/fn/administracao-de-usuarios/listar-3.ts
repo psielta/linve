@@ -9,7 +9,7 @@ import { RequestBuilder } from '../../request-builder';
 
 import { PageUserAdminOutput } from '../../models/page-user-admin-output';
 
-export interface Listar2$Params {
+export interface Listar3$Params {
 
 /**
  * Filtrar por status ativo
@@ -42,8 +42,8 @@ export interface Listar2$Params {
   sort?: string;
 }
 
-export function listar2(http: HttpClient, rootUrl: string, params?: Listar2$Params, context?: HttpContext): Observable<StrictHttpResponse<PageUserAdminOutput>> {
-  const rb = new RequestBuilder(rootUrl, listar2.PATH, 'get');
+export function listar3(http: HttpClient, rootUrl: string, params?: Listar3$Params, context?: HttpContext): Observable<StrictHttpResponse<PageUserAdminOutput>> {
+  const rb = new RequestBuilder(rootUrl, listar3.PATH, 'get');
   if (params) {
     rb.query('ativo', params.ativo, {});
     rb.query('role', params.role, {});
@@ -63,4 +63,4 @@ export function listar2(http: HttpClient, rootUrl: string, params?: Listar2$Para
   );
 }
 
-listar2.PATH = '/api/admin/users';
+listar3.PATH = '/api/admin/users';

@@ -29,7 +29,8 @@ export class AppMenu {
                 items: [
                     { label: 'Tarefas', icon: 'pi pi-fw pi-check-square', routerLink: ['/app/todos'] },
                     { label: 'Culinárias', icon: 'pi pi-fw pi-th-large', routerLink: ['/app/culinarias'] },
-                    { label: 'Categorias', icon: 'pi pi-fw pi-sitemap', routerLink: ['/app/categorias'] }
+                    { label: 'Categorias', icon: 'pi pi-fw pi-sitemap', routerLink: ['/app/categorias'] },
+                    { label: 'Produtos', icon: 'pi pi-fw pi-box', routerLink: ['/app/produtos'] }
                 ]
             },
             {
@@ -126,4 +127,5 @@ export class AppMenu {
         ];
     }
 }
+
 

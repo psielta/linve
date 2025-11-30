@@ -7,30 +7,25 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { CategoriaOutput } from '../../models/categoria-output';
 
-export interface Buscar1$Params {
-
-/**
- * ID da categoria
- */
+export interface Excluir1$Params {
   id: number;
 }
 
-export function buscar1(http: HttpClient, rootUrl: string, params: Buscar1$Params, context?: HttpContext): Observable<StrictHttpResponse<CategoriaOutput>> {
-  const rb = new RequestBuilder(rootUrl, buscar1.PATH, 'get');
+export function excluir1(http: HttpClient, rootUrl: string, params: Excluir1$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+  const rb = new RequestBuilder(rootUrl, excluir1.PATH, 'delete');
   if (params) {
     rb.path('id', params.id, {});
   }
 
   return http.request(
-    rb.build({ responseType: 'json', accept: 'application/json', context })
+    rb.build({ responseType: 'text', accept: '*/*', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<CategoriaOutput>;
+      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
     })
   );
 }
 
-buscar1.PATH = '/api/categorias/{id}';
+excluir1.PATH = '/api/produtos/{id}';

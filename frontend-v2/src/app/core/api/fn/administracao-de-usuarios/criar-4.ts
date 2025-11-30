@@ -7,22 +7,16 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { OrganizationInput } from '../../models/organization-input';
-import { OrganizationOutput } from '../../models/organization-output';
+import { UserAdminInput } from '../../models/user-admin-input';
+import { UserPasswordResetOutput } from '../../models/user-password-reset-output';
 
-export interface Atualizar1$Params {
-
-/**
- * ID da organizacao
- */
-  id: number;
-      body: OrganizationInput
+export interface Criar4$Params {
+      body: UserAdminInput
 }
 
-export function atualizar1(http: HttpClient, rootUrl: string, params: Atualizar1$Params, context?: HttpContext): Observable<StrictHttpResponse<OrganizationOutput>> {
-  const rb = new RequestBuilder(rootUrl, atualizar1.PATH, 'put');
+export function criar4(http: HttpClient, rootUrl: string, params: Criar4$Params, context?: HttpContext): Observable<StrictHttpResponse<UserPasswordResetOutput>> {
+  const rb = new RequestBuilder(rootUrl, criar4.PATH, 'post');
   if (params) {
-    rb.path('id', params.id, {});
     rb.body(params.body, 'application/json');
   }
 
@@ -31,9 +25,9 @@ export function atualizar1(http: HttpClient, rootUrl: string, params: Atualizar1
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<OrganizationOutput>;
+      return r as StrictHttpResponse<UserPasswordResetOutput>;
     })
   );
 }
 
-atualizar1.PATH = '/api/organizations/{id}';
+criar4.PATH = '/api/admin/users';

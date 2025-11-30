@@ -9,18 +9,18 @@ import { RequestBuilder } from '../../request-builder';
 
 import { CategoriaOutput } from '../../models/categoria-output';
 
-export interface Listar1$Params {
+export interface Buscar2$Params {
 
 /**
- * ID da culinaria para filtro opcional
+ * ID da categoria
  */
-  id_culinaria?: number;
+  id: number;
 }
 
-export function listar1(http: HttpClient, rootUrl: string, params?: Listar1$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<CategoriaOutput>>> {
-  const rb = new RequestBuilder(rootUrl, listar1.PATH, 'get');
+export function buscar2(http: HttpClient, rootUrl: string, params: Buscar2$Params, context?: HttpContext): Observable<StrictHttpResponse<CategoriaOutput>> {
+  const rb = new RequestBuilder(rootUrl, buscar2.PATH, 'get');
   if (params) {
-    rb.query('id_culinaria', params.id_culinaria, {});
+    rb.path('id', params.id, {});
   }
 
   return http.request(
@@ -28,9 +28,9 @@ export function listar1(http: HttpClient, rootUrl: string, params?: Listar1$Para
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<Array<CategoriaOutput>>;
+      return r as StrictHttpResponse<CategoriaOutput>;
     })
   );
 }
 
-listar1.PATH = '/api/categorias';
+buscar2.PATH = '/api/categorias/{id}';

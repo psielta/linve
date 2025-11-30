@@ -4,13 +4,13 @@ import { from, Observable } from 'rxjs';
 import { Api } from '../../../core/api/api';
 import {
   adicionarOpcao,
-  atualizar2,
+  atualizar3,
   atualizarOpcao,
-  buscar1,
-  criar2,
+  buscar2,
+  criar3,
   desativarOpcao,
-  excluir1,
-  listar1,
+  excluir2,
+  listar2,
   listarOpcoes
 } from '../../../core/api/functions';
 import { CategoriaInput } from '../../../core/api/models/categoria-input';
@@ -23,23 +23,23 @@ export class CategoriaService {
 
   listar(idCulinaria?: number): Observable<CategoriaOutput[]> {
     const params = idCulinaria !== undefined ? { id_culinaria: idCulinaria } : undefined;
-    return from(this.api.invoke(listar1, params, {} as HttpContext));
+    return from(this.api.invoke(listar2, params, {} as HttpContext));
   }
 
   buscar(id: number): Observable<CategoriaOutput> {
-    return from(this.api.invoke(buscar1, { id }));
+    return from(this.api.invoke(buscar2, { id }));
   }
 
   criar(input: CategoriaInput): Observable<CategoriaOutput> {
-    return from(this.api.invoke(criar2, { body: input }));
+    return from(this.api.invoke(criar3, { body: input }));
   }
 
   atualizar(id: number, input: CategoriaInput): Observable<CategoriaOutput> {
-    return from(this.api.invoke(atualizar2, { id, body: input }));
+    return from(this.api.invoke(atualizar3, { id, body: input }));
   }
 
   excluir(id: number): Observable<void> {
-    return from(this.api.invoke(excluir1, { id }));
+    return from(this.api.invoke(excluir2, { id }));
   }
 
   listarOpcoes(categoriaId: number): Observable<CategoriaOpcaoOutput[]> {
@@ -58,4 +58,3 @@ export class CategoriaService {
     return from(this.api.invoke(desativarOpcao, { idCategoria: categoriaId, idOpcao: opcaoId }));
   }
 }
-

@@ -10,12 +10,12 @@ import { RequestBuilder } from '../../request-builder';
 import { CategoriaInput } from '../../models/categoria-input';
 import { CategoriaOutput } from '../../models/categoria-output';
 
-export interface Criar2$Params {
+export interface Criar3$Params {
       body: CategoriaInput
 }
 
-export function criar2(http: HttpClient, rootUrl: string, params: Criar2$Params, context?: HttpContext): Observable<StrictHttpResponse<CategoriaOutput>> {
-  const rb = new RequestBuilder(rootUrl, criar2.PATH, 'post');
+export function criar3(http: HttpClient, rootUrl: string, params: Criar3$Params, context?: HttpContext): Observable<StrictHttpResponse<CategoriaOutput>> {
+  const rb = new RequestBuilder(rootUrl, criar3.PATH, 'post');
   if (params) {
     rb.body(params.body, 'application/json');
   }
@@ -30,4 +30,4 @@ export function criar2(http: HttpClient, rootUrl: string, params: Criar2$Params,
   );
 }
 
-criar2.PATH = '/api/categorias';
+criar3.PATH = '/api/categorias';

@@ -8,7 +8,7 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 
-export interface Excluir1$Params {
+export interface Excluir2$Params {
 
 /**
  * ID da categoria
@@ -16,8 +16,8 @@ export interface Excluir1$Params {
   id: number;
 }
 
-export function excluir1(http: HttpClient, rootUrl: string, params: Excluir1$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
-  const rb = new RequestBuilder(rootUrl, excluir1.PATH, 'delete');
+export function excluir2(http: HttpClient, rootUrl: string, params: Excluir2$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+  const rb = new RequestBuilder(rootUrl, excluir2.PATH, 'delete');
   if (params) {
     rb.path('id', params.id, {});
   }
@@ -32,4 +32,4 @@ export function excluir1(http: HttpClient, rootUrl: string, params: Excluir1$Par
   );
 }
 
-excluir1.PATH = '/api/categorias/{id}';
+excluir2.PATH = '/api/categorias/{id}';
