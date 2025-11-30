@@ -92,6 +92,7 @@ import { CulinariaOutput } from '../../../../core/api/models/culinaria-output';
                 [showClear]="true"
                 styleClass="w-full"
                 inputStyleClass="w-full"
+                [invalid]="invalid('culinariaSelecionada')"
               >
                 <ng-template let-culinaria #item>
                   <div class="flex items-center justify-between w-full gap-2">
@@ -117,7 +118,7 @@ import { CulinariaOutput } from '../../../../core/api/models/culinaria-output';
                 pInputText
                 formControlName="nome"
                 placeholder="Ex: Acais, Pizzas, Bebidas..."
-                class="w-full"
+                [ngClass]="{'w-full': true, 'ng-invalid ng-dirty': invalid('nome')}"
               />
               <small class="text-red-500" *ngIf="invalid('nome')">Informe um nome (max. 150 caracteres)</small>
             </div>
@@ -130,7 +131,7 @@ import { CulinariaOutput } from '../../../../core/api/models/culinaria-output';
                 rows="3"
                 formControlName="descricao"
                 placeholder="Breve descricao para o cliente (opcional)"
-                class="w-full"
+                [ngClass]="{'w-full': true, 'ng-invalid ng-dirty': invalid('descricao')}"
               ></textarea>
             </div>
 
@@ -201,7 +202,13 @@ import { CulinariaOutput } from '../../../../core/api/models/culinaria-output';
               />
             </div>
 
-            <div class="flex flex-wrap gap-2 min-h-12 p-3 bg-surface-0 dark:bg-surface-900 rounded-lg border border-surface-200 dark:border-surface-700">
+            <div
+              class="flex flex-wrap gap-2 min-h-12 p-3 rounded-lg border"
+              [ngClass]="{
+                'bg-surface-0 dark:bg-surface-900 border-surface-200 dark:border-surface-700': !invalid('opcoes'),
+                'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700': invalid('opcoes')
+              }"
+            >
               @if (opcoesValue().length === 0) {
                 <span class="text-surface-400 text-sm">Nenhuma opcao adicionada</span>
               } @else {
@@ -215,7 +222,13 @@ import { CulinariaOutput } from '../../../../core/api/models/culinaria-output';
                 }
               }
             </div>
-            <small class="text-red-500" *ngIf="invalid('opcoes')">Cadastre ao menos uma opcao</small>
+            <div
+              *ngIf="invalid('opcoes')"
+              class="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-400"
+            >
+              <i class="pi pi-exclamation-triangle text-xl"></i>
+              <span class="font-medium">Cadastre ao menos uma opcao para esta categoria</span>
+            </div>
           </div>
         </div>
 
@@ -237,6 +250,7 @@ import { CulinariaOutput } from '../../../../core/api/models/culinaria-output';
                   placeholder="00:00"
                   slotChar="HH:MM"
                   styleClass="w-full"
+                  [invalid]="invalid('horario')"
                 />
               </div>
               <div class="flex flex-col gap-2">
@@ -247,6 +261,7 @@ import { CulinariaOutput } from '../../../../core/api/models/culinaria-output';
                   placeholder="23:59"
                   slotChar="HH:MM"
                   styleClass="w-full"
+                  [invalid]="invalid('horario')"
                 />
               </div>
             </div>

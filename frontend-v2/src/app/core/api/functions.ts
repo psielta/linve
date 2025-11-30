@@ -75,6 +75,16 @@ export type { Ativar$Params as Ativar$Params } from './fn/administracao-de-usuar
 export { ativar as ativar } from './fn/administracao-de-usuarios/ativar';
 export type { HistoricoLogin$Params as HistoricoLogin$Params } from './fn/administracao-de-usuarios/historico-login';
 export { historicoLogin as historicoLogin } from './fn/administracao-de-usuarios/historico-login';
+export type { Buscar4$Params as Buscar4$Params } from './fn/adicionais/buscar-4';
+export { buscar4 as buscar4 } from './fn/adicionais/buscar-4';
+export type { Atualizar5$Params as Atualizar5$Params } from './fn/adicionais/atualizar-5';
+export { atualizar5 as atualizar5 } from './fn/adicionais/atualizar-5';
+export type { Excluir3$Params as Excluir3$Params } from './fn/adicionais/excluir-3';
+export { excluir3 as excluir3 } from './fn/adicionais/excluir-3';
+export type { Listar4$Params as Listar4$Params } from './fn/adicionais/listar-4';
+export { listar4 as listar4 } from './fn/adicionais/listar-4';
+export type { Criar5$Params as Criar5$Params } from './fn/adicionais/criar-5';
+export { criar5 as criar5 } from './fn/adicionais/criar-5';
 export type { Upload$Params as Upload$Params } from './fn/media/upload';
 export { upload as upload } from './fn/media/upload';
 export type { Download$Any$Params as Download$Any$Params } from './fn/media/download-any';
@@ -99,7 +109,7 @@ export type { AtualizarAvatar1$Params as AtualizarAvatar1$Params } from './fn/co
 export { atualizarAvatar1 as atualizarAvatar1 } from './fn/conta/atualizar-avatar-1';
 export type { RemoverAvatar1$Params as RemoverAvatar1$Params } from './fn/conta/remover-avatar-1';
 export { removerAvatar1 as removerAvatar1 } from './fn/conta/remover-avatar-1';
-export type { Listar4$Params as Listar4$Params } from './fn/culinarias/listar-4';
-export { listar4 as listar4 } from './fn/culinarias/listar-4';
+export type { Listar5$Params as Listar5$Params } from './fn/culinarias/listar-5';
+export { listar5 as listar5 } from './fn/culinarias/listar-5';
 export type { BuscarPorId$Params as BuscarPorId$Params } from './fn/culinarias/buscar-por-id';
 export { buscarPorId as buscarPorId } from './fn/culinarias/buscar-por-id';

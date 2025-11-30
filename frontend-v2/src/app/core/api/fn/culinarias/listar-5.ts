@@ -9,12 +9,12 @@ import { RequestBuilder } from '../../request-builder';
 
 import { CulinariaOutput } from '../../models/culinaria-output';
 
-export interface Listar4$Params {
+export interface Listar5$Params {
   meioMeio?: boolean;
 }
 
-export function listar4(http: HttpClient, rootUrl: string, params?: Listar4$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<CulinariaOutput>>> {
-  const rb = new RequestBuilder(rootUrl, listar4.PATH, 'get');
+export function listar5(http: HttpClient, rootUrl: string, params?: Listar5$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<CulinariaOutput>>> {
+  const rb = new RequestBuilder(rootUrl, listar5.PATH, 'get');
   if (params) {
     rb.query('meioMeio', params.meioMeio, {});
   }
@@ -29,4 +29,4 @@ export function listar4(http: HttpClient, rootUrl: string, params?: Listar4$Para
   );
 }
 
-listar4.PATH = '/api/culinarias';
+listar5.PATH = '/api/culinarias';

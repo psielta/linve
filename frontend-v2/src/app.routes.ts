@@ -25,6 +25,7 @@ export const appRoutes: Routes = [
             { path: 'culinarias', loadChildren: () => import('./app/features/culinarias/culinarias.routes') },
             { path: 'categorias', loadChildren: () => import('./app/features/categorias/categorias.routes') },
             { path: 'produtos', loadChildren: () => import('./app/features/produtos/produtos.routes') },
+            { path: 'adicionais', loadChildren: () => import('./app/features/adicionais/adicionais.routes') },
             { path: 'account', loadChildren: () => import('./app/pages/account/account.routes') }
         ]
     },

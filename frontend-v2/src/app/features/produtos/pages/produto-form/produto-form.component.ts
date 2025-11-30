@@ -88,6 +88,7 @@ interface OpcaoPrecoView {
                 [showClear]="true"
                 filterBy="nome"
                 styleClass="w-full"
+                [invalid]="invalid('categoria')"
               />
               <small class="text-red-500" *ngIf="invalid('categoria')">Selecione uma categoria</small>
             </div>
@@ -98,7 +99,7 @@ interface OpcaoPrecoView {
                 pInputText
                 formControlName="nome"
                 placeholder="Ex: Acai no copo, X-Tudo, Pizza Calabresa..."
-                class="w-full"
+                [ngClass]="{'w-full': true, 'ng-invalid ng-dirty': invalid('nome')}"
               />
               <small class="text-red-500" *ngIf="invalid('nome')">Informe um nome (max. 150 caracteres)</small>
             </div>
@@ -110,7 +111,7 @@ interface OpcaoPrecoView {
                 rows="3"
                 formControlName="descricao"
                 placeholder="Ingredientes ou observacoes importantes (opcional)"
-                class="w-full"
+                [ngClass]="{'w-full': true, 'ng-invalid ng-dirty': invalid('descricao')}"
               ></textarea>
             </div>
           </div>
@@ -136,8 +137,9 @@ interface OpcaoPrecoView {
                 [showClear]="true"
                 [disabled]="!opcoesCategoria().length"
                 styleClass="w-full"
+                [invalid]="invalidOpcaoField('id_opcao')"
               />
-              <small class="text-red-500" *ngIf="opcaoForm.controls.id_opcao.invalid && opcaoForm.touched">
+              <small class="text-red-500" *ngIf="invalidOpcaoField('id_opcao')">
                 Selecione uma opcao
               </small>
             </div>
@@ -153,8 +155,9 @@ interface OpcaoPrecoView {
                 [useGrouping]="true"
                 inputStyleClass="w-full"
                 styleClass="w-full"
+                [invalid]="invalidOpcaoField('valor')"
               />
-              <small class="text-red-500" *ngIf="opcaoForm.controls.valor.invalid && opcaoForm.touched">
+              <small class="text-red-500" *ngIf="invalidOpcaoField('valor')">
                 Informe um valor maior que zero
               </small>
             </div>
@@ -171,8 +174,21 @@ interface OpcaoPrecoView {
           </div>
 
           @if (opcoesSelecionadas().length === 0) {
-            <div class="p-4 border border-dashed border-surface-300 dark:border-surface-600 rounded-lg text-surface-500">
-              Nenhuma opcao adicionada. Selecione uma opcao da categoria e informe o valor para adicionar.
+            <div
+              class="p-4 rounded-lg border"
+              [ngClass]="{
+                'border-dashed border-surface-300 dark:border-surface-600 text-surface-500': !opcoesInvalidas(),
+                'border-solid border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20': opcoesInvalidas()
+              }"
+            >
+              @if (opcoesInvalidas()) {
+                <div class="flex items-center gap-3 text-red-700 dark:text-red-400">
+                  <i class="pi pi-exclamation-triangle text-xl"></i>
+                  <span class="font-medium">Adicione ao menos uma opcao com preco para este produto</span>
+                </div>
+              } @else {
+                Nenhuma opcao adicionada. Selecione uma opcao da categoria e informe o valor para adicionar.
+              }
             </div>
           } @else {
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -241,6 +257,7 @@ export class ProdutoFormComponent implements OnInit {
   saving = signal(false);
   isEditMode = signal(false);
   currentId: number | null = null;
+  opcoesInvalidas = signal(false);
 
   categorias = signal<CategoriaOutput[]>([]);
   categoriaOptions = signal<CategoriaOutput[]>([]);
@@ -420,6 +437,7 @@ export class ProdutoFormComponent implements OnInit {
 
     this.opcoesSelecionadas.set([...this.opcoesSelecionadas(), nova]);
     this.opcaoForm.reset();
+    this.opcoesInvalidas.set(false);
   }
 
   removeOpcao(idOpcao: number): void {
@@ -438,6 +456,7 @@ export class ProdutoFormComponent implements OnInit {
     }
 
     if (this.opcoesSelecionadas().length === 0) {
+      this.opcoesInvalidas.set(true);
       this.messageService.add({
         severity: 'warn',
         summary: 'Adicione ao menos uma opcao',
@@ -445,6 +464,8 @@ export class ProdutoFormComponent implements OnInit {
       });
       return;
     }
+
+    this.opcoesInvalidas.set(false);
 
     const payload: ProdutoInput = {
       id_categoria: this.form.controls.categoria.value!,
@@ -488,6 +509,11 @@ export class ProdutoFormComponent implements OnInit {
 
   invalid(controlName: string): boolean {
     const control = this.form.get(controlName);
+    return !!control && control.invalid && (control.touched || control.dirty);
+  }
+
+  invalidOpcaoField(controlName: string): boolean {
+    const control = this.opcaoForm.get(controlName);
     return !!control && control.invalid && (control.touched || control.dirty);
   }
 }
