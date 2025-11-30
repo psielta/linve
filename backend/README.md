@@ -946,6 +946,39 @@ java -jar target/todo-api.jar
 - `ordem` nao pode repetir dentro da mesma organizacao (unico em `CAT_ORG_ID + CAT_ORDEM`).
 - Soft delete: campos `ativo` em categoria e opcoes; DELETE apenas desativa.
 
+### Produtos e Precos (autenticados - requer Bearer token)
+
+| Metodo | Endpoint | Descricao | Headers | Status |
+|--------|----------|-----------|---------|--------|
+| GET | /produtos | Lista produtos ativos (filtro opcional `id_categoria`) com precos ativos embutidos | Authorization, X-Organization-Id | 200 |
+| GET | /produtos/{id} | Busca produto com precos ativos | Authorization, X-Organization-Id | 200 / 404 |
+| POST | /produtos | Cria produto e precos (array `opcoes`) | Authorization, X-Organization-Id | 201 / 400 |
+| PUT | /produtos/{id} | Atualiza produto e sincroniza precos (ativa/atualiza/desativa) | Authorization, X-Organization-Id | 200 / 400 / 404 |
+| DELETE | /produtos/{id} | Desativa produto e todos os precos (soft delete) | Authorization, X-Organization-Id | 204 / 404 |
+
+**Contrato (POST/PUT)**
+```json
+{
+  "id_categoria": 90395,
+  "nome": "No copo",
+  "descricao": "Acai no copo",
+  "opcoes": [
+    { "id_opcao": 185862, "valor": 20.0 },
+    { "id_opcao": 185863, "valor": 30.0 }
+  ]
+}
+```
+
+**Regras de negocio (produto/preco)**
+- `id_categoria` obrigatorio e precisa estar ativa na organizacao.
+- Cada `opcoes[].id_opcao` deve pertencer a mesma categoria; caso contrario 400 (ProdutoPrecoCategoriaInvalidaException).
+- `valor` obrigatorio e > 0.
+- Soft delete via campo `ativo` em produto e preco; DELETE apenas desativa.
+- Triggers no banco garantem cascata de soft delete:
+  - Categoria desativada -> produtos e precos relacionados sao desativados.
+  - Opcao de categoria desativada -> precos que a referenciam sao desativados.
+  - Valida que `PRP_CATOP_ID` pertence a categoria do produto (bloqueia inconsistencias por SQL).
+
 ### Administração de Usuários (requer OWNER ou ADMIN)
 
 | Método | Endpoint | Descrição | Headers | Status |

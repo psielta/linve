@@ -1,6 +1,7 @@
 package br.com.exemplo.todo.domain.repository;
 
 import br.com.exemplo.todo.domain.model.entity.Produto;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,10 +13,13 @@ import java.util.Optional;
 @Repository
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
+    @EntityGraph(attributePaths = "precos")
     List<Produto> findByOrganizationIdAndAtivoTrueOrderByNomeAsc(Long organizationId);
 
+    @EntityGraph(attributePaths = "precos")
     List<Produto> findByOrganizationIdAndCategoriaIdAndAtivoTrueOrderByNomeAsc(Long organizationId, Long categoriaId);
 
+    @EntityGraph(attributePaths = "precos")
     Optional<Produto> findByIdAndOrganizationIdAndAtivoTrue(Long id, Long organizationId);
 
     boolean existsByIdAndOrganizationIdAndAtivoTrue(Long id, Long organizationId);
