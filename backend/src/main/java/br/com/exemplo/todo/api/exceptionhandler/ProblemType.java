@@ -18,6 +18,9 @@ import br.com.exemplo.todo.domain.service.exception.CategoriaOpcaoNaoEncontradaE
 import br.com.exemplo.todo.domain.service.exception.ProdutoNaoEncontradoException;
 import br.com.exemplo.todo.domain.service.exception.ProdutoPrecoCategoriaInvalidaException;
 import br.com.exemplo.todo.domain.service.exception.ProdutoPrecoNaoEncontradoException;
+import br.com.exemplo.todo.domain.service.exception.AdicionalNaoEncontradoException;
+import br.com.exemplo.todo.domain.service.exception.AdicionalItemNaoEncontradoException;
+import br.com.exemplo.todo.domain.service.exception.AdicionalSelecaoInvalidaException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
 import lombok.Getter;
 import lombok.NonNull;
@@ -45,6 +48,15 @@ public enum ProblemType {
 
     PRODUTO_PRECO_CATEGORIA_INVALIDA(ProdutoPrecoCategoriaInvalidaException.class,
             "Opcao de categoria nao pertence a categoria do produto", "produto-preco-categoria-invalida"),
+
+    ADICIONAL_NAO_ENCONTRADO(AdicionalNaoEncontradoException.class,
+            "Adicional nao encontrado", "adicional-nao-encontrado"),
+
+    ADICIONAL_ITEM_NAO_ENCONTRADO(AdicionalItemNaoEncontradoException.class,
+            "Item de adicional nao encontrado", "adicional-item-nao-encontrado"),
+
+    ADICIONAL_SELECAO_INVALIDA(AdicionalSelecaoInvalidaException.class,
+            "Selecao de adicional invalida", "adicional-selecao-invalida"),
 
     CAMPO_INVALIDO(IllegalArgumentException.class,
             "Campo invalido", "campo-invalido"),

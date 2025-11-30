@@ -1,49 +1,49 @@
-# Todo API - Spring Boot + SQLite + JWT + Multi-Tenancy
+﻿# Todo API - Spring Boot + SQLite + JWT + Multi-Tenancy
 
 API REST de CRUD de tarefas (Todo) com **autenticacao JWT** e **multi-tenancy por organizacao**, desenvolvida como exemplo para aprendizado de Spring Boot com SQLite.
 
-Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-backend`, usando as mesmas versões e padrões.
+Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-backend`, usando as mesmas versÃµes e padrÃµes.
 
 ---
 
-## Sumário
+## SumÃ¡rio
 
 1. [Tecnologias](#tecnologias)
 2. [Arquitetura do Projeto](#arquitetura-do-projeto)
-3. [Autenticação JWT](#autenticação-jwt)
+3. [AutenticaÃ§Ã£o JWT](#autenticaÃ§Ã£o-jwt)
 4. [Multi-Tenancy](#multi-tenancy)
 5. [Entendendo as Camadas](#entendendo-as-camadas)
-6. [Fluxo de uma Requisição](#fluxo-de-uma-requisição)
+6. [Fluxo de uma RequisiÃ§Ã£o](#fluxo-de-uma-requisiÃ§Ã£o)
 7. [Conceitos Importantes](#conceitos-importantes)
 8. [Como Executar](#como-executar)
 9. [Endpoints da API](#endpoints-da-api)
-10. [Exemplos de Requisições](#exemplos-de-requisições)
+10. [Exemplos de RequisiÃ§Ãµes](#exemplos-de-requisiÃ§Ãµes)
 11. [Banco de Dados](#banco-de-dados)
 12. [Testes](#testes)
-13. [Módulo de Administração de Usuários](#módulo-de-administração-de-usuários-user-admin)
-14. [Comparação com o Projeto Base](#comparação-com-o-projeto-base)
-15. [Guia Prático: Passo a Passo](#guia-prático-passo-a-passo)
+13. [MÃ³dulo de AdministraÃ§Ã£o de UsuÃ¡rios](#mÃ³dulo-de-administraÃ§Ã£o-de-usuÃ¡rios-user-admin)
+14. [ComparaÃ§Ã£o com o Projeto Base](#comparaÃ§Ã£o-com-o-projeto-base)
+15. [Guia PrÃ¡tico: Passo a Passo](#guia-prÃ¡tico-passo-a-passo)
 16. [Resumo: Checklist para Novo CRUD](#resumo-checklist-para-novo-crud)
-17. [OpenAPI/Swagger para Geração de Clientes](#openapiswagger-para-geração-de-clientes)
+17. [OpenAPI/Swagger para GeraÃ§Ã£o de Clientes](#openapiswagger-para-geraÃ§Ã£o-de-clientes)
 18. [Frontend (Interface Web)](#frontend-interface-web)
 19. [Armazenamento de Arquivos (MinIO)](#armazenamento-de-arquivos-minio)
-20. [Fotos de Organização e Usuário](#fotos-de-organizacao-e-usuario)
+20. [Fotos de OrganizaÃ§Ã£o e UsuÃ¡rio](#fotos-de-organizacao-e-usuario)
 
 ---
 
 ## Tecnologias
 
-| Tecnologia | Versão | Propósito |
+| Tecnologia | VersÃ£o | PropÃ³sito |
 |------------|--------|-----------|
-| Java | 21 | Linguagem de programação |
+| Java | 21 | Linguagem de programaÃ§Ã£o |
 | Spring Boot | 3.4.7 | Framework web |
-| Spring Security | 6.4.x | Autenticação e autorização |
-| Spring Data JPA | 3.4.7 | Abstração para acesso a dados |
+| Spring Security | 6.4.x | AutenticaÃ§Ã£o e autorizaÃ§Ã£o |
+| Spring Data JPA | 3.4.7 | AbstraÃ§Ã£o para acesso a dados |
 | SQLite | - | Banco de dados local (arquivo) |
 | Hibernate Community Dialects | - | Suporte SQLite no Hibernate |
-| JJWT | 0.12.6 | Geração e validação de tokens JWT |
-| SpringDoc OpenAPI | 2.8.9 | Documentação da API (Swagger) |
-| Lombok | - | Redução de código boilerplate |
+| JJWT | 0.12.6 | GeraÃ§Ã£o e validaÃ§Ã£o de tokens JWT |
+| SpringDoc OpenAPI | 2.8.9 | DocumentaÃ§Ã£o da API (Swagger) |
+| Lombok | - | ReduÃ§Ã£o de cÃ³digo boilerplate |
 | ModelMapper | 3.2.5 | Mapeamento entre objetos |
 | BCrypt | - | Hash seguro de senhas |
 | JUnit 5 | - | Framework de testes |
@@ -56,88 +56,88 @@ Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-back
 
 ```
 todo-api/
-├── pom.xml                                    # Configuração Maven (dependências)
-├── flyway/sql/
-│   ├── V0001__criar_tabela_todo.sql           # Migration inicial (tabela TODO)
-│   ├── V0002__criar_tabelas_autenticacao.sql  # Tabelas de auth (USUARIO, ORGANIZATION, etc)
-│   └── V0003__adicionar_organizacao_todo.sql  # Adiciona org_id à tabela TODO
-├── data/                                      # Banco SQLite (criado automaticamente)
-│   └── todo.db
-└── src/
-    ├── main/
-    │   ├── java/br/com/exemplo/todo/         # Código fonte (controllers, services, repos)
-    │   └── resources/
-    │       ├── application.yml               # Configuração principal (SQLite + JWT)
-    │       └── application-testes.yml        # Config profile testes
-    └── test/java/br/com/exemplo/todo/        # Testes unitários/integração
+â”œâ”€â”€ pom.xml                                    # ConfiguraÃ§Ã£o Maven (dependÃªncias)
+â”œâ”€â”€ flyway/sql/
+â”‚   â”œâ”€â”€ V0001__criar_tabela_todo.sql           # Migration inicial (tabela TODO)
+â”‚   â”œâ”€â”€ V0002__criar_tabelas_autenticacao.sql  # Tabelas de auth (USUARIO, ORGANIZATION, etc)
+â”‚   â””â”€â”€ V0003__adicionar_organizacao_todo.sql  # Adiciona org_id Ã  tabela TODO
+â”œâ”€â”€ data/                                      # Banco SQLite (criado automaticamente)
+â”‚   â””â”€â”€ todo.db
+â””â”€â”€ src/
+    â”œâ”€â”€ main/
+    â”‚   â”œâ”€â”€ java/br/com/exemplo/todo/         # CÃ³digo fonte (controllers, services, repos)
+    â”‚   â””â”€â”€ resources/
+    â”‚       â”œâ”€â”€ application.yml               # ConfiguraÃ§Ã£o principal (SQLite + JWT)
+    â”‚       â””â”€â”€ application-testes.yml        # Config profile testes
+    â””â”€â”€ test/java/br/com/exemplo/todo/        # Testes unitÃ¡rios/integraÃ§Ã£o
 ```
 
 ---
 
-## Autenticação JWT
+## AutenticaÃ§Ã£o JWT
 
-### Visão Geral
+### VisÃ£o Geral
 
-O sistema usa **JWT (JSON Web Token)** para autenticação stateless:
+O sistema usa **JWT (JSON Web Token)** para autenticaÃ§Ã£o stateless:
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          FLUXO DE AUTENTICAÇÃO                              │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  1. LOGIN                                                                   │
-│     POST /auth/login { email, senha }                                       │
-│          │                                                                  │
-│          ▼                                                                  │
-│     ┌─────────────────────────────────────────────────────────┐            │
-│     │ AuthService                                              │            │
-│     │  - Valida credenciais                                    │            │
-│     │  - Gera Access Token (15 min)                            │            │
-│     │  - Gera Refresh Token (30 dias)                          │            │
-│     │  - Persiste hash do refresh token                        │            │
-│     └─────────────────────────────────────────────────────────┘            │
-│          │                                                                  │
-│          ▼                                                                  │
-│     { accessToken, refreshToken, user, organizations }                      │
-│                                                                             │
-│  2. REQUISIÇÕES AUTENTICADAS                                                │
-│     GET /todos                                                              │
-│     Headers:                                                                │
-│       - Authorization: Bearer {accessToken}                                 │
-│       - X-Organization-Id: 1                                                │
-│          │                                                                  │
-│          ▼                                                                  │
-│     ┌─────────────────────────────────────────────────────────┐            │
-│     │ JwtAuthenticationFilter                                  │            │
-│     │  - Extrai token do header                                │            │
-│     │  - Valida assinatura e expiração                         │            │
-│     │  - Popula SecurityContext com AuthenticatedUser          │            │
-│     └─────────────────────────────────────────────────────────┘            │
-│          │                                                                  │
-│          ▼                                                                  │
-│     ┌─────────────────────────────────────────────────────────┐            │
-│     │ TenantFilter                                             │            │
-│     │  - Lê X-Organization-Id do header                        │            │
-│     │  - Valida membership do usuário na org                   │            │
-│     │  - Popula TenantContext (ThreadLocal)                    │            │
-│     └─────────────────────────────────────────────────────────┘            │
-│          │                                                                  │
-│          ▼                                                                  │
-│     Controller → Service → Repository (com isolamento por org)              │
-│                                                                             │
-│  3. REFRESH TOKEN                                                           │
-│     POST /auth/refresh { refreshToken }                                     │
-│          │                                                                  │
-│          ▼                                                                  │
-│     ┌─────────────────────────────────────────────────────────┐            │
-│     │ AuthService                                              │            │
-│     │  - Valida refresh token (hash no banco)                  │            │
-│     │  - Revoga token antigo (rotação)                         │            │
-│     │  - Gera novos tokens                                     │            │
-│     │  - Detecta roubo (token já revogado = revoga família)    │            │
-│     └─────────────────────────────────────────────────────────┘            │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                          FLUXO DE AUTENTICAÃ‡ÃƒO                              â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                                                                             â”‚
+â”‚  1. LOGIN                                                                   â”‚
+â”‚     POST /auth/login { email, senha }                                       â”‚
+â”‚          â”‚                                                                  â”‚
+â”‚          â–¼                                                                  â”‚
+â”‚     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”            â”‚
+â”‚     â”‚ AuthService                                              â”‚            â”‚
+â”‚     â”‚  - Valida credenciais                                    â”‚            â”‚
+â”‚     â”‚  - Gera Access Token (15 min)                            â”‚            â”‚
+â”‚     â”‚  - Gera Refresh Token (30 dias)                          â”‚            â”‚
+â”‚     â”‚  - Persiste hash do refresh token                        â”‚            â”‚
+â”‚     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜            â”‚
+â”‚          â”‚                                                                  â”‚
+â”‚          â–¼                                                                  â”‚
+â”‚     { accessToken, refreshToken, user, organizations }                      â”‚
+â”‚                                                                             â”‚
+â”‚  2. REQUISIÃ‡Ã•ES AUTENTICADAS                                                â”‚
+â”‚     GET /todos                                                              â”‚
+â”‚     Headers:                                                                â”‚
+â”‚       - Authorization: Bearer {accessToken}                                 â”‚
+â”‚       - X-Organization-Id: 1                                                â”‚
+â”‚          â”‚                                                                  â”‚
+â”‚          â–¼                                                                  â”‚
+â”‚     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”            â”‚
+â”‚     â”‚ JwtAuthenticationFilter                                  â”‚            â”‚
+â”‚     â”‚  - Extrai token do header                                â”‚            â”‚
+â”‚     â”‚  - Valida assinatura e expiraÃ§Ã£o                         â”‚            â”‚
+â”‚     â”‚  - Popula SecurityContext com AuthenticatedUser          â”‚            â”‚
+â”‚     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜            â”‚
+â”‚          â”‚                                                                  â”‚
+â”‚          â–¼                                                                  â”‚
+â”‚     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”            â”‚
+â”‚     â”‚ TenantFilter                                             â”‚            â”‚
+â”‚     â”‚  - LÃª X-Organization-Id do header                        â”‚            â”‚
+â”‚     â”‚  - Valida membership do usuÃ¡rio na org                   â”‚            â”‚
+â”‚     â”‚  - Popula TenantContext (ThreadLocal)                    â”‚            â”‚
+â”‚     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜            â”‚
+â”‚          â”‚                                                                  â”‚
+â”‚          â–¼                                                                  â”‚
+â”‚     Controller â†’ Service â†’ Repository (com isolamento por org)              â”‚
+â”‚                                                                             â”‚
+â”‚  3. REFRESH TOKEN                                                           â”‚
+â”‚     POST /auth/refresh { refreshToken }                                     â”‚
+â”‚          â”‚                                                                  â”‚
+â”‚          â–¼                                                                  â”‚
+â”‚     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”            â”‚
+â”‚     â”‚ AuthService                                              â”‚            â”‚
+â”‚     â”‚  - Valida refresh token (hash no banco)                  â”‚            â”‚
+â”‚     â”‚  - Revoga token antigo (rotaÃ§Ã£o)                         â”‚            â”‚
+â”‚     â”‚  - Gera novos tokens                                     â”‚            â”‚
+â”‚     â”‚  - Detecta roubo (token jÃ¡ revogado = revoga famÃ­lia)    â”‚            â”‚
+â”‚     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜            â”‚
+â”‚                                                                             â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Estrutura do JWT
@@ -150,11 +150,11 @@ O sistema usa **JWT (JSON Web Token)** para autenticação stateless:
   "iat": 1700000000,       // Issued At
   "exp": 1700000900,       // Expiration (15 min)
   "email": "user@email.com",
-  "nome": "João Silva"
+  "nome": "JoÃ£o Silva"
 }
 ```
 
-### Configuração (application.yml)
+### ConfiguraÃ§Ã£o (application.yml)
 
 ```yaml
 security:
@@ -165,30 +165,30 @@ security:
     refresh-token:
       expiration-days: 30        # 30 dias
   bcrypt:
-    strength: 12                 # Força do hash BCrypt
+    strength: 12                 # ForÃ§a do hash BCrypt
 ```
 
-### Endpoints de Autenticação
+### Endpoints de AutenticaÃ§Ã£o
 
-| Método | Endpoint | Descrição | Autenticação |
+| MÃ©todo | Endpoint | DescriÃ§Ã£o | AutenticaÃ§Ã£o |
 |--------|----------|-----------|--------------|
-| POST | /auth/register | Registrar novo usuário | Pública |
-| POST | /auth/login | Login com email/senha | Pública |
-| POST | /auth/refresh | Renovar tokens | Pública |
-| POST | /auth/logout | Revogar refresh token | Pública |
+| POST | /auth/register | Registrar novo usuÃ¡rio | PÃºblica |
+| POST | /auth/login | Login com email/senha | PÃºblica |
+| POST | /auth/refresh | Renovar tokens | PÃºblica |
+| POST | /auth/logout | Revogar refresh token | PÃºblica |
 
-### Segurança do Refresh Token
+### SeguranÃ§a do Refresh Token
 
-1. **Armazenamento seguro**: Apenas o hash SHA-256 é persistido
-2. **Rotação automática**: Cada uso gera um novo token
-3. **Detecção de roubo**: Token já usado = revoga toda família
+1. **Armazenamento seguro**: Apenas o hash SHA-256 Ã© persistido
+2. **RotaÃ§Ã£o automÃ¡tica**: Cada uso gera um novo token
+3. **DetecÃ§Ã£o de roubo**: Token jÃ¡ usado = revoga toda famÃ­lia
 4. **Family tracking**: Tokens relacionados compartilham `familiaId`
-5. **Metadados**: IP e User-Agent são registrados
+5. **Metadados**: IP e User-Agent sÃ£o registrados
 
 ### Classes Importantes
 
 ```java
-// JwtService.java - Geração e validação de tokens
+// JwtService.java - GeraÃ§Ã£o e validaÃ§Ã£o de tokens
 public String generateAccessToken(User user) {
     return Jwts.builder()
         .subject(String.valueOf(user.getId()))
@@ -200,7 +200,7 @@ public String generateAccessToken(User user) {
         .compact();
 }
 
-// JwtAuthenticationFilter.java - Filtro de validação
+// JwtAuthenticationFilter.java - Filtro de validaÃ§Ã£o
 @Override
 protected void doFilterInternal(HttpServletRequest request, ...) {
     String token = extractToken(request);
@@ -225,59 +225,59 @@ protected void doFilterInternal(HttpServletRequest request, ...) {
 
 ### Conceito
 
-Multi-tenancy permite que múltiplas organizações usem a mesma aplicação com dados isolados.
+Multi-tenancy permite que mÃºltiplas organizaÃ§Ãµes usem a mesma aplicaÃ§Ã£o com dados isolados.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          MODELO DE MULTI-TENANCY                            │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  ┌─────────────┐                      ┌─────────────┐                       │
-│  │   User A    │                      │   User B    │                       │
-│  │  (João)     │                      │  (Maria)    │                       │
-│  └──────┬──────┘                      └──────┬──────┘                       │
-│         │                                    │                              │
-│         │  Membership                        │  Membership                  │
-│         │  (OWNER)                           │  (MEMBER)                    │
-│         │                                    │                              │
-│         ▼                                    ▼                              │
-│  ┌─────────────────────────────────────────────────────────────┐           │
-│  │                    Organization 1                            │           │
-│  │                    "Empresa ABC"                             │           │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐                   │           │
-│  │  │  Todo 1  │  │  Todo 2  │  │  Todo 3  │  (org_id = 1)     │           │
-│  │  └──────────┘  └──────────┘  └──────────┘                   │           │
-│  └─────────────────────────────────────────────────────────────┘           │
-│                                                                             │
-│         │  Membership                                                       │
-│         │  (ADMIN)                                                          │
-│         ▼                                                                   │
-│  ┌─────────────────────────────────────────────────────────────┐           │
-│  │                    Organization 2                            │           │
-│  │                    "Startup XYZ"                             │           │
-│  │  ┌──────────┐  ┌──────────┐  (org_id = 2)                   │           │
-│  │  │  Todo 4  │  │  Todo 5  │  ← João também acessa aqui      │           │
-│  │  └──────────┘  └──────────┘                                 │           │
-│  └─────────────────────────────────────────────────────────────┘           │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                          MODELO DE MULTI-TENANCY                            â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                                                                             â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                      â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                       â”‚
+â”‚  â”‚   User A    â”‚                      â”‚   User B    â”‚                       â”‚
+â”‚  â”‚  (JoÃ£o)     â”‚                      â”‚  (Maria)    â”‚                       â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜                      â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜                       â”‚
+â”‚         â”‚                                    â”‚                              â”‚
+â”‚         â”‚  Membership                        â”‚  Membership                  â”‚
+â”‚         â”‚  (OWNER)                           â”‚  (MEMBER)                    â”‚
+â”‚         â”‚                                    â”‚                              â”‚
+â”‚         â–¼                                    â–¼                              â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”           â”‚
+â”‚  â”‚                    Organization 1                            â”‚           â”‚
+â”‚  â”‚                    "Empresa ABC"                             â”‚           â”‚
+â”‚  â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                   â”‚           â”‚
+â”‚  â”‚  â”‚  Todo 1  â”‚  â”‚  Todo 2  â”‚  â”‚  Todo 3  â”‚  (org_id = 1)     â”‚           â”‚
+â”‚  â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                   â”‚           â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜           â”‚
+â”‚                                                                             â”‚
+â”‚         â”‚  Membership                                                       â”‚
+â”‚         â”‚  (ADMIN)                                                          â”‚
+â”‚         â–¼                                                                   â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”           â”‚
+â”‚  â”‚                    Organization 2                            â”‚           â”‚
+â”‚  â”‚                    "Startup XYZ"                             â”‚           â”‚
+â”‚  â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  (org_id = 2)                   â”‚           â”‚
+â”‚  â”‚  â”‚  Todo 4  â”‚  â”‚  Todo 5  â”‚  â† JoÃ£o tambÃ©m acessa aqui      â”‚           â”‚
+â”‚  â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                                 â”‚           â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜           â”‚
+â”‚                                                                             â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Entidades do Multi-Tenancy
 
-| Entidade | Descrição |
+| Entidade | DescriÃ§Ã£o |
 |----------|-----------|
-| **User** | Usuário do sistema (pode pertencer a várias orgs) |
-| **Organization** | Organização/tenant (agrupa tarefas) |
-| **Membership** | Vínculo usuário ↔ organização com papel |
+| **User** | UsuÃ¡rio do sistema (pode pertencer a vÃ¡rias orgs) |
+| **Organization** | OrganizaÃ§Ã£o/tenant (agrupa tarefas) |
+| **Membership** | VÃ­nculo usuÃ¡rio â†” organizaÃ§Ã£o com papel |
 | **Account** | Credenciais (email/senha, OAuth, etc) |
 | **RefreshToken** | Tokens de refresh persistidos |
 
-### Papéis (MembershipRole)
+### PapÃ©is (MembershipRole)
 
 ```java
 public enum MembershipRole {
-    OWNER,   // Dono da organização (pode tudo)
+    OWNER,   // Dono da organizaÃ§Ã£o (pode tudo)
     ADMIN,   // Administrador (gerencia membros)
     MEMBER   // Membro comum (apenas CRUD de tarefas)
 }
@@ -285,7 +285,7 @@ public enum MembershipRole {
 
 ### TenantContext (ThreadLocal)
 
-O `TenantContext` armazena informações da organização ativa para cada requisição:
+O `TenantContext` armazena informaÃ§Ãµes da organizaÃ§Ã£o ativa para cada requisiÃ§Ã£o:
 
 ```java
 // Definir contexto (feito pelo TenantFilter)
@@ -296,9 +296,9 @@ Long orgId = TenantContext.getOrganizationId();
 Long userId = TenantContext.getUserId();
 MembershipRole role = TenantContext.getRole();
 
-// Verificações de permissão
-TenantContext.isOwner();  // É dono?
-TenantContext.isAdmin();  // É admin ou dono?
+// VerificaÃ§Ãµes de permissÃ£o
+TenantContext.isOwner();  // Ã‰ dono?
+TenantContext.isAdmin();  // Ã‰ admin ou dono?
 
 // IMPORTANTE: Limpar ao final (feito automaticamente pelo TenantFilter)
 TenantContext.clear();
@@ -306,7 +306,7 @@ TenantContext.clear();
 
 ### Header X-Organization-Id
 
-O cliente deve enviar o header `X-Organization-Id` para especificar qual organização acessar:
+O cliente deve enviar o header `X-Organization-Id` para especificar qual organizaÃ§Ã£o acessar:
 
 ```bash
 curl -H "Authorization: Bearer {token}" \
@@ -315,13 +315,13 @@ curl -H "Authorization: Bearer {token}" \
 ```
 
 **Comportamento:**
-- Se não enviar: usa a primeira organização do usuário
-- Se enviar ID inválido: retorna 400 Bad Request
-- Se não tiver membership: retorna 403 Forbidden
+- Se nÃ£o enviar: usa a primeira organizaÃ§Ã£o do usuÃ¡rio
+- Se enviar ID invÃ¡lido: retorna 400 Bad Request
+- Se nÃ£o tiver membership: retorna 403 Forbidden
 
 ### Isolamento de Dados
 
-Os repositórios filtram por `organizationId`:
+Os repositÃ³rios filtram por `organizationId`:
 
 ```java
 // TodoRepository.java
@@ -343,11 +343,11 @@ public List<Todo> listarTodos() {
 @PreAuthorize("@tenantSecurity.isMember()")
 public class TodoController { ... }
 
-// Verificar papel específico
+// Verificar papel especÃ­fico
 @PreAuthorize("@tenantSecurity.isAdmin()")
 public void deletarMembro(Long membroId) { ... }
 
-// Verificar se é o próprio usuário
+// Verificar se Ã© o prÃ³prio usuÃ¡rio
 @PreAuthorize("@tenantSecurity.isCurrentUser(#userId)")
 public void alterarPerfil(Long userId) { ... }
 ```
@@ -356,13 +356,13 @@ public void alterarPerfil(Long userId) { ... }
 
 ## Entendendo as Camadas
 
-### 1. Camada API (Apresentação)
+### 1. Camada API (ApresentaÃ§Ã£o)
 
-Responsável por receber requisições HTTP e retornar respostas.
+ResponsÃ¡vel por receber requisiÃ§Ãµes HTTP e retornar respostas.
 
 #### Controller (`TodoController.java`)
 ```java
-@RestController          // Define que é um controller REST
+@RestController          // Define que Ã© um controller REST
 @RequestMapping("todos") // Base path: /api/todos
 public class TodoController {
 
@@ -375,14 +375,14 @@ public class TodoController {
 }
 ```
 
-**Anotações importantes:**
+**AnotaÃ§Ãµes importantes:**
 - `@RestController` = `@Controller` + `@ResponseBody` (retorna JSON automaticamente)
 - `@RequestMapping` = Define o path base do controller
-- `@GetMapping`, `@PostMapping`, etc = Mapeia métodos HTTP
-- `@PathVariable` = Captura variável da URL (`/todos/{id}`)
+- `@GetMapping`, `@PostMapping`, etc = Mapeia mÃ©todos HTTP
+- `@PathVariable` = Captura variÃ¡vel da URL (`/todos/{id}`)
 - `@RequestParam` = Captura query parameter (`?concluido=true`)
 - `@RequestBody` = Converte JSON do body para objeto Java
-- `@Valid` = Ativa validação do Bean Validation
+- `@Valid` = Ativa validaÃ§Ã£o do Bean Validation
 
 #### DTOs (Data Transfer Objects)
 Objetos para transferir dados entre camadas. Separam a API da entidade do banco.
@@ -390,7 +390,7 @@ Objetos para transferir dados entre camadas. Separam a API da entidade do banco.
 **Input DTO** - O que a API recebe:
 ```java
 public class TodoInput {
-    @NotBlank(message = "Título é obrigatório")  // Validação
+    @NotBlank(message = "TÃ­tulo Ã© obrigatÃ³rio")  // ValidaÃ§Ã£o
     @Size(min = 1, max = 200)
     private String titulo;
 
@@ -411,96 +411,96 @@ public class TodoOutput {
 
 **Por que usar DTOs?**
 - Controla exatamente o que entra/sai da API
-- Entidade pode ter campos que não devem ser expostos
-- Validações ficam no Input, não na Entity
+- Entidade pode ter campos que nÃ£o devem ser expostos
+- ValidaÃ§Ãµes ficam no Input, nÃ£o na Entity
 - Permite evoluir API e banco independentemente
 
 #### Exception Handler (`ApiExceptionHandler.java`)
-Captura exceções e converte para respostas HTTP padronizadas.
+Captura exceÃ§Ãµes e converte para respostas HTTP padronizadas.
 
 ```java
-@RestControllerAdvice  // Intercepta exceções de TODOS os controllers automaticamente
+@RestControllerAdvice  // Intercepta exceÃ§Ãµes de TODOS os controllers automaticamente
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(TodoNaoEncontradoException.class)  // Captura esta exceção específica
+    @ExceptionHandler(TodoNaoEncontradoException.class)  // Captura esta exceÃ§Ã£o especÃ­fica
     public ResponseEntity<Object> handleTodoNaoEncontrado(...) {
         // Retorna HTTP 404 com ProblemDetail (RFC 7807)
     }
 }
 ```
 
-**Como funciona a conexão Controller ↔ Exception Handler:**
+**Como funciona a conexÃ£o Controller â†” Exception Handler:**
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  O SPRING FAZ TUDO AUTOMATICAMENTE - NÃO PRECISA "LIGAR" NADA!              │
-│                                                                             │
-│  1. @RestControllerAdvice é um interceptador GLOBAL                         │
-│     → Spring detecta automaticamente na inicialização                       │
-│     → Aplica-se a TODOS os @RestController da aplicação                     │
-│                                                                             │
-│  2. @ExceptionHandler define QUAL exceção esse método trata                 │
-│     → Quando qualquer Controller lançar essa exceção                        │
-│     → O Spring redireciona automaticamente para este método                 │
-└─────────────────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  O SPRING FAZ TUDO AUTOMATICAMENTE - NÃƒO PRECISA "LIGAR" NADA!              â”‚
+â”‚                                                                             â”‚
+â”‚  1. @RestControllerAdvice Ã© um interceptador GLOBAL                         â”‚
+â”‚     â†’ Spring detecta automaticamente na inicializaÃ§Ã£o                       â”‚
+â”‚     â†’ Aplica-se a TODOS os @RestController da aplicaÃ§Ã£o                     â”‚
+â”‚                                                                             â”‚
+â”‚  2. @ExceptionHandler define QUAL exceÃ§Ã£o esse mÃ©todo trata                 â”‚
+â”‚     â†’ Quando qualquer Controller lanÃ§ar essa exceÃ§Ã£o                        â”‚
+â”‚     â†’ O Spring redireciona automaticamente para este mÃ©todo                 â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
-**Fluxo de uma exceção:**
+**Fluxo de uma exceÃ§Ã£o:**
 
 ```
-┌──────────────────┐     ┌──────────────────┐     ┌──────────────────────────┐
-│  TodoController  │     │   TodoService    │     │   ApiExceptionHandler    │
-│                  │     │                  │     │                          │
-│  GET /todos/999  │────▶│  buscarPorId(999)│     │                          │
-│                  │     │        │         │     │                          │
-│                  │     │        ▼         │     │                          │
-│                  │     │  repository      │     │                          │
-│                  │     │  .findById(999)  │     │                          │
-│                  │     │        │         │     │                          │
-│                  │     │        ▼         │     │                          │
-│                  │     │  Optional.empty()│     │                          │
-│                  │     │        │         │     │                          │
-│                  │     │        ▼         │     │                          │
-│                  │◀─ ─ │  throw new       │     │                          │
-│                  │  ─ ─│  TodoNaoEncon-   │─ ─ ─│─ ─ ─ ─ ─ ─ ─ ─ ┐         │
-│                  │     │  tradoException()│     │                ▼         │
-│                  │     │                  │     │  @ExceptionHandler(      │
-│                  │     │                  │     │    TodoNaoEncontrado-    │
-│                  │     │                  │     │    Exception.class)      │
-│                  │     │                  │     │         │                │
-│                  │     │                  │     │         ▼                │
-│                  │     │                  │     │  Cria ProblemDetail      │
-│                  │     │                  │     │  com status 404          │
-│                  │     │                  │     │         │                │
-└──────────────────┘     └──────────────────┘     └─────────│────────────────┘
-                                                            ▼
-                                               ┌──────────────────────────┐
-                                               │     HTTP Response        │
-                                               │     Status: 404          │
-                                               │     Body: ProblemDetail  │
-                                               └──────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  TodoController  â”‚     â”‚   TodoService    â”‚     â”‚   ApiExceptionHandler    â”‚
+â”‚                  â”‚     â”‚                  â”‚     â”‚                          â”‚
+â”‚  GET /todos/999  â”‚â”€â”€â”€â”€â–¶â”‚  buscarPorId(999)â”‚     â”‚                          â”‚
+â”‚                  â”‚     â”‚        â”‚         â”‚     â”‚                          â”‚
+â”‚                  â”‚     â”‚        â–¼         â”‚     â”‚                          â”‚
+â”‚                  â”‚     â”‚  repository      â”‚     â”‚                          â”‚
+â”‚                  â”‚     â”‚  .findById(999)  â”‚     â”‚                          â”‚
+â”‚                  â”‚     â”‚        â”‚         â”‚     â”‚                          â”‚
+â”‚                  â”‚     â”‚        â–¼         â”‚     â”‚                          â”‚
+â”‚                  â”‚     â”‚  Optional.empty()â”‚     â”‚                          â”‚
+â”‚                  â”‚     â”‚        â”‚         â”‚     â”‚                          â”‚
+â”‚                  â”‚     â”‚        â–¼         â”‚     â”‚                          â”‚
+â”‚                  â”‚â—€â”€ â”€ â”‚  throw new       â”‚     â”‚                          â”‚
+â”‚                  â”‚  â”€ â”€â”‚  TodoNaoEncon-   â”‚â”€ â”€ â”€â”‚â”€ â”€ â”€ â”€ â”€ â”€ â”€ â”€ â”         â”‚
+â”‚                  â”‚     â”‚  tradoException()â”‚     â”‚                â–¼         â”‚
+â”‚                  â”‚     â”‚                  â”‚     â”‚  @ExceptionHandler(      â”‚
+â”‚                  â”‚     â”‚                  â”‚     â”‚    TodoNaoEncontrado-    â”‚
+â”‚                  â”‚     â”‚                  â”‚     â”‚    Exception.class)      â”‚
+â”‚                  â”‚     â”‚                  â”‚     â”‚         â”‚                â”‚
+â”‚                  â”‚     â”‚                  â”‚     â”‚         â–¼                â”‚
+â”‚                  â”‚     â”‚                  â”‚     â”‚  Cria ProblemDetail      â”‚
+â”‚                  â”‚     â”‚                  â”‚     â”‚  com status 404          â”‚
+â”‚                  â”‚     â”‚                  â”‚     â”‚         â”‚                â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”‚â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                                                            â–¼
+                                               â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+                                               â”‚     HTTP Response        â”‚
+                                               â”‚     Status: 404          â”‚
+                                               â”‚     Body: ProblemDetail  â”‚
+                                               â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
-**Exemplo prático - Controller NÃO trata exceção, apenas lança:**
+**Exemplo prÃ¡tico - Controller NÃƒO trata exceÃ§Ã£o, apenas lanÃ§a:**
 
 ```java
-// TodoController.java - NÃO precisa try/catch!
+// TodoController.java - NÃƒO precisa try/catch!
 @GetMapping("/{id}")
 public TodoOutput buscar(@PathVariable Long id) {
-    // Se não encontrar, o Service lança TodoNaoEncontradoException
+    // Se nÃ£o encontrar, o Service lanÃ§a TodoNaoEncontradoException
     // O Spring intercepta e redireciona para o ApiExceptionHandler
-    Todo todo = todoService.buscarPorId(id);  // Pode lançar exceção!
+    Todo todo = todoService.buscarPorId(id);  // Pode lanÃ§ar exceÃ§Ã£o!
     return toOutput(todo);
 }
 
-// TodoService.java - Lança a exceção
+// TodoService.java - LanÃ§a a exceÃ§Ã£o
 public Todo buscarPorId(Long id) {
     return repository.findById(id)
-        .orElseThrow(() -> new TodoNaoEncontradoException(id));  // LANÇA!
+        .orElseThrow(() -> new TodoNaoEncontradoException(id));  // LANÃ‡A!
 }
 
 // ApiExceptionHandler.java - CAPTURA automaticamente
-@ExceptionHandler(TodoNaoEncontradoException.class)  // Escuta esta exceção
+@ExceptionHandler(TodoNaoEncontradoException.class)  // Escuta esta exceÃ§Ã£o
 public ResponseEntity<Object> handleTodoNaoEncontradoException(
         TodoNaoEncontradoException ex, WebRequest request) {
 
@@ -511,26 +511,26 @@ public ResponseEntity<Object> handleTodoNaoEncontradoException(
 }
 ```
 
-**Hierarquia de captura de exceções:**
+**Hierarquia de captura de exceÃ§Ãµes:**
 
 ```java
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
-    // 1. ESPECÍFICA: Captura apenas TodoNaoEncontradoException
+    // 1. ESPECÃFICA: Captura apenas TodoNaoEncontradoException
     @ExceptionHandler(TodoNaoEncontradoException.class)
     public ResponseEntity<Object> handleTodoNaoEncontrado(...) {
         return ... // 404 Not Found
     }
 
-    // 2. ESPECÍFICA: Captura apenas CategoriaNaoEncontradaException
+    // 2. ESPECÃFICA: Captura apenas CategoriaNaoEncontradaException
     @ExceptionHandler(CategoriaNaoEncontradaException.class)
     public ResponseEntity<Object> handleCategoriaNaoEncontrada(...) {
         return ... // 404 Not Found
     }
 
-    // 3. GENÉRICA: Captura qualquer Exception não tratada acima
-    //    (funciona como "catch all" - fallback de segurança)
+    // 3. GENÃ‰RICA: Captura qualquer Exception nÃ£o tratada acima
+    //    (funciona como "catch all" - fallback de seguranÃ§a)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGenericException(...) {
         return ... // 500 Internal Server Error
@@ -538,45 +538,45 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 }
 ```
 
-**Ordem de prioridade:** O Spring escolhe o handler mais específico.
-Se lançar `TodoNaoEncontradoException`, vai para o handler específico (404).
-Se lançar `NullPointerException`, vai para o handler genérico (500).
+**Ordem de prioridade:** O Spring escolhe o handler mais especÃ­fico.
+Se lanÃ§ar `TodoNaoEncontradoException`, vai para o handler especÃ­fico (404).
+Se lanÃ§ar `NullPointerException`, vai para o handler genÃ©rico (500).
 
-**Anotações importantes:**
+**AnotaÃ§Ãµes importantes:**
 
-| Anotação | O que faz |
+| AnotaÃ§Ã£o | O que faz |
 |----------|-----------|
-| `@RestControllerAdvice` | Marca a classe como interceptador global de exceções para todos os `@RestController` |
-| `@ExceptionHandler(Tipo.class)` | Define qual tipo de exceção este método trata |
-| `ResponseEntityExceptionHandler` | Classe base do Spring que já trata exceções comuns (validação, parsing, etc.) |
+| `@RestControllerAdvice` | Marca a classe como interceptador global de exceÃ§Ãµes para todos os `@RestController` |
+| `@ExceptionHandler(Tipo.class)` | Define qual tipo de exceÃ§Ã£o este mÃ©todo trata |
+| `ResponseEntityExceptionHandler` | Classe base do Spring que jÃ¡ trata exceÃ§Ãµes comuns (validaÃ§Ã£o, parsing, etc.) |
 
 **Por que estender `ResponseEntityExceptionHandler`?**
 
-Essa classe base já trata automaticamente várias exceções do Spring:
-- `MethodArgumentNotValidException` → Erros de validação (`@Valid`)
-- `HttpMessageNotReadableException` → JSON malformado
-- `HttpRequestMethodNotSupportedException` → Método HTTP errado (POST em endpoint GET)
-- `MissingServletRequestParameterException` → Parâmetro obrigatório ausente
+Essa classe base jÃ¡ trata automaticamente vÃ¡rias exceÃ§Ãµes do Spring:
+- `MethodArgumentNotValidException` â†’ Erros de validaÃ§Ã£o (`@Valid`)
+- `HttpMessageNotReadableException` â†’ JSON malformado
+- `HttpRequestMethodNotSupportedException` â†’ MÃ©todo HTTP errado (POST em endpoint GET)
+- `MissingServletRequestParameterException` â†’ ParÃ¢metro obrigatÃ³rio ausente
 - E muitas outras...
 
-Você pode sobrescrever esses métodos para customizar a resposta.
+VocÃª pode sobrescrever esses mÃ©todos para customizar a resposta.
 
-**Padrão ProblemDetail (RFC 7807):**
+**PadrÃ£o ProblemDetail (RFC 7807):**
 ```json
 {
     "type": "/api/errors/todo-nao-encontrado",
-    "title": "Tarefa não encontrada",
+    "title": "Tarefa nÃ£o encontrada",
     "status": 404,
-    "detail": "Tarefa com ID 999 não encontrada",
+    "detail": "Tarefa com ID 999 nÃ£o encontrada",
     "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 
 ---
 
-### 2. Camada Domain (Negócio)
+### 2. Camada Domain (NegÃ³cio)
 
-Contém a lógica de negócio, independente de frameworks.
+ContÃ©m a lÃ³gica de negÃ³cio, independente de frameworks.
 
 #### Entity (`Todo.java`)
 Representa uma tabela no banco de dados.
@@ -586,12 +586,12 @@ Representa uma tabela no banco de dados.
 @Table(name = "TODO")        // Nome da tabela
 public class Todo {
 
-    @Id                      // Chave primária
+    @Id                      // Chave primÃ¡ria
     @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-increment
     @Column(name = "TODO_ID")
     private Long id;
 
-    @NotNull                 // Validação JPA
+    @NotNull                 // ValidaÃ§Ã£o JPA
     @Column(name = "TODO_TITULO", nullable = false)
     private String titulo;
 
@@ -600,7 +600,7 @@ public class Todo {
 }
 ```
 
-**Anotações Lombok usadas:**
+**AnotaÃ§Ãµes Lombok usadas:**
 - `@Data` = Gera getters, setters, equals, hashCode, toString
 - `@EqualsAndHashCode(onlyExplicitlyIncluded = true)` = Usa apenas campos marcados
 
@@ -611,7 +611,7 @@ Interface para acesso ao banco. Spring Data JPA implementa automaticamente.
 @Repository
 public interface TodoRepository extends JpaRepository<Todo, Long> {
 
-    // Spring Data JPA cria a query automaticamente pelo nome do método!
+    // Spring Data JPA cria a query automaticamente pelo nome do mÃ©todo!
     List<Todo> findByConcluidoOrderByDataCriacaoDesc(Boolean concluido);
 
     // Equivalente a:
@@ -619,7 +619,7 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
 }
 ```
 
-**Métodos herdados de JpaRepository:**
+**MÃ©todos herdados de JpaRepository:**
 - `save(entity)` - Salva ou atualiza
 - `findById(id)` - Busca por ID (retorna Optional)
 - `findAll()` - Busca todos
@@ -627,19 +627,19 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
 - `deleteById(id)` - Exclui por ID
 
 #### Service (`TodoService.java`)
-Contém a lógica de negócio. Orquestra operações.
+ContÃ©m a lÃ³gica de negÃ³cio. Orquestra operaÃ§Ãµes.
 
 ```java
-@Service                     // Marca como bean de serviço
+@Service                     // Marca como bean de serviÃ§o
 @RequiredArgsConstructor     // Lombok: cria construtor com campos final
 public class TodoService {
 
-    private final TodoRepository repository;  // Injeção de dependência
+    private final TodoRepository repository;  // InjeÃ§Ã£o de dependÃªncia
     private final ModelMapper modelMapper;
 
-    @Transactional           // Operação em transação (commit/rollback automático)
+    @Transactional           // OperaÃ§Ã£o em transaÃ§Ã£o (commit/rollback automÃ¡tico)
     public Todo criar(TodoInput input) {
-        Todo todo = modelMapper.map(input, Todo.class);  // Converte DTO → Entity
+        Todo todo = modelMapper.map(input, Todo.class);  // Converte DTO â†’ Entity
         todo.setDataCriacao(LocalDateTime.now());
         todo.setConcluido(false);
         return repository.save(todo);  // Persiste no banco
@@ -647,7 +647,7 @@ public class TodoService {
 
     public Todo buscarPorId(Long id) {
         return repository.findById(id)
-            .orElseThrow(() -> new TodoNaoEncontradoException(id));  // Lança exceção se não encontrar
+            .orElseThrow(() -> new TodoNaoEncontradoException(id));  // LanÃ§a exceÃ§Ã£o se nÃ£o encontrar
     }
 }
 ```
@@ -656,13 +656,13 @@ public class TodoService {
 
 ### 3. Camada Config
 
-Configurações do Spring (beans, interceptors, etc).
+ConfiguraÃ§Ãµes do Spring (beans, interceptors, etc).
 
 ```java
-@Configuration  // Marca como classe de configuração
+@Configuration  // Marca como classe de configuraÃ§Ã£o
 public class ModelMapperConfig {
 
-    @Bean  // Registra como bean do Spring (disponível para injeção)
+    @Bean  // Registra como bean do Spring (disponÃ­vel para injeÃ§Ã£o)
     public ModelMapper modelMapper() {
         return new ModelMapper();
     }
@@ -671,54 +671,54 @@ public class ModelMapperConfig {
 
 ---
 
-## Fluxo de uma Requisição
+## Fluxo de uma RequisiÃ§Ã£o
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           POST /api/todos                                   │
-│                    {"titulo": "Comprar pão", "descricao": "..."}            │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  1. CONTROLLER (TodoController)                                             │
-│     - Recebe a requisição HTTP                                              │
-│     - @Valid valida o TodoInput (Bean Validation)                           │
-│     - Se inválido → ApiExceptionHandler retorna 400                         │
-│     - Se válido → chama todoService.criar(input)                            │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  2. SERVICE (TodoService)                                                   │
-│     - Aplica lógica de negócio                                              │
-│     - Converte TodoInput → Todo (ModelMapper)                               │
-│     - Define dataCriacao = agora                                            │
-│     - Define concluido = false                                              │
-│     - Chama repository.save(todo)                                           │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  3. REPOSITORY (TodoRepository)                                             │
-│     - Spring Data JPA gera o SQL automaticamente                            │
-│     - INSERT INTO TODO (TODO_TITULO, ...) VALUES (?, ...)                   │
-│     - Retorna entidade com ID preenchido                                    │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  4. CONTROLLER (volta)                                                      │
-│     - Recebe Todo do Service                                                │
-│     - Converte Todo → TodoOutput (ModelMapper)                              │
-│     - Retorna ResponseEntity com status 201 (CREATED)                       │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         HTTP 201 Created                                    │
-│  {"id": 1, "titulo": "Comprar pão", "concluido": false, ...}               │
-└─────────────────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                           POST /api/todos                                   â”‚
+â”‚                    {"titulo": "Comprar pÃ£o", "descricao": "..."}            â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                                      â”‚
+                                      â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  1. CONTROLLER (TodoController)                                             â”‚
+â”‚     - Recebe a requisiÃ§Ã£o HTTP                                              â”‚
+â”‚     - @Valid valida o TodoInput (Bean Validation)                           â”‚
+â”‚     - Se invÃ¡lido â†’ ApiExceptionHandler retorna 400                         â”‚
+â”‚     - Se vÃ¡lido â†’ chama todoService.criar(input)                            â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                                      â”‚
+                                      â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  2. SERVICE (TodoService)                                                   â”‚
+â”‚     - Aplica lÃ³gica de negÃ³cio                                              â”‚
+â”‚     - Converte TodoInput â†’ Todo (ModelMapper)                               â”‚
+â”‚     - Define dataCriacao = agora                                            â”‚
+â”‚     - Define concluido = false                                              â”‚
+â”‚     - Chama repository.save(todo)                                           â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                                      â”‚
+                                      â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  3. REPOSITORY (TodoRepository)                                             â”‚
+â”‚     - Spring Data JPA gera o SQL automaticamente                            â”‚
+â”‚     - INSERT INTO TODO (TODO_TITULO, ...) VALUES (?, ...)                   â”‚
+â”‚     - Retorna entidade com ID preenchido                                    â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                                      â”‚
+                                      â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  4. CONTROLLER (volta)                                                      â”‚
+â”‚     - Recebe Todo do Service                                                â”‚
+â”‚     - Converte Todo â†’ TodoOutput (ModelMapper)                              â”‚
+â”‚     - Retorna ResponseEntity com status 201 (CREATED)                       â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                                      â”‚
+                                      â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                         HTTP 201 Created                                    â”‚
+â”‚  {"id": 1, "titulo": "Comprar pÃ£o", "concluido": false, ...}               â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
@@ -762,43 +762,43 @@ public class ModelMapperConfig {
 
 ### Bean Validation (Jakarta Validation)
 
-Validações declarativas via anotações.
+ValidaÃ§Ãµes declarativas via anotaÃ§Ãµes.
 
 ```java
 public class TodoInput {
-    @NotBlank(message = "Título é obrigatório")
-    @Size(min = 1, max = 200, message = "Título deve ter entre 1 e 200 caracteres")
+    @NotBlank(message = "TÃ­tulo Ã© obrigatÃ³rio")
+    @Size(min = 1, max = 200, message = "TÃ­tulo deve ter entre 1 e 200 caracteres")
     private String titulo;
 }
 ```
 
-**Anotações comuns:**
-| Anotação | Descrição |
+**AnotaÃ§Ãµes comuns:**
+| AnotaÃ§Ã£o | DescriÃ§Ã£o |
 |----------|-----------|
-| `@NotNull` | Não pode ser null |
-| `@NotBlank` | Não pode ser null, vazio ou só espaços |
-| `@NotEmpty` | Não pode ser null ou vazio |
-| `@Size(min, max)` | Tamanho da string ou coleção |
-| `@Min`, `@Max` | Valor mínimo/máximo para números |
-| `@Email` | Formato de email válido |
+| `@NotNull` | NÃ£o pode ser null |
+| `@NotBlank` | NÃ£o pode ser null, vazio ou sÃ³ espaÃ§os |
+| `@NotEmpty` | NÃ£o pode ser null ou vazio |
+| `@Size(min, max)` | Tamanho da string ou coleÃ§Ã£o |
+| `@Min`, `@Max` | Valor mÃ­nimo/mÃ¡ximo para nÃºmeros |
+| `@Email` | Formato de email vÃ¡lido |
 | `@Pattern(regexp)` | Deve casar com regex |
 
-### Transações (@Transactional)
+### TransaÃ§Ãµes (@Transactional)
 
-Garante que operações no banco sejam atômicas.
+Garante que operaÃ§Ãµes no banco sejam atÃ´micas.
 
 ```java
 @Transactional  // Se der erro, faz rollback de tudo
 public Todo criar(TodoInput input) {
-    // Operação 1: salva todo
-    // Operação 2: salva log (exemplo)
-    // Se operação 2 falhar, operação 1 também é desfeita
+    // OperaÃ§Ã£o 1: salva todo
+    // OperaÃ§Ã£o 2: salva log (exemplo)
+    // Se operaÃ§Ã£o 2 falhar, operaÃ§Ã£o 1 tambÃ©m Ã© desfeita
 }
 ```
 
 ### Optional
 
-Evita NullPointerException. Força tratamento de ausência de valor.
+Evita NullPointerException. ForÃ§a tratamento de ausÃªncia de valor.
 
 ```java
 // Ruim (pode dar NullPointerException):
@@ -814,29 +814,29 @@ Todo todo = optional.orElseThrow(() -> new TodoNaoEncontradoException(id));
 
 ## Como Executar
 
-### Pré-requisitos
+### PrÃ©-requisitos
 - Java 21+
 - Maven 3.9+
 
 ### IDEs Recomendadas
 
-| IDE | Descrição | Plugins Recomendados |
+| IDE | DescriÃ§Ã£o | Plugins Recomendados |
 |-----|-----------|---------------------|
-| **IntelliJ IDEA** | IDE mais popular para Java. Versão Community (gratuita) ou Ultimate | Lombok (geralmente já vem instalado) |
+| **IntelliJ IDEA** | IDE mais popular para Java. VersÃ£o Community (gratuita) ou Ultimate | Lombok (geralmente jÃ¡ vem instalado) |
 | **VS Code** | Editor leve com suporte a Java | Extension Pack for Java, Spring Boot Extension Pack, Lombok Annotations Support |
 | **Eclipse** | IDE tradicional para Java | Spring Tools Suite (STS), Lombok |
-| **NetBeans** | IDE gratuita da Apache | Suporte a Maven já integrado |
+| **NetBeans** | IDE gratuita da Apache | Suporte a Maven jÃ¡ integrado |
 
-**Nota:** Todas as IDEs precisam do plugin **Lombok** para que o código compile corretamente (getters, setters, construtores são gerados automaticamente).
+**Nota:** Todas as IDEs precisam do plugin **Lombok** para que o cÃ³digo compile corretamente (getters, setters, construtores sÃ£o gerados automaticamente).
 
 ### Estrutura do Projeto e Ponto de Entrada
 
 ```
 src/main/java/br/com/exemplo/todo/
-└── TodoApplication.java    ← PONTO DE ENTRADA (classe main)
+â””â”€â”€ TodoApplication.java    â† PONTO DE ENTRADA (classe main)
 ```
 
-O arquivo `TodoApplication.java` contém o método `main()` que inicia a aplicação Spring Boot:
+O arquivo `TodoApplication.java` contÃ©m o mÃ©todo `main()` que inicia a aplicaÃ§Ã£o Spring Boot:
 
 ```java
 @SpringBootApplication
@@ -850,16 +850,16 @@ public class TodoApplication {
 **Para rodar o projeto na IDE:**
 1. Abra o projeto como projeto Maven
 2. Localize a classe `TodoApplication.java` em `src/main/java/br/com/exemplo/todo/`
-3. Clique com botão direito → Run (ou use o atalho da IDE)
+3. Clique com botÃ£o direito â†’ Run (ou use o atalho da IDE)
 
 ### Banco de dados e migrations (SQLite)
 
-- **Sem servidor externo:** o SQLite cria o arquivo `./data/todo.db` automaticamente na primeira execução.
-- **Schema automático:** o Hibernate está com `spring.jpa.hibernate.ddl-auto=update`, então as tabelas são criadas/ajustadas ao subir a aplicação.
+- **Sem servidor externo:** o SQLite cria o arquivo `./data/todo.db` automaticamente na primeira execuÃ§Ã£o.
+- **Schema automÃ¡tico:** o Hibernate estÃ¡ com `spring.jpa.hibernate.ddl-auto=update`, entÃ£o as tabelas sÃ£o criadas/ajustadas ao subir a aplicaÃ§Ã£o.
 - **Migrations Flyway (opcional/manual):**
   - Scripts SQL ficam em `flyway/sql/`.
   - Para aplicar manualmente: `mvn -Dflyway.configFiles=flyway/flyway.conf flyway:migrate`.
-  - Para recomeçar do zero, basta apagar o arquivo `data/todo.db` antes de rodar.
+  - Para recomeÃ§ar do zero, basta apagar o arquivo `data/todo.db` antes de rodar.
 
 ### Executar via Terminal
 
@@ -874,14 +874,14 @@ A aplicacao ficara disponivel em: http://localhost:8080/api
 
 | IDE | Como Executar |
 |-----|---------------|
-| **IntelliJ IDEA** | Abra `TodoApplication.java` → Clique no ícone ▶️ verde ao lado do método `main` → Run |
-| **VS Code** | Abra `TodoApplication.java` → Clique em "Run" acima do método `main` (ou F5) |
-| **Eclipse/STS** | Clique direito em `TodoApplication.java` → Run As → Spring Boot App (ou Java Application) |
-| **NetBeans** | Clique direito no projeto → Run (ou F6) |
+| **IntelliJ IDEA** | Abra `TodoApplication.java` â†’ Clique no Ã­cone â–¶ï¸ verde ao lado do mÃ©todo `main` â†’ Run |
+| **VS Code** | Abra `TodoApplication.java` â†’ Clique em "Run" acima do mÃ©todo `main` (ou F5) |
+| **Eclipse/STS** | Clique direito em `TodoApplication.java` â†’ Run As â†’ Spring Boot App (ou Java Application) |
+| **NetBeans** | Clique direito no projeto â†’ Run (ou F6) |
 
 ### Swagger UI
 
-Acesse a documentação interativa da API:
+Acesse a documentaÃ§Ã£o interativa da API:
 - **Swagger UI:** http://localhost:8080/api/swagger-ui.html
 - **OpenAPI JSON:** http://localhost:8080/api/api-docs
 
@@ -902,18 +902,18 @@ java -jar target/todo-api.jar
 
 ## Endpoints da API
 
-### Autenticação (públicos)
+### AutenticaÃ§Ã£o (pÃºblicos)
 
-| Método | Endpoint | Descrição | Status |
+| MÃ©todo | Endpoint | DescriÃ§Ã£o | Status |
 |--------|----------|-----------|--------|
-| POST | /auth/register | Registrar novo usuário | 201 / 400 / 409 |
+| POST | /auth/register | Registrar novo usuÃ¡rio | 201 / 400 / 409 |
 | POST | /auth/login | Login com email/senha | 200 / 401 / 423 |
 | POST | /auth/refresh | Renovar tokens | 200 / 401 |
 | POST | /auth/logout | Revogar refresh token | 204 |
 
 ### Tarefas (autenticados - requer Bearer token)
 
-| Método | Endpoint | Descrição | Headers | Status |
+| MÃ©todo | Endpoint | DescriÃ§Ã£o | Headers | Status |
 |--------|----------|-----------|---------|--------|
 | GET | /todos | Listar tarefas da org | Authorization, X-Organization-Id | 200 / 403 |
 | GET | /todos?concluido=true | Filtrar por status | Authorization, X-Organization-Id | 200 |
@@ -921,7 +921,7 @@ java -jar target/todo-api.jar
 | POST | /todos | Criar nova tarefa | Authorization, X-Organization-Id | 201 / 400 |
 | PUT | /todos/{id} | Atualizar tarefa | Authorization, X-Organization-Id | 200 / 400 / 404 |
 | DELETE | /todos/{id} | Excluir tarefa | Authorization, X-Organization-Id | 204 / 404 |
-| PATCH | /todos/{id}/concluir | Marcar como concluída | Authorization, X-Organization-Id | 200 / 404 |
+| PATCH | /todos/{id}/concluir | Marcar como concluÃ­da | Authorization, X-Organization-Id | 200 / 404 |
 | PATCH | /todos/{id}/reabrir | Reabrir tarefa | Authorization, X-Organization-Id | 200 / 404 |
 
 ### Categorias de Produtos (autenticados - requer Bearer token)
@@ -979,40 +979,64 @@ java -jar target/todo-api.jar
   - Opcao de categoria desativada -> precos que a referenciam sao desativados.
   - Valida que `PRP_CATOP_ID` pertence a categoria do produto (bloqueia inconsistencias por SQL).
 
-### Administração de Usuários (requer OWNER ou ADMIN)
+### Adicionais (autenticados - requer Bearer token)
 
-| Método | Endpoint | Descrição | Headers | Status |
+| Metodo | Endpoint | Descricao | Headers | Status |
 |--------|----------|-----------|---------|--------|
-| GET | /admin/users | Listar usuários da org | Authorization, X-Organization-Id | 200 / 403 |
-| GET | /admin/users?ativo=true&role=ADMIN | Filtrar usuários | Authorization, X-Organization-Id | 200 |
-| POST | /admin/users | Criar novo usuário | Authorization, X-Organization-Id | 201 / 400 / 409 |
-| GET | /admin/users/{id} | Buscar usuário por ID | Authorization, X-Organization-Id | 200 / 404 |
-| PUT | /admin/users/{id} | Atualizar usuário | Authorization, X-Organization-Id | 200 / 400 / 404 |
-| PATCH | /admin/users/{id}/ativar | Ativar usuário | Authorization, X-Organization-Id | 200 / 404 |
-| PATCH | /admin/users/{id}/desativar | Desativar usuário | Authorization, X-Organization-Id | 200 / 400 / 403 |
-| PATCH | /admin/users/{id}/role | Alterar papel (só OWNER) | Authorization, X-Organization-Id | 200 / 400 / 403 |
+| GET | /adicionais | Lista adicionais ativos (filtro opcional `id_categoria`) com itens ativos embutidos | Authorization, X-Organization-Id | 200 |
+| GET | /adicionais/{id} | Busca adicional com itens ativos | Authorization, X-Organization-Id | 200 / 404 |
+| POST | /adicionais | Cria adicional e itens | Authorization, X-Organization-Id | 201 / 400 |
+| PUT | /adicionais/{id} | Atualiza adicional e sincroniza itens (ativa/atualiza/desativa) | Authorization, X-Organization-Id | 200 / 400 / 404 |
+| DELETE | /adicionais/{id} | Desativa adicional e itens (soft delete) | Authorization, X-Organization-Id | 204 / 404 |
+
+**Selecao (`selecao`)**
+- `U` (Unico): cliente deve escolher exatamente 1 item ativo.
+- `M` (Multiplo): cliente pode escolher 0..N itens; `limite` opcional (>=1).
+- `Q` (Quantidade multipla): cliente pode escolher itens/quantidades com `minimo` (>=0) e `limite` (>=1 e >= minimo).
+
+**Regras de negocio (adicionais)**
+- `id_categoria` obrigatorio e categoria deve estar ativa na organizacao.
+- `opcoes` obrigatorio; cada item: `nome` obrigatorio, `valor` > 0, nomes nao podem repetir (case-insensitive).
+- `status` controla soft delete; DELETE apenas desativa.
+- Triggers no banco:
+  - Categoria desativada -> adicionais e itens relacionados sao desativados.
+  - Adicional desativado -> itens relacionados sao desativados.
+
+
+### AdministraÃ§Ã£o de UsuÃ¡rios (requer OWNER ou ADMIN)
+
+| MÃ©todo | Endpoint | DescriÃ§Ã£o | Headers | Status |
+|--------|----------|-----------|---------|--------|
+| GET | /admin/users | Listar usuÃ¡rios da org | Authorization, X-Organization-Id | 200 / 403 |
+| GET | /admin/users?ativo=true&role=ADMIN | Filtrar usuÃ¡rios | Authorization, X-Organization-Id | 200 |
+| POST | /admin/users | Criar novo usuÃ¡rio | Authorization, X-Organization-Id | 201 / 400 / 409 |
+| GET | /admin/users/{id} | Buscar usuÃ¡rio por ID | Authorization, X-Organization-Id | 200 / 404 |
+| PUT | /admin/users/{id} | Atualizar usuÃ¡rio | Authorization, X-Organization-Id | 200 / 400 / 404 |
+| PATCH | /admin/users/{id}/ativar | Ativar usuÃ¡rio | Authorization, X-Organization-Id | 200 / 404 |
+| PATCH | /admin/users/{id}/desativar | Desativar usuÃ¡rio | Authorization, X-Organization-Id | 200 / 400 / 403 |
+| PATCH | /admin/users/{id}/role | Alterar papel (sÃ³ OWNER) | Authorization, X-Organization-Id | 200 / 400 / 403 |
 | POST | /admin/users/{id}/reset-password | Resetar senha | Authorization, X-Organization-Id | 200 / 404 |
 | POST | /admin/users/{id}/unlock | Desbloquear conta | Authorization, X-Organization-Id | 200 / 404 |
-| GET | /admin/users/{id}/login-history | Histórico de login | Authorization, X-Organization-Id | 200 / 404 |
+| GET | /admin/users/{id}/login-history | HistÃ³rico de login | Authorization, X-Organization-Id | 200 / 404 |
 
 ---
 
-## Exemplos de Requisições
+## Exemplos de RequisiÃ§Ãµes
 
-> **Nota:** Todos os exemplos usam variáveis de ambiente para facilitar os testes.
-> Configure `TOKEN` após login/registro e `ORG_ID` com sua organização.
+> **Nota:** Todos os exemplos usam variÃ¡veis de ambiente para facilitar os testes.
+> Configure `TOKEN` apÃ³s login/registro e `ORG_ID` com sua organizaÃ§Ã£o.
 
-### 1. Autenticação
+### 1. AutenticaÃ§Ã£o
 
-#### Registrar novo usuário
+#### Registrar novo usuÃ¡rio
 ```bash
 curl -X POST http://localhost:8080/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
-    "nome": "João Silva",
+    "nome": "JoÃ£o Silva",
     "email": "joao@exemplo.com",
     "senha": "minhasenha123",
-    "nomeOrganizacao": "Empresa do João"
+    "nomeOrganizacao": "Empresa do JoÃ£o"
   }'
 ```
 
@@ -1024,13 +1048,13 @@ curl -X POST http://localhost:8080/api/auth/register \
   "expiresIn": 900,
   "user": {
     "id": 1,
-    "nome": "João Silva",
+    "nome": "JoÃ£o Silva",
     "email": "joao@exemplo.com"
   },
   "memberships": [
     {
       "organizationId": 1,
-      "organizationName": "Empresa do João",
+      "organizationName": "Empresa do JoÃ£o",
       "organizationSlug": "empresa-do-joao",
       "role": "OWNER"
     }
@@ -1048,7 +1072,7 @@ curl -X POST http://localhost:8080/api/auth/login \
   }'
 ```
 
-**Salvar token para usar nos próximos comandos:**
+**Salvar token para usar nos prÃ³ximos comandos:**
 ```bash
 # No Linux/Mac:
 export TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -1083,7 +1107,7 @@ curl -X POST http://localhost:8080/api/auth/logout \
 
 ---
 
-### 2. Operações de Tarefas (Requerem Autenticação)
+### 2. OperaÃ§Ãµes de Tarefas (Requerem AutenticaÃ§Ã£o)
 
 #### Criar tarefa
 ```bash
@@ -1091,15 +1115,15 @@ curl -X POST http://localhost:8080/api/todos \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Organization-Id: $ORG_ID" \
-  -d '{"titulo": "Comprar pão", "descricao": "Ir à padaria do João"}'
+  -d '{"titulo": "Comprar pÃ£o", "descricao": "Ir Ã  padaria do JoÃ£o"}'
 ```
 
 **Resposta (201 Created):**
 ```json
 {
   "id": 1,
-  "titulo": "Comprar pão",
-  "descricao": "Ir à padaria do João",
+  "titulo": "Comprar pÃ£o",
+  "descricao": "Ir Ã  padaria do JoÃ£o",
   "concluido": false,
   "dataCriacao": "2024-01-15T10:30:00"
 }
@@ -1119,7 +1143,7 @@ curl "http://localhost:8080/api/todos?concluido=false" \
   -H "X-Organization-Id: $ORG_ID"
 ```
 
-#### Listar tarefas concluídas
+#### Listar tarefas concluÃ­das
 ```bash
 curl "http://localhost:8080/api/todos?concluido=true" \
   -H "Authorization: Bearer $TOKEN" \
@@ -1139,10 +1163,10 @@ curl -X PUT http://localhost:8080/api/todos/1 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Organization-Id: $ORG_ID" \
-  -d '{"titulo": "Comprar pão integral", "descricao": "Na padaria do centro"}'
+  -d '{"titulo": "Comprar pÃ£o integral", "descricao": "Na padaria do centro"}'
 ```
 
-#### Marcar como concluída
+#### Marcar como concluÃ­da
 ```bash
 curl -X PATCH http://localhost:8080/api/todos/1/concluir \
   -H "Authorization: Bearer $TOKEN" \
@@ -1182,7 +1206,7 @@ curl http://localhost:8080/api/todos
 }
 ```
 
-#### Credenciais inválidas (401 Unauthorized)
+#### Credenciais invÃ¡lidas (401 Unauthorized)
 ```bash
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
@@ -1193,26 +1217,26 @@ curl -X POST http://localhost:8080/api/auth/login \
 ```json
 {
   "type": "/api/errors/credenciais-invalidas",
-  "title": "Credenciais inválidas.",
+  "title": "Credenciais invÃ¡lidas.",
   "status": 401,
   "detail": "Email ou senha incorretos"
 }
 ```
 
-#### Email já cadastrado (409 Conflict)
+#### Email jÃ¡ cadastrado (409 Conflict)
 ```bash
 curl -X POST http://localhost:8080/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"nome": "João", "email": "joao@exemplo.com", "senha": "123456"}'
+  -d '{"nome": "JoÃ£o", "email": "joao@exemplo.com", "senha": "123456"}'
 ```
 
 **Resposta:**
 ```json
 {
   "type": "/api/errors/email-ja-existe",
-  "title": "Email já cadastrado.",
+  "title": "Email jÃ¡ cadastrado.",
   "status": 409,
-  "detail": "O email joao@exemplo.com já está cadastrado no sistema"
+  "detail": "O email joao@exemplo.com jÃ¡ estÃ¡ cadastrado no sistema"
 }
 ```
 
@@ -1226,22 +1250,22 @@ curl -X POST http://localhost:8080/api/auth/register \
 }
 ```
 
-#### Validação de campos (400 Bad Request)
+#### ValidaÃ§Ã£o de campos (400 Bad Request)
 ```bash
 curl -X POST http://localhost:8080/api/todos \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Organization-Id: $ORG_ID" \
-  -d '{"titulo": "", "descricao": "Sem título"}'
+  -d '{"titulo": "", "descricao": "Sem tÃ­tulo"}'
 ```
 
 **Resposta:**
 ```json
 {
   "type": "/api/errors/campo-invalido",
-  "title": "Campos inválidos.",
+  "title": "Campos invÃ¡lidos.",
   "status": 400,
-  "detail": "Um ou mais campos são inválidos - [titulo: Título é obrigatório]"
+  "detail": "Um ou mais campos sÃ£o invÃ¡lidos - [titulo: TÃ­tulo Ã© obrigatÃ³rio]"
 }
 ```
 
@@ -1255,7 +1279,7 @@ curl -X POST http://localhost:8080/api/todos \
 
 BASE_URL="http://localhost:8080/api"
 
-echo "=== 1. Registrando usuário ==="
+echo "=== 1. Registrando usuÃ¡rio ==="
 REGISTER_RESPONSE=$(curl -s -X POST "$BASE_URL/auth/register" \
   -H "Content-Type: application/json" \
   -d '{
@@ -1282,7 +1306,7 @@ curl -s "$BASE_URL/todos" \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Organization-Id: $ORG_ID" | jq
 
-echo -e "\n=== 4. Marcando como concluída ==="
+echo -e "\n=== 4. Marcando como concluÃ­da ==="
 curl -s -X PATCH "$BASE_URL/todos/1/concluir" \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Organization-Id: $ORG_ID" | jq
@@ -1296,7 +1320,7 @@ echo -e "\n=== Teste completo! ==="
 
 ### SQLite
 
-O SQLite é um banco de dados em arquivo. Não precisa de servidor separado.
+O SQLite Ã© um banco de dados em arquivo. NÃ£o precisa de servidor separado.
 
 - **Arquivo:** `data/todo.db` (criado automaticamente)
 - **Driver:** `org.sqlite.JDBC`
@@ -1305,49 +1329,49 @@ O SQLite é um banco de dados em arquivo. Não precisa de servidor separado.
 ### Modelo de Dados (ER)
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              MODELO DE DADOS                                     │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│   ┌──────────────┐           ┌──────────────────┐           ┌──────────────┐   │
-│   │   USUARIO    │           │    MEMBERSHIP    │           │ ORGANIZATION │   │
-│   ├──────────────┤           ├──────────────────┤           ├──────────────┤   │
-│   │ USR_ID (PK)  │──────────<│ MBS_USR_ID (FK)  │>──────────│ ORG_ID (PK)  │   │
-│   │ USR_NOME     │           │ MBS_ORG_ID (FK)  │           │ ORG_NOME     │   │
-│   │ USR_EMAIL    │           │ MBS_PAPEL        │           │ ORG_SLUG     │   │
-│   │ USR_ATIVO    │           │ MBS_ATIVO        │           │ ORG_ATIVA    │   │
-│   └──────┬───────┘           └──────────────────┘           └──────┬───────┘   │
-│          │                                                          │           │
-│          │ 1:N                                                      │ 1:N       │
-│          ▼                                                          ▼           │
-│   ┌──────────────┐                                           ┌──────────────┐   │
-│   │   ACCOUNT    │                                           │     TODO     │   │
-│   ├──────────────┤                                           ├──────────────┤   │
-│   │ ACC_ID (PK)  │                                           │ TODO_ID (PK) │   │
-│   │ ACC_USR_ID   │                                           │ TODO_ORG_ID  │   │
-│   │ ACC_PROVIDER │                                           │ TODO_TITULO  │   │
-│   │ ACC_SENHA    │                                           │ TODO_DESCR   │   │
-│   │ ACC_BLOQUEADO│                                           │ TODO_CONCL   │   │
-│   │ ACC_TENTATIVAS│                                          └──────────────┘   │
-│   └──────────────┘                                                              │
-│          │                                                                       │
-│          │ 1:N                                                                   │
-│          ▼                                                                       │
-│   ┌──────────────────┐                                                          │
-│   │  REFRESH_TOKEN   │                                                          │
-│   ├──────────────────┤                                                          │
-│   │ RTK_ID (PK)      │                                                          │
-│   │ RTK_USR_ID (FK)  │                                                          │
-│   │ RTK_TOKEN_HASH   │                                                          │
-│   │ RTK_FAMILIA_ID   │   ◄── Agrupa tokens para rotação                         │
-│   │ RTK_REVOGADO     │                                                          │
-│   │ RTK_DATA_EXPIRACAO│                                                         │
-│   └──────────────────┘                                                          │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                              MODELO DE DADOS                                     â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                                                                                  â”‚
+â”‚   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”           â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”           â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚   â”‚   USUARIO    â”‚           â”‚    MEMBERSHIP    â”‚           â”‚ ORGANIZATION â”‚   â”‚
+â”‚   â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤           â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤           â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤   â”‚
+â”‚   â”‚ USR_ID (PK)  â”‚â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€<â”‚ MBS_USR_ID (FK)  â”‚>â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”‚ ORG_ID (PK)  â”‚   â”‚
+â”‚   â”‚ USR_NOME     â”‚           â”‚ MBS_ORG_ID (FK)  â”‚           â”‚ ORG_NOME     â”‚   â”‚
+â”‚   â”‚ USR_EMAIL    â”‚           â”‚ MBS_PAPEL        â”‚           â”‚ ORG_SLUG     â”‚   â”‚
+â”‚   â”‚ USR_ATIVO    â”‚           â”‚ MBS_ATIVO        â”‚           â”‚ ORG_ATIVA    â”‚   â”‚
+â”‚   â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜           â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜           â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚          â”‚                                                          â”‚           â”‚
+â”‚          â”‚ 1:N                                                      â”‚ 1:N       â”‚
+â”‚          â–¼                                                          â–¼           â”‚
+â”‚   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                                           â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚   â”‚   ACCOUNT    â”‚                                           â”‚     TODO     â”‚   â”‚
+â”‚   â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤                                           â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤   â”‚
+â”‚   â”‚ ACC_ID (PK)  â”‚                                           â”‚ TODO_ID (PK) â”‚   â”‚
+â”‚   â”‚ ACC_USR_ID   â”‚                                           â”‚ TODO_ORG_ID  â”‚   â”‚
+â”‚   â”‚ ACC_PROVIDER â”‚                                           â”‚ TODO_TITULO  â”‚   â”‚
+â”‚   â”‚ ACC_SENHA    â”‚                                           â”‚ TODO_DESCR   â”‚   â”‚
+â”‚   â”‚ ACC_BLOQUEADOâ”‚                                           â”‚ TODO_CONCL   â”‚   â”‚
+â”‚   â”‚ ACC_TENTATIVASâ”‚                                          â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                                                              â”‚
+â”‚          â”‚                                                                       â”‚
+â”‚          â”‚ 1:N                                                                   â”‚
+â”‚          â–¼                                                                       â”‚
+â”‚   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                                                          â”‚
+â”‚   â”‚  REFRESH_TOKEN   â”‚                                                          â”‚
+â”‚   â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤                                                          â”‚
+â”‚   â”‚ RTK_ID (PK)      â”‚                                                          â”‚
+â”‚   â”‚ RTK_USR_ID (FK)  â”‚                                                          â”‚
+â”‚   â”‚ RTK_TOKEN_HASH   â”‚                                                          â”‚
+â”‚   â”‚ RTK_FAMILIA_ID   â”‚   â—„â”€â”€ Agrupa tokens para rotaÃ§Ã£o                         â”‚
+â”‚   â”‚ RTK_REVOGADO     â”‚                                                          â”‚
+â”‚   â”‚ RTK_DATA_EXPIRACAOâ”‚                                                         â”‚
+â”‚   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                                                          â”‚
+â”‚                                                                                  â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
-### Configuração (application.yml)
+### ConfiguraÃ§Ã£o (application.yml)
 
 ```yaml
 spring:
@@ -1359,7 +1383,7 @@ spring:
     hibernate:
       ddl-auto: update  # Hibernate gerencia o schema automaticamente
 
-# Configuração JWT
+# ConfiguraÃ§Ã£o JWT
 security:
   jwt:
     secret: ${JWT_SECRET:chave-secreta-desenvolvimento-minimo-32-caracteres-segura}
@@ -1373,24 +1397,24 @@ security:
 
 ### Migrations Flyway (opcional)
 
-As migrations Flyway estão disponíveis em `flyway/sql/` mas o Hibernate está configurado com `ddl-auto: update`, então as tabelas são criadas/ajustadas automaticamente.
+As migrations Flyway estÃ£o disponÃ­veis em `flyway/sql/` mas o Hibernate estÃ¡ configurado com `ddl-auto: update`, entÃ£o as tabelas sÃ£o criadas/ajustadas automaticamente.
 
 Para aplicar migrations manualmente:
 ```bash
 mvn -Dflyway.configFiles=flyway/flyway.conf flyway:migrate
 ```
 
-Para recomeçar do zero, basta apagar o arquivo `data/todo.db` antes de rodar.
+Para recomeÃ§ar do zero, basta apagar o arquivo `data/todo.db` antes de rodar.
 ## Testes
 
 ### Estrutura de Testes
 
 ```
 src/test/java/br/com/exemplo/todo/
-├── testesunitarios/           # Testes isolados (com mocks)
-│   └── TodoServiceTest.java
-└── testesintegracao/          # Testes end-to-end (com banco real + auth)
-    └── TodoControllerIntegracaoTest.java
+â”œâ”€â”€ testesunitarios/           # Testes isolados (com mocks)
+â”‚   â””â”€â”€ TodoServiceTest.java
+â””â”€â”€ testesintegracao/          # Testes end-to-end (com banco real + auth)
+    â””â”€â”€ TodoControllerIntegracaoTest.java
 ```
 
 ### Executar Testes
@@ -1399,23 +1423,23 @@ src/test/java/br/com/exemplo/todo/
 # Todos os testes
 mvn test
 
-# Apenas testes unitários
+# Apenas testes unitÃ¡rios
 mvn test -Dtest="**/testesunitarios/**"
 
-# Apenas testes de integração
+# Apenas testes de integraÃ§Ã£o
 mvn test -Dtest="**/testesintegracao/**"
 ```
 
-### Testes Unitários (com TenantContext)
+### Testes UnitÃ¡rios (com TenantContext)
 
-Testam uma classe isolada, usando mocks para dependências.
-**Importante:** É necessário configurar o `TenantContext` nos testes para simular o multi-tenancy.
+Testam uma classe isolada, usando mocks para dependÃªncias.
+**Importante:** Ã‰ necessÃ¡rio configurar o `TenantContext` nos testes para simular o multi-tenancy.
 
 ```java
 @ExtendWith(MockitoExtension.class)  // Ativa Mockito
 class TodoServiceTest {
 
-    @Mock  // Cria mock do repositório
+    @Mock  // Cria mock do repositÃ³rio
     private TodoRepository repository;
 
     @InjectMocks  // Injeta mocks no service
@@ -1423,7 +1447,7 @@ class TodoServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Configura o TenantContext para simular um usuário autenticado
+        // Configura o TenantContext para simular um usuÃ¡rio autenticado
         TenantInfo tenantInfo = new TenantInfo(
             1L,                    // userId
             "Teste",               // userName
@@ -1436,7 +1460,7 @@ class TodoServiceTest {
 
     @AfterEach
     void tearDown() {
-        // IMPORTANTE: Limpar o ThreadLocal após cada teste
+        // IMPORTANTE: Limpar o ThreadLocal apÃ³s cada teste
         TenantContext.clear();
     }
 
@@ -1449,16 +1473,16 @@ class TodoServiceTest {
         Todo resultado = service.criar(input);
 
         // Verifica
-        assertThat(resultado.getTitulo()).isEqualTo("Comprar pão");
+        assertThat(resultado.getTitulo()).isEqualTo("Comprar pÃ£o");
         assertThat(resultado.getOrganization().getId()).isEqualTo(1L);  // Valida org
         verify(repository).save(any());
     }
 }
 ```
 
-### Testes de Integração (com JWT)
+### Testes de IntegraÃ§Ã£o (com JWT)
 
-Testam o fluxo completo, com banco de dados real e autenticação JWT.
+Testam o fluxo completo, com banco de dados real e autenticaÃ§Ã£o JWT.
 
 ```java
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -1495,7 +1519,7 @@ class TodoControllerIntegracaoTest {
         organizationRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Cria usuário de teste
+        // Cria usuÃ¡rio de teste
         User user = new User();
         user.setNome("Teste");
         user.setEmail("teste@teste.com");
@@ -1504,7 +1528,7 @@ class TodoControllerIntegracaoTest {
         user.setDataAtualizacao(LocalDateTime.now());
         user = userRepository.save(user);
 
-        // Cria organização de teste
+        // Cria organizaÃ§Ã£o de teste
         Organization org = new Organization();
         org.setNome("Org Teste");
         org.setSlug("org-teste");
@@ -1559,47 +1583,47 @@ class TodoControllerIntegracaoTest {
 
 ### Pontos Importantes nos Testes
 
-| Aspecto | Teste Unitário | Teste de Integração |
+| Aspecto | Teste UnitÃ¡rio | Teste de IntegraÃ§Ã£o |
 |---------|---------------|---------------------|
-| TenantContext | Manual via `TenantContext.set()` | Automático via filtros |
-| Autenticação | Não passa pelos filtros | Requer token JWT real |
+| TenantContext | Manual via `TenantContext.set()` | AutomÃ¡tico via filtros |
+| AutenticaÃ§Ã£o | NÃ£o passa pelos filtros | Requer token JWT real |
 | Banco de dados | Mockado | Real (SQLite) |
 | Limpeza | `TenantContext.clear()` | `@BeforeEach` com `deleteAll()` |
 
 ---
 
-## Módulo de Administração de Usuários (User Admin)
+## MÃ³dulo de AdministraÃ§Ã£o de UsuÃ¡rios (User Admin)
 
-Sistema completo de CRUD de usuários da organização com controle de acesso por roles.
+Sistema completo de CRUD de usuÃ¡rios da organizaÃ§Ã£o com controle de acesso por roles.
 
 ### Arquitetura
 
 ```
 domain/
-├── exception/
-│   ├── UserNotFoundException.java          # Usuário não encontrado
-│   ├── CannotModifyOwnerException.java     # Não pode modificar OWNER
-│   ├── CannotModifySelfException.java      # Não pode modificar a si mesmo
-│   └── PasswordExpiredException.java       # Senha expirada
-├── model/entity/
-│   └── LoginAttempt.java                   # Registro de tentativas de login
-├── repository/
-│   └── LoginAttemptRepository.java         # Repository para histórico de login
-└── service/
-    └── UserAdminService.java               # Lógica de negócio
+â”œâ”€â”€ exception/
+â”‚   â”œâ”€â”€ UserNotFoundException.java          # UsuÃ¡rio nÃ£o encontrado
+â”‚   â”œâ”€â”€ CannotModifyOwnerException.java     # NÃ£o pode modificar OWNER
+â”‚   â”œâ”€â”€ CannotModifySelfException.java      # NÃ£o pode modificar a si mesmo
+â”‚   â””â”€â”€ PasswordExpiredException.java       # Senha expirada
+â”œâ”€â”€ model/entity/
+â”‚   â””â”€â”€ LoginAttempt.java                   # Registro de tentativas de login
+â”œâ”€â”€ repository/
+â”‚   â””â”€â”€ LoginAttemptRepository.java         # Repository para histÃ³rico de login
+â””â”€â”€ service/
+    â””â”€â”€ UserAdminService.java               # LÃ³gica de negÃ³cio
 
 api/
-├── controller/
-│   └── UserAdminController.java            # REST endpoints
-├── dto/admin/
-│   ├── UserAdminOutput.java                # Dados completos do usuário
-│   ├── UserAdminInput.java                 # Input para criar usuário
-│   ├── UserUpdateInput.java                # Input para atualizar
-│   ├── UserRoleUpdateInput.java            # Input para alterar role
-│   ├── UserPasswordResetOutput.java        # Resposta com senha temporária
-│   └── LoginAttemptOutput.java             # Tentativa de login
-└── openapi/
-    └── UserAdminControllerOpenApi.java     # Documentação Swagger
+â”œâ”€â”€ controller/
+â”‚   â””â”€â”€ UserAdminController.java            # REST endpoints
+â”œâ”€â”€ dto/admin/
+â”‚   â”œâ”€â”€ UserAdminOutput.java                # Dados completos do usuÃ¡rio
+â”‚   â”œâ”€â”€ UserAdminInput.java                 # Input para criar usuÃ¡rio
+â”‚   â”œâ”€â”€ UserUpdateInput.java                # Input para atualizar
+â”‚   â”œâ”€â”€ UserRoleUpdateInput.java            # Input para alterar role
+â”‚   â”œâ”€â”€ UserPasswordResetOutput.java        # Resposta com senha temporÃ¡ria
+â”‚   â””â”€â”€ LoginAttemptOutput.java             # Tentativa de login
+â””â”€â”€ openapi/
+    â””â”€â”€ UserAdminControllerOpenApi.java     # DocumentaÃ§Ã£o Swagger
 ```
 
 ### Tabela LOGIN_ATTEMPT (Migration V0004)
@@ -1615,28 +1639,28 @@ CREATE TABLE LOGIN_ATTEMPT (
     LOGA_DATA_TENTATIVA TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Índice para busca por usuário
+-- Ãndice para busca por usuÃ¡rio
 CREATE INDEX IDX_LOGIN_ATTEMPT_USER ON LOGIN_ATTEMPT(LOGA_USER_ID);
 
 -- Coluna senhaExpirada em ACCOUNT
 ALTER TABLE ACCOUNT ADD COLUMN ACCO_SENHA_EXPIRADA BOOLEAN DEFAULT FALSE;
 ```
 
-### UserAdminService - Métodos Principais
+### UserAdminService - MÃ©todos Principais
 
 ```java
 @Service
 @RequiredArgsConstructor
 public class UserAdminService {
 
-    // Listar usuários com filtros e paginação
+    // Listar usuÃ¡rios com filtros e paginaÃ§Ã£o
     public Page<UserAdminOutput> listarUsuarios(
         Boolean ativo, String role, String search, Pageable pageable);
 
-    // Buscar usuário por ID (valida membership na org)
+    // Buscar usuÃ¡rio por ID (valida membership na org)
     public UserAdminOutput buscarUsuario(Long userId);
 
-    // Criar usuário com senha temporária
+    // Criar usuÃ¡rio com senha temporÃ¡ria
     public UserPasswordResetOutput criarUsuario(UserAdminInput input);
 
     // Atualizar nome/email
@@ -1644,56 +1668,56 @@ public class UserAdminService {
 
     // Ativar/desativar (soft delete)
     public UserAdminOutput ativarUsuario(Long userId);
-    public UserAdminOutput desativarUsuario(Long userId);  // Valida: não pode desativar OWNER ou si mesmo
+    public UserAdminOutput desativarUsuario(Long userId);  // Valida: nÃ£o pode desativar OWNER ou si mesmo
 
     // Alterar role (apenas OWNER pode)
     public UserAdminOutput alterarRole(Long userId, UserRoleUpdateInput input);
 
-    // Resetar senha (gera senha temporária, marca senhaExpirada=true)
+    // Resetar senha (gera senha temporÃ¡ria, marca senhaExpirada=true)
     public UserPasswordResetOutput resetarSenha(Long userId);
 
     // Desbloquear conta bloqueada por tentativas
     public UserAdminOutput desbloquearConta(Long userId);
 
-    // Histórico de login (últimas 10 tentativas)
+    // HistÃ³rico de login (Ãºltimas 10 tentativas)
     public List<LoginAttemptOutput> listarHistoricoLogin(Long userId);
 }
 ```
 
-### Regras de Negócio
+### Regras de NegÃ³cio
 
-1. **Criação de usuário**:
-   - Email deve ser único
-   - Não pode criar com role OWNER
-   - Gera senha temporária de 12 caracteres
-   - Marca `senhaExpirada = true` (força troca no primeiro login)
+1. **CriaÃ§Ã£o de usuÃ¡rio**:
+   - Email deve ser Ãºnico
+   - NÃ£o pode criar com role OWNER
+   - Gera senha temporÃ¡ria de 12 caracteres
+   - Marca `senhaExpirada = true` (forÃ§a troca no primeiro login)
 
-2. **Desativação**:
-   - Não pode desativar OWNER
-   - Não pode desativar a si mesmo
+2. **DesativaÃ§Ã£o**:
+   - NÃ£o pode desativar OWNER
+   - NÃ£o pode desativar a si mesmo
 
-3. **Alteração de role**:
+3. **AlteraÃ§Ã£o de role**:
    - Apenas OWNER pode alterar roles
-   - Não pode promover alguém a OWNER
-   - Não pode alterar próprio role
-   - Não pode rebaixar/alterar OWNER
+   - NÃ£o pode promover alguÃ©m a OWNER
+   - NÃ£o pode alterar prÃ³prio role
+   - NÃ£o pode rebaixar/alterar OWNER
 
 4. **Reset de senha**:
-   - Gera nova senha temporária
+   - Gera nova senha temporÃ¡ria
    - Desbloqueia conta se bloqueada
    - Marca `senhaExpirada = true`
 
-### Exceções e HTTP Status
+### ExceÃ§Ãµes e HTTP Status
 
-| Exceção | Status | Quando |
+| ExceÃ§Ã£o | Status | Quando |
 |---------|--------|--------|
-| `UserNotFoundException` | 404 | Usuário não existe ou não pertence à org |
+| `UserNotFoundException` | 404 | UsuÃ¡rio nÃ£o existe ou nÃ£o pertence Ã  org |
 | `CannotModifyOwnerException` | 403 | Tentativa de modificar OWNER |
 | `CannotModifySelfException` | 400 | Tentativa de desativar/alterar a si mesmo |
-| `EmailAlreadyExistsException` | 409 | Email já cadastrado |
+| `EmailAlreadyExistsException` | 409 | Email jÃ¡ cadastrado |
 | `PasswordExpiredException` | 403 | Login com senha expirada |
 
-### Proteção de Endpoints
+### ProteÃ§Ã£o de Endpoints
 
 ```java
 @RestController
@@ -1707,28 +1731,28 @@ public class UserAdminController {
 }
 ```
 
-### Testes Unitários (UserAdminServiceTest)
+### Testes UnitÃ¡rios (UserAdminServiceTest)
 
 20 testes cobrindo:
-- Buscar usuário (sucesso e não encontrado)
-- Criar usuário (sucesso, email duplicado, criar OWNER)
-- Atualizar usuário (sucesso, email duplicado)
+- Buscar usuÃ¡rio (sucesso e nÃ£o encontrado)
+- Criar usuÃ¡rio (sucesso, email duplicado, criar OWNER)
+- Atualizar usuÃ¡rio (sucesso, email duplicado)
 - Desativar (sucesso, desativar si mesmo, desativar OWNER)
-- Ativar usuário
-- Alterar role (sucesso como OWNER, falha como ADMIN, definir como OWNER, alterar próprio)
+- Ativar usuÃ¡rio
+- Alterar role (sucesso como OWNER, falha como ADMIN, definir como OWNER, alterar prÃ³prio)
 - Resetar senha (sucesso, sem conta local)
 - Desbloquear conta
-- Histórico de login (sucesso, usuário não pertence à org)
+- HistÃ³rico de login (sucesso, usuÃ¡rio nÃ£o pertence Ã  org)
 
-### Exemplos de Requisições
+### Exemplos de RequisiÃ§Ãµes
 
-#### Criar usuário
+#### Criar usuÃ¡rio
 ```bash
 curl -X POST http://localhost:8080/api/admin/users \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Organization-Id: $ORG_ID" \
   -H "Content-Type: application/json" \
-  -d '{"nome": "João Silva", "email": "joao@empresa.com", "role": "MEMBER"}'
+  -d '{"nome": "JoÃ£o Silva", "email": "joao@empresa.com", "role": "MEMBER"}'
 ```
 
 **Resposta:**
@@ -1736,11 +1760,11 @@ curl -X POST http://localhost:8080/api/admin/users \
 {
   "userId": 5,
   "senhaTemporaria": "aB3#xY9!kL2$",
-  "mensagem": "Usuário criado. Senha temporária deve ser alterada no primeiro login."
+  "mensagem": "UsuÃ¡rio criado. Senha temporÃ¡ria deve ser alterada no primeiro login."
 }
 ```
 
-#### Listar usuários com filtros
+#### Listar usuÃ¡rios com filtros
 ```bash
 curl "http://localhost:8080/api/admin/users?ativo=true&role=ADMIN&search=joao&page=0&size=10" \
   -H "Authorization: Bearer $TOKEN" \
@@ -1756,7 +1780,7 @@ curl -X PATCH http://localhost:8080/api/admin/users/5/role \
   -d '{"role": "ADMIN"}'
 ```
 
-#### Ver histórico de login
+#### Ver histÃ³rico de login
 ```bash
 curl http://localhost:8080/api/admin/users/5/login-history \
   -H "Authorization: Bearer $TOKEN" \
@@ -1785,59 +1809,59 @@ curl http://localhost:8080/api/admin/users/5/login-history \
 
 ---
 
-## Comparação com o Projeto Base
+## ComparaÃ§Ã£o com o Projeto Base
 
-| Aspecto | Todo API | Reforma Tributária |
+| Aspecto | Todo API | Reforma TributÃ¡ria |
 |---------|----------|-------------------|
-| Controllers | 3 (Auth + Todo + UserAdmin) | Múltiplos |
+| Controllers | 3 (Auth + Todo + UserAdmin) | MÃºltiplos |
 | Entities | 7 (User, Org, Todo, LoginAttempt...) | 50+ tabelas |
-| Autenticação | JWT + Refresh Token | JWT + OAuth2 |
-| Multi-tenancy | Por header X-Organization-Id | Complexo, múltiplas camadas |
-| Complexidade | CRUD + Auth + User Admin | Cálculos tributários complexos |
+| AutenticaÃ§Ã£o | JWT + Refresh Token | JWT + OAuth2 |
+| Multi-tenancy | Por header X-Organization-Id | Complexo, mÃºltiplas camadas |
+| Complexidade | CRUD + Auth + User Admin | CÃ¡lculos tributÃ¡rios complexos |
 | Endpoints | 22 | 50+ |
-| Cache | Não implementado | 60+ caches Caffeine |
-| Validações | Bean Validation + regras de negócio | Regras de negócio complexas |
-| Exceções | 11 customizadas | 40+ exceções de negócio |
-| Serviços externos | Nenhum | WebClient, retry patterns |
+| Cache | NÃ£o implementado | 60+ caches Caffeine |
+| ValidaÃ§Ãµes | Bean Validation + regras de negÃ³cio | Regras de negÃ³cio complexas |
+| ExceÃ§Ãµes | 11 customizadas | 40+ exceÃ§Ãµes de negÃ³cio |
+| ServiÃ§os externos | Nenhum | WebClient, retry patterns |
 
 ### O que este projeto ensina:
 
-**Básico (estrutura):**
-- **Estrutura de pastas** - Organização `api/`, `domain/`, `security/`, `config/`
-- **Padrão de camadas** - Controller → Service → Repository
+**BÃ¡sico (estrutura):**
+- **Estrutura de pastas** - OrganizaÃ§Ã£o `api/`, `domain/`, `security/`, `config/`
+- **PadrÃ£o de camadas** - Controller â†’ Service â†’ Repository
 - **DTOs separados** - Input/Output para controle da API
 - **Exception Handler** - Tratamento centralizado com ProblemDetail (RFC 7807)
-- **OpenAPI/Swagger** - Documentação automática com autenticação
-- **Testes organizados** - Unitários vs Integração
+- **OpenAPI/Swagger** - DocumentaÃ§Ã£o automÃ¡tica com autenticaÃ§Ã£o
+- **Testes organizados** - UnitÃ¡rios vs IntegraÃ§Ã£o
 
-**Intermediário (autenticação):**
+**IntermediÃ¡rio (autenticaÃ§Ã£o):**
 - **JWT stateless** - Access token + Refresh token
 - **Spring Security 6** - SecurityFilterChain (sem WebSecurityConfigurerAdapter)
 - **Filtros customizados** - JwtAuthenticationFilter, TenantFilter
 - **BCrypt** - Hash seguro de senhas
-- **Rotação de tokens** - Família de tokens para detecção de roubo
+- **RotaÃ§Ã£o de tokens** - FamÃ­lia de tokens para detecÃ§Ã£o de roubo
 
-**Avançado (multi-tenancy):**
+**AvanÃ§ado (multi-tenancy):**
 - **ThreadLocal** - TenantContext para isolamento por thread
-- **SpEL expressions** - @PreAuthorize com expressões customizadas
-- **Isolamento de dados** - Cada organização vê apenas seus dados
+- **SpEL expressions** - @PreAuthorize com expressÃµes customizadas
+- **Isolamento de dados** - Cada organizaÃ§Ã£o vÃª apenas seus dados
 
-### Próximos passos para aprender:
+### PrÃ³ximos passos para aprender:
 
-1. Estudar os Services do projeto Reforma (lógica de negócio complexa)
-2. Ver como o cache Caffeine é configurado
-3. Analisar as validações de negócio customizadas
+1. Estudar os Services do projeto Reforma (lÃ³gica de negÃ³cio complexa)
+2. Ver como o cache Caffeine Ã© configurado
+3. Analisar as validaÃ§Ãµes de negÃ³cio customizadas
 4. Entender o uso de WebClient para chamadas externas
-5. Explorar os testes de integração mais elaborados
-6. Implementar OAuth2 (Google, GitHub) usando o padrão Account
+5. Explorar os testes de integraÃ§Ã£o mais elaborados
+6. Implementar OAuth2 (Google, GitHub) usando o padrÃ£o Account
 
 ---
 
-## Guia Prático: Passo a Passo
+## Guia PrÃ¡tico: Passo a Passo
 
-Esta seção ensina como criar novos recursos do zero. Vamos usar como exemplo a criação de um CRUD de **Categoria** para organizar as tarefas.
+Esta seÃ§Ã£o ensina como criar novos recursos do zero. Vamos usar como exemplo a criaÃ§Ã£o de um CRUD de **Categoria** para organizar as tarefas.
 
-### Índice do Guia Prático
+### Ãndice do Guia PrÃ¡tico
 
 1. [Criar Migration (Tabela no Banco)](#1-criar-migration-tabela-no-banco)
 2. [Criar Entity (Entidade JPA)](#2-criar-entity-entidade-jpa)
@@ -1901,7 +1925,7 @@ CREATE INDEX IDX_TODO_CATEGORIA ON TODO(TODO_CATE_ID);
 ```
 ### 2. Criar Entity (Entidade JPA)
 
-**Localização:** `src/main/java/br/com/exemplo/todo/domain/model/entity/`
+**LocalizaÃ§Ã£o:** `src/main/java/br/com/exemplo/todo/domain/model/entity/`
 
 **Criar arquivo:** `Categoria.java`
 
@@ -1957,12 +1981,12 @@ public class Categoria {
 - [ ] `@Table(name = "NOME_TABELA")`
 - [ ] `@Data` do Lombok (getters/setters)
 - [ ] `@EqualsAndHashCode(onlyExplicitlyIncluded = true)`
-- [ ] `@Id` no campo de chave primária
+- [ ] `@Id` no campo de chave primÃ¡ria
 - [ ] `@EqualsAndHashCode.Include` no ID
 - [ ] `@GeneratedValue(strategy = GenerationType.IDENTITY)` para auto-increment
 - [ ] `@Column(name = "NOME_COLUNA")` em cada campo
-- [ ] `@NotNull` em campos obrigatórios
-- [ ] Valores default definidos na declaração do campo
+- [ ] `@NotNull` em campos obrigatÃ³rios
+- [ ] Valores default definidos na declaraÃ§Ã£o do campo
 
 **Tipos de dados comuns:**
 
@@ -1980,7 +2004,7 @@ public class Categoria {
 
 ### 3. Criar Repository
 
-**Localização:** `src/main/java/br/com/exemplo/todo/domain/repository/`
+**LocalizaÃ§Ã£o:** `src/main/java/br/com/exemplo/todo/domain/repository/`
 
 **Criar arquivo:** `CategoriaRepository.java`
 
@@ -1999,10 +2023,10 @@ import java.util.Optional;
 @Repository
 public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 
-    // Query method automática pelo nome
+    // Query method automÃ¡tica pelo nome
     List<Categoria> findByAtivoOrderByNomeAsc(Boolean ativo);
 
-    // Query method com ordenação
+    // Query method com ordenaÃ§Ã£o
     List<Categoria> findAllByOrderByNomeAsc();
 
     // Busca por nome (case insensitive)
@@ -2015,20 +2039,20 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
     @Query("SELECT c FROM Categoria c WHERE c.ativo = true ORDER BY c.nome")
     List<Categoria> buscarAtivas();
 
-    // Query customizada com parâmetro
+    // Query customizada com parÃ¢metro
     @Query("SELECT c FROM Categoria c WHERE LOWER(c.nome) LIKE LOWER(CONCAT('%', :termo, '%'))")
     List<Categoria> buscarPorTermo(@Param("termo") String termo);
 
-    // Query nativa SQL (quando JPQL não resolve)
+    // Query nativa SQL (quando JPQL nÃ£o resolve)
     @Query(value = "SELECT * FROM CATEGORIA WHERE CATE_ATIVO = true LIMIT :limite", nativeQuery = true)
     List<Categoria> buscarAtivasComLimite(@Param("limite") int limite);
 
 }
 ```
 
-**Padrões de Query Methods (Spring Data JPA cria automaticamente):**
+**PadrÃµes de Query Methods (Spring Data JPA cria automaticamente):**
 
-| Método | SQL Gerado |
+| MÃ©todo | SQL Gerado |
 |--------|-----------|
 | `findByNome(String)` | `WHERE nome = ?` |
 | `findByNomeAndAtivo(String, Boolean)` | `WHERE nome = ? AND ativo = ?` |
@@ -2045,16 +2069,16 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 | `existsByNome(String)` | `SELECT EXISTS(... WHERE nome = ?)` |
 | `deleteByAtivo(Boolean)` | `DELETE WHERE ativo = ?` |
 
-**Ordenação:**
-- `findByAtivoOrderByNomeAsc` → `ORDER BY nome ASC`
-- `findByAtivoOrderByNomeDesc` → `ORDER BY nome DESC`
-- `findAllByOrderByDataCriacaoDesc` → `ORDER BY dataCriacao DESC`
+**OrdenaÃ§Ã£o:**
+- `findByAtivoOrderByNomeAsc` â†’ `ORDER BY nome ASC`
+- `findByAtivoOrderByNomeDesc` â†’ `ORDER BY nome DESC`
+- `findAllByOrderByDataCriacaoDesc` â†’ `ORDER BY dataCriacao DESC`
 
 ---
 
 ### 4. Criar Exception Customizada
 
-**Localização:** `src/main/java/br/com/exemplo/todo/domain/service/exception/`
+**LocalizaÃ§Ã£o:** `src/main/java/br/com/exemplo/todo/domain/service/exception/`
 
 **Criar arquivo:** `CategoriaNaoEncontradaException.java`
 
@@ -2068,26 +2092,26 @@ public class CategoriaNaoEncontradaException extends RuntimeException {
     }
 
     public CategoriaNaoEncontradaException(Long id) {
-        this(String.format("Categoria com ID %d não encontrada", id));
+        this(String.format("Categoria com ID %d nÃ£o encontrada", id));
     }
 
 }
 ```
 
-**Outras exceções comuns:**
+**Outras exceÃ§Ãµes comuns:**
 
 ```java
-// Para regras de negócio
+// Para regras de negÃ³cio
 public class CategoriaEmUsoException extends RuntimeException {
     public CategoriaEmUsoException(Long id) {
-        super(String.format("Categoria %d não pode ser excluída pois está em uso", id));
+        super(String.format("Categoria %d nÃ£o pode ser excluÃ­da pois estÃ¡ em uso", id));
     }
 }
 
 // Para duplicidade
 public class CategoriaDuplicadaException extends RuntimeException {
     public CategoriaDuplicadaException(String nome) {
-        super(String.format("Já existe uma categoria com o nome '%s'", nome));
+        super(String.format("JÃ¡ existe uma categoria com o nome '%s'", nome));
     }
 }
 ```
@@ -2098,7 +2122,7 @@ public class CategoriaDuplicadaException extends RuntimeException {
 
 #### 5.1 Input DTO (dados que a API recebe)
 
-**Localização:** `src/main/java/br/com/exemplo/todo/api/model/input/`
+**LocalizaÃ§Ã£o:** `src/main/java/br/com/exemplo/todo/api/model/input/`
 
 **Criar arquivo:** `CategoriaInput.java`
 
@@ -2118,13 +2142,13 @@ import lombok.Setter;
 @NoArgsConstructor
 public class CategoriaInput {
 
-    @NotBlank(message = "Nome é obrigatório")
+    @NotBlank(message = "Nome Ã© obrigatÃ³rio")
     @Size(min = 2, max = 100, message = "Nome deve ter entre 2 e 100 caracteres")
     @Schema(description = "Nome da categoria", example = "Trabalho")
     private String nome;
 
-    @Size(max = 500, message = "Descrição deve ter no máximo 500 caracteres")
-    @Schema(description = "Descrição da categoria", example = "Tarefas relacionadas ao trabalho")
+    @Size(max = 500, message = "DescriÃ§Ã£o deve ter no mÃ¡ximo 500 caracteres")
+    @Schema(description = "DescriÃ§Ã£o da categoria", example = "Tarefas relacionadas ao trabalho")
     private String descricao;
 
     @Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "Cor deve estar no formato hexadecimal (#RRGGBB)")
@@ -2134,26 +2158,26 @@ public class CategoriaInput {
 }
 ```
 
-**Anotações de validação mais usadas:**
+**AnotaÃ§Ãµes de validaÃ§Ã£o mais usadas:**
 
 ```java
 // Strings
-@NotNull                    // Não pode ser null
-@NotBlank                   // Não pode ser null, vazio ou só espaços
-@NotEmpty                   // Não pode ser null ou vazio (funciona em listas também)
-@Size(min = 1, max = 100)   // Tamanho mínimo e máximo
+@NotNull                    // NÃ£o pode ser null
+@NotBlank                   // NÃ£o pode ser null, vazio ou sÃ³ espaÃ§os
+@NotEmpty                   // NÃ£o pode ser null ou vazio (funciona em listas tambÃ©m)
+@Size(min = 1, max = 100)   // Tamanho mÃ­nimo e mÃ¡ximo
 @Pattern(regexp = "...")    // Deve casar com regex
-@Email                      // Formato de email válido
+@Email                      // Formato de email vÃ¡lido
 
-// Números
-@Min(0)                     // Valor mínimo
-@Max(100)                   // Valor máximo
+// NÃºmeros
+@Min(0)                     // Valor mÃ­nimo
+@Max(100)                   // Valor mÃ¡ximo
 @Positive                   // Deve ser positivo (> 0)
 @PositiveOrZero             // Deve ser >= 0
 @Negative                   // Deve ser negativo
 @DecimalMin("0.01")         // Para BigDecimal
 @DecimalMax("999.99")       // Para BigDecimal
-@Digits(integer = 10, fraction = 2)  // Precisão decimal
+@Digits(integer = 10, fraction = 2)  // PrecisÃ£o decimal
 
 // Datas
 @Past                       // Deve ser no passado
@@ -2163,12 +2187,12 @@ public class CategoriaInput {
 
 // Objetos aninhados
 @Valid                      // Valida objeto interno recursivamente
-@NotNull @Valid             // Objeto obrigatório e validado
+@NotNull @Valid             // Objeto obrigatÃ³rio e validado
 ```
 
 #### 5.2 Output DTO (dados que a API retorna)
 
-**Localização:** `src/main/java/br/com/exemplo/todo/api/model/output/`
+**LocalizaÃ§Ã£o:** `src/main/java/br/com/exemplo/todo/api/model/output/`
 
 **Criar arquivo:** `CategoriaOutput.java`
 
@@ -2187,22 +2211,22 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class CategoriaOutput {
 
-    @Schema(description = "ID único da categoria", example = "1")
+    @Schema(description = "ID Ãºnico da categoria", example = "1")
     private Long id;
 
     @Schema(description = "Nome da categoria", example = "Trabalho")
     private String nome;
 
-    @Schema(description = "Descrição da categoria", example = "Tarefas relacionadas ao trabalho")
+    @Schema(description = "DescriÃ§Ã£o da categoria", example = "Tarefas relacionadas ao trabalho")
     private String descricao;
 
     @Schema(description = "Cor em hexadecimal", example = "#FF5733")
     private String cor;
 
-    @Schema(description = "Se a categoria está ativa", example = "true")
+    @Schema(description = "Se a categoria estÃ¡ ativa", example = "true")
     private Boolean ativo;
 
-    @Schema(description = "Data de criação", example = "2024-01-15T10:30:00")
+    @Schema(description = "Data de criaÃ§Ã£o", example = "2024-01-15T10:30:00")
     private LocalDateTime dataCriacao;
 
 }
@@ -2239,7 +2263,7 @@ public class CategoriaResumoOutput {
 
 ### 6. Criar Service
 
-**Localização:** `src/main/java/br/com/exemplo/todo/domain/service/`
+**LocalizaÃ§Ã£o:** `src/main/java/br/com/exemplo/todo/domain/service/`
 
 **Criar arquivo:** `CategoriaService.java`
 
@@ -2287,7 +2311,7 @@ public class CategoriaService {
 
     /**
      * Busca categoria por ID.
-     * @throws CategoriaNaoEncontradaException se não encontrar
+     * @throws CategoriaNaoEncontradaException se nÃ£o encontrar
      */
     public Categoria buscarPorId(Long id) {
         log.debug("Buscando categoria com ID {}", id);
@@ -2302,7 +2326,7 @@ public class CategoriaService {
         log.debug("Buscando categoria com nome '{}'", nome);
         return repository.findByNomeIgnoreCase(nome)
                 .orElseThrow(() -> new CategoriaNaoEncontradaException(
-                        String.format("Categoria '%s' não encontrada", nome)));
+                        String.format("Categoria '%s' nÃ£o encontrada", nome)));
     }
 
     // ==================== COMANDOS ====================
@@ -2314,15 +2338,15 @@ public class CategoriaService {
     public Categoria criar(CategoriaInput input) {
         log.debug("Criando categoria: {}", input.getNome());
 
-        // Validação de regra de negócio
+        // ValidaÃ§Ã£o de regra de negÃ³cio
         validarNomeDuplicado(input.getNome(), null);
 
-        // Conversão e defaults
+        // ConversÃ£o e defaults
         Categoria categoria = modelMapper.map(input, Categoria.class);
         categoria.setDataCriacao(LocalDateTime.now());
         categoria.setAtivo(true);
 
-        // Se cor não informada, usa default
+        // Se cor nÃ£o informada, usa default
         if (categoria.getCor() == null) {
             categoria.setCor("#808080");
         }
@@ -2342,10 +2366,10 @@ public class CategoriaService {
 
         Categoria categoriaExistente = buscarPorId(id);
 
-        // Validação de regra de negócio (ignora a própria categoria)
+        // ValidaÃ§Ã£o de regra de negÃ³cio (ignora a prÃ³pria categoria)
         validarNomeDuplicado(input.getNome(), id);
 
-        // Atualiza apenas os campos editáveis
+        // Atualiza apenas os campos editÃ¡veis
         categoriaExistente.setNome(input.getNome());
         categoriaExistente.setDescricao(input.getDescricao());
         if (input.getCor() != null) {
@@ -2367,11 +2391,11 @@ public class CategoriaService {
 
         Categoria categoria = buscarPorId(id);
 
-        // Aqui você pode adicionar validação se a categoria está em uso
+        // Aqui vocÃª pode adicionar validaÃ§Ã£o se a categoria estÃ¡ em uso
         // Ex: if (todoRepository.existsByCategoriaId(id)) throw new CategoriaEmUsoException(id);
 
         repository.delete(categoria);
-        log.info("Categoria ID {} excluída", id);
+        log.info("Categoria ID {} excluÃ­da", id);
     }
 
     /**
@@ -2406,21 +2430,21 @@ public class CategoriaService {
         return inativada;
     }
 
-    // ==================== VALIDAÇÕES PRIVADAS ====================
+    // ==================== VALIDAÃ‡Ã•ES PRIVADAS ====================
 
     /**
-     * Valida se já existe categoria com o mesmo nome.
+     * Valida se jÃ¡ existe categoria com o mesmo nome.
      * @param nome nome a validar
-     * @param idIgnorar ID para ignorar (usado em atualização)
+     * @param idIgnorar ID para ignorar (usado em atualizaÃ§Ã£o)
      */
     private void validarNomeDuplicado(String nome, Long idIgnorar) {
         repository.findByNomeIgnoreCase(nome).ifPresent(existente -> {
-            // Se está atualizando e encontrou a própria categoria, OK
+            // Se estÃ¡ atualizando e encontrou a prÃ³pria categoria, OK
             if (idIgnorar != null && existente.getId().equals(idIgnorar)) {
                 return;
             }
             throw new RuntimeException(
-                    String.format("Já existe uma categoria com o nome '%s'", nome));
+                    String.format("JÃ¡ existe uma categoria com o nome '%s'", nome));
         });
     }
 
@@ -2429,20 +2453,20 @@ public class CategoriaService {
 
 **Checklist do Service:**
 - [ ] `@Service` na classe
-- [ ] `@RequiredArgsConstructor` para injeção
+- [ ] `@RequiredArgsConstructor` para injeÃ§Ã£o
 - [ ] `@Slf4j` para logging
-- [ ] `@Transactional` em métodos que alteram dados
+- [ ] `@Transactional` em mÃ©todos que alteram dados
 - [ ] Injetar Repository e ModelMapper
-- [ ] Métodos de consulta (listar, buscar)
-- [ ] Métodos de comando (criar, atualizar, excluir)
-- [ ] Validações de negócio
-- [ ] Logging adequado (debug para início, info para conclusão)
+- [ ] MÃ©todos de consulta (listar, buscar)
+- [ ] MÃ©todos de comando (criar, atualizar, excluir)
+- [ ] ValidaÃ§Ãµes de negÃ³cio
+- [ ] Logging adequado (debug para inÃ­cio, info para conclusÃ£o)
 
 ---
 
 ### 7. Criar Interface OpenAPI
 
-**Localização:** `src/main/java/br/com/exemplo/todo/api/openapi/`
+**LocalizaÃ§Ã£o:** `src/main/java/br/com/exemplo/todo/api/openapi/`
 
 **Criar arquivo:** `CategoriaControllerOpenApi.java`
 
@@ -2478,7 +2502,7 @@ public interface CategoriaControllerOpenApi {
     @Operation(summary = "Busca categoria por ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Categoria encontrada"),
-            @ApiResponse(responseCode = "404", description = "Categoria não encontrada",
+            @ApiResponse(responseCode = "404", description = "Categoria nÃ£o encontrada",
                     content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     CategoriaOutput buscar(
@@ -2489,7 +2513,7 @@ public interface CategoriaControllerOpenApi {
     @Operation(summary = "Cria nova categoria")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Categoria criada com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos",
+            @ApiResponse(responseCode = "400", description = "Dados invÃ¡lidos",
                     content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     CategoriaOutput criar(
@@ -2500,9 +2524,9 @@ public interface CategoriaControllerOpenApi {
     @Operation(summary = "Atualiza categoria existente")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Categoria atualizada"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos",
+            @ApiResponse(responseCode = "400", description = "Dados invÃ¡lidos",
                     content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
-            @ApiResponse(responseCode = "404", description = "Categoria não encontrada",
+            @ApiResponse(responseCode = "404", description = "Categoria nÃ£o encontrada",
                     content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     CategoriaOutput atualizar(
@@ -2512,8 +2536,8 @@ public interface CategoriaControllerOpenApi {
 
     @Operation(summary = "Exclui categoria")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Categoria excluída"),
-            @ApiResponse(responseCode = "404", description = "Categoria não encontrada",
+            @ApiResponse(responseCode = "204", description = "Categoria excluÃ­da"),
+            @ApiResponse(responseCode = "404", description = "Categoria nÃ£o encontrada",
                     content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "409", description = "Categoria em uso",
                     content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
@@ -2525,7 +2549,7 @@ public interface CategoriaControllerOpenApi {
     @Operation(summary = "Ativa categoria")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Categoria ativada"),
-            @ApiResponse(responseCode = "404", description = "Categoria não encontrada",
+            @ApiResponse(responseCode = "404", description = "Categoria nÃ£o encontrada",
                     content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     CategoriaOutput ativar(
@@ -2535,7 +2559,7 @@ public interface CategoriaControllerOpenApi {
     @Operation(summary = "Inativa categoria")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Categoria inativada"),
-            @ApiResponse(responseCode = "404", description = "Categoria não encontrada",
+            @ApiResponse(responseCode = "404", description = "Categoria nÃ£o encontrada",
                     content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     CategoriaOutput inativar(
@@ -2549,7 +2573,7 @@ public interface CategoriaControllerOpenApi {
 
 ### 8. Criar Controller
 
-**Localização:** `src/main/java/br/com/exemplo/todo/api/controller/`
+**LocalizaÃ§Ã£o:** `src/main/java/br/com/exemplo/todo/api/controller/`
 
 **Criar arquivo:** `CategoriaController.java`
 
@@ -2661,7 +2685,7 @@ public class CategoriaController implements CategoriaControllerOpenApi {
         return toOutput(categoria);
     }
 
-    // ==================== MÉTODOS AUXILIARES ====================
+    // ==================== MÃ‰TODOS AUXILIARES ====================
 
     private CategoriaOutput toOutput(Categoria categoria) {
         return modelMapper.map(categoria, CategoriaOutput.class);
@@ -2672,7 +2696,7 @@ public class CategoriaController implements CategoriaControllerOpenApi {
 
 **Checklist do Controller:**
 - [ ] `@RestController`
-- [ ] `@RequestMapping("nome-recurso")` (plural, minúsculo)
+- [ ] `@RequestMapping("nome-recurso")` (plural, minÃºsculo)
 - [ ] `@RequiredArgsConstructor`
 - [ ] `@Slf4j`
 - [ ] Implementa interface OpenAPI
@@ -2681,11 +2705,11 @@ public class CategoriaController implements CategoriaControllerOpenApi {
 - [ ] `@PostMapping` + `@ResponseStatus(CREATED)` para criar
 - [ ] `@PutMapping` para atualizar
 - [ ] `@DeleteMapping` + `@ResponseStatus(NO_CONTENT)` para excluir
-- [ ] `@PatchMapping` para ações específicas
-- [ ] `@Valid` no `@RequestBody` para validação
-- [ ] `@PathVariable` para parâmetros de URL
+- [ ] `@PatchMapping` para aÃ§Ãµes especÃ­ficas
+- [ ] `@Valid` no `@RequestBody` para validaÃ§Ã£o
+- [ ] `@PathVariable` para parÃ¢metros de URL
 - [ ] `@RequestParam` para query parameters
-- [ ] Método privado `toOutput()` para conversão
+- [ ] MÃ©todo privado `toOutput()` para conversÃ£o
 
 ---
 
@@ -2696,7 +2720,7 @@ public class CategoriaController implements CategoriaControllerOpenApi {
 ```java
 // Adicionar novo enum
 CATEGORIA_NAO_ENCONTRADA(CategoriaNaoEncontradaException.class,
-        "Categoria não encontrada", "categoria-nao-encontrada"),
+        "Categoria nÃ£o encontrada", "categoria-nao-encontrada"),
 ```
 
 **Editar arquivo:** `src/main/java/br/com/exemplo/todo/api/exceptionhandler/ApiExceptionHandler.java`
@@ -2721,7 +2745,7 @@ public ResponseEntity<Object> handleCategoriaNaoEncontradaException(
 
 ### 10. Criar Testes
 
-#### 10.1 Teste Unitário do Service
+#### 10.1 Teste UnitÃ¡rio do Service
 
 **Criar arquivo:** `src/test/java/br/com/exemplo/todo/testesunitarios/CategoriaServiceTest.java`
 
@@ -2816,7 +2840,7 @@ class CategoriaServiceTest {
         }
 
         @Test
-        @DisplayName("deve lançar exceção quando não existe")
+        @DisplayName("deve lanÃ§ar exceÃ§Ã£o quando nÃ£o existe")
         void deveLancarExcecaoQuandoNaoExiste() {
             when(repository.findById(999L)).thenReturn(Optional.empty());
 
@@ -2869,7 +2893,7 @@ class CategoriaServiceTest {
 }
 ```
 
-#### 10.2 Teste de Integração
+#### 10.2 Teste de IntegraÃ§Ã£o
 
 **Criar arquivo:** `src/test/java/br/com/exemplo/todo/testesintegracao/CategoriaControllerIntegracaoTest.java`
 
@@ -2893,7 +2917,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("testes")
-@DisplayName("CategoriaController - Integração")
+@DisplayName("CategoriaController - IntegraÃ§Ã£o")
 class CategoriaControllerIntegracaoTest {
 
     @Autowired
@@ -2944,7 +2968,7 @@ class CategoriaControllerIntegracaoTest {
 
 ### 11. Relacionamento entre Entidades
 
-Para adicionar categoria às tarefas (relacionamento ManyToOne):
+Para adicionar categoria Ã s tarefas (relacionamento ManyToOne):
 
 #### 11.1 Migration
 
@@ -2999,40 +3023,40 @@ public Todo criar(TodoInput input) {
 ## Resumo: Checklist para Novo CRUD
 
 ```
-□ 1. Migration SQL (src/main/resources/db/migration/V000X__*.sql)
-□ 2. Entity (domain/model/entity/*.java)
-□ 3. Repository (domain/repository/*Repository.java)
-□ 4. Exception (domain/service/exception/*Exception.java)
-□ 5. Input DTO (api/model/input/*Input.java)
-□ 6. Output DTO (api/model/output/*Output.java)
-□ 7. Service (domain/service/*Service.java)
-□ 8. OpenAPI Interface (api/openapi/*ControllerOpenApi.java)
-□ 9. Controller (api/controller/*Controller.java)
-□ 10. Registrar Exception no Handler
-□ 11. Testes Unitários (testesunitarios/*ServiceTest.java)
-□ 12. Testes de Integração (testesintegracao/*ControllerIntegracaoTest.java)
+â–¡ 1. Migration SQL (src/main/resources/db/migration/V000X__*.sql)
+â–¡ 2. Entity (domain/model/entity/*.java)
+â–¡ 3. Repository (domain/repository/*Repository.java)
+â–¡ 4. Exception (domain/service/exception/*Exception.java)
+â–¡ 5. Input DTO (api/model/input/*Input.java)
+â–¡ 6. Output DTO (api/model/output/*Output.java)
+â–¡ 7. Service (domain/service/*Service.java)
+â–¡ 8. OpenAPI Interface (api/openapi/*ControllerOpenApi.java)
+â–¡ 9. Controller (api/controller/*Controller.java)
+â–¡ 10. Registrar Exception no Handler
+â–¡ 11. Testes UnitÃ¡rios (testesunitarios/*ServiceTest.java)
+â–¡ 12. Testes de IntegraÃ§Ã£o (testesintegracao/*ControllerIntegracaoTest.java)
 ```
 
-**Ordem recomendada de criação:**
-1. Migration → 2. Entity → 3. Repository → 4. Exception → 5. DTOs → 6. Service → 7. OpenAPI → 8. Controller → 9. Handler → 10. Testes
+**Ordem recomendada de criaÃ§Ã£o:**
+1. Migration â†’ 2. Entity â†’ 3. Repository â†’ 4. Exception â†’ 5. DTOs â†’ 6. Service â†’ 7. OpenAPI â†’ 8. Controller â†’ 9. Handler â†’ 10. Testes
 
 ---
 
-## OpenAPI/Swagger para Geração de Clientes
+## OpenAPI/Swagger para GeraÃ§Ã£o de Clientes
 
-Esta seção documenta as boas práticas para configurar as anotações OpenAPI no backend, garantindo que clientes TypeScript gerados automaticamente (usando ferramentas como `ng-openapi-gen`) tenham tipos corretos.
+Esta seÃ§Ã£o documenta as boas prÃ¡ticas para configurar as anotaÃ§Ãµes OpenAPI no backend, garantindo que clientes TypeScript gerados automaticamente (usando ferramentas como `ng-openapi-gen`) tenham tipos corretos.
 
 ### Problema: responseType 'blob' em vez de 'json'
 
-Quando o endpoint não especifica `mediaType` no `@Content`, o SpringDoc gera:
+Quando o endpoint nÃ£o especifica `mediaType` no `@Content`, o SpringDoc gera:
 
 ```json
 "content": { "*/*": {} }
 ```
 
-Isso faz com que geradores de cliente usem `responseType: 'blob'`, causando problemas na deserialização.
+Isso faz com que geradores de cliente usem `responseType: 'blob'`, causando problemas na deserializaÃ§Ã£o.
 
-**Solução:** Sempre especifique `mediaType = "application/json"` no `@Content`:
+**SoluÃ§Ã£o:** Sempre especifique `mediaType = "application/json"` no `@Content`:
 
 ```java
 @ApiResponse(responseCode = "200", description = "Sucesso",
@@ -3048,9 +3072,9 @@ E adicione `produces = "application/json"` no `@PostMapping`/`@GetMapping`:
 
 ### Problema: Propriedades com undefined (opcionais) em excesso
 
-Quando o schema não define `required`, o gerador marca todas propriedades como opcionais (`?` em TypeScript).
+Quando o schema nÃ£o define `required`, o gerador marca todas propriedades como opcionais (`?` em TypeScript).
 
-**Solução:** Use `requiredProperties` na anotação `@Schema` da classe:
+**SoluÃ§Ã£o:** Use `requiredProperties` na anotaÃ§Ã£o `@Schema` da classe:
 
 ```java
 @Schema(description = "Dados de saida",
@@ -3062,9 +3086,9 @@ Resultado no TypeScript gerado:
 
 ```typescript
 export interface MeuOutput {
-  id: number;           // obrigatório
-  nome: string;         // obrigatório
-  email: string;        // obrigatório
+  id: number;           // obrigatÃ³rio
+  nome: string;         // obrigatÃ³rio
+  email: string;        // obrigatÃ³rio
   opcional?: string;    // opcional
 }
 ```
@@ -3152,49 +3176,49 @@ public class EntidadeOutput {
 
 O projeto inclui uma interface web simples para gerenciar as tarefas.
 
-### Localização
+### LocalizaÃ§Ã£o
 
 ```
 src/main/resources/static/
-└── index.html          # Página principal (Single Page Application)
+â””â”€â”€ index.html          # PÃ¡gina principal (Single Page Application)
 ```
 
 ### Tecnologias do Frontend
 
-| Tecnologia | Versão | CDN | Propósito |
+| Tecnologia | VersÃ£o | CDN | PropÃ³sito |
 |------------|--------|-----|-----------|
 | Bootstrap | 5.3.3 | jsdelivr | Framework CSS (layout, componentes) |
-| Bootstrap Icons | 1.11.3 | jsdelivr | Ícones |
-| Axios | latest | jsdelivr | Requisições HTTP para a API |
-| jQuery | 3.7.1 | jsdelivr | Manipulação DOM e eventos |
+| Bootstrap Icons | 1.11.3 | jsdelivr | Ãcones |
+| Axios | latest | jsdelivr | RequisiÃ§Ãµes HTTP para a API |
+| jQuery | 3.7.1 | jsdelivr | ManipulaÃ§Ã£o DOM e eventos |
 
 ### Como Funciona
 
-O Spring Boot serve automaticamente arquivos da pasta `src/main/resources/static/` como conteúdo estático. O arquivo `index.html` é reconhecido como "welcome page" e é servido na raiz do context-path.
+O Spring Boot serve automaticamente arquivos da pasta `src/main/resources/static/` como conteÃºdo estÃ¡tico. O arquivo `index.html` Ã© reconhecido como "welcome page" e Ã© servido na raiz do context-path.
 
-**Configuração automática:**
+**ConfiguraÃ§Ã£o automÃ¡tica:**
 - Spring detecta: `Adding welcome page: class path resource [static/index.html]`
-- Acessível em: `http://localhost:8080/api/` (redireciona para index.html)
-- Também acessível em: `http://localhost:8080/api/index.html`
+- AcessÃ­vel em: `http://localhost:8080/api/` (redireciona para index.html)
+- TambÃ©m acessÃ­vel em: `http://localhost:8080/api/index.html`
 
 ### Acesso
 
-| URL | Descrição |
+| URL | DescriÃ§Ã£o |
 |-----|-----------|
 | http://localhost:8080/api/ | Frontend (interface web) |
-| http://localhost:8080/api/swagger-ui.html | Swagger UI (documentação interativa) |
+| http://localhost:8080/api/swagger-ui.html | Swagger UI (documentaÃ§Ã£o interativa) |
 | http://localhost:8080/api/todos | API REST (JSON) |
 
 ### Funcionalidades do Frontend
 
 - Listar todas as tarefas
-- Filtrar por status: Todas / Pendentes / Concluídas
-- Criar nova tarefa (modal com formulário)
+- Filtrar por status: Todas / Pendentes / ConcluÃ­das
+- Criar nova tarefa (modal com formulÃ¡rio)
 - Editar tarefa existente
-- Excluir tarefa (com confirmação)
-- Marcar tarefa como concluída
-- Reabrir tarefa concluída
-- Notificações toast para feedback de ações
+- Excluir tarefa (com confirmaÃ§Ã£o)
+- Marcar tarefa como concluÃ­da
+- Reabrir tarefa concluÃ­da
+- NotificaÃ§Ãµes toast para feedback de aÃ§Ãµes
 
 ### Estrutura do index.html
 
@@ -3214,20 +3238,20 @@ O Spring Boot serve automaticamente arquivos da pasta `src/main/resources/static
 </head>
 <body>
     <!-- Navbar -->
-    <!-- Filtros e Botão Nova Tarefa -->
+    <!-- Filtros e BotÃ£o Nova Tarefa -->
     <!-- Lista de Tarefas (renderizada via JavaScript) -->
-    <!-- Modais (criar/editar, confirmar exclusão) -->
-    <!-- Toast de notificações -->
+    <!-- Modais (criar/editar, confirmar exclusÃ£o) -->
+    <!-- Toast de notificaÃ§Ãµes -->
 
     <!-- CDNs do Bootstrap JS, Axios e jQuery -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 
-    <!-- JavaScript da aplicação -->
+    <!-- JavaScript da aplicaÃ§Ã£o -->
     <script>
         const API_URL = '/api/todos';
-        // Funções: carregarTarefas(), criar(), editar(), excluir(), etc.
+        // FunÃ§Ãµes: carregarTarefas(), criar(), editar(), excluir(), etc.
     </script>
 </body>
 </html>
@@ -3235,33 +3259,33 @@ O Spring Boot serve automaticamente arquivos da pasta `src/main/resources/static
 
 ### Como Remover o Frontend
 
-Se você quiser remover a interface web e manter apenas a API REST:
+Se vocÃª quiser remover a interface web e manter apenas a API REST:
 
 ```bash
 # Excluir o arquivo
 rm src/main/resources/static/index.html
 
-# Ou excluir toda a pasta static (se não houver outros arquivos)
+# Ou excluir toda a pasta static (se nÃ£o houver outros arquivos)
 rm -rf src/main/resources/static/
 ```
 
-Após remover, a API REST continua funcionando normalmente em `/api/todos`.
+ApÃ³s remover, a API REST continua funcionando normalmente em `/api/todos`.
 
 ### Como Incrementar o Frontend
 
-#### Adicionar novos arquivos estáticos
+#### Adicionar novos arquivos estÃ¡ticos
 
 Coloque arquivos em `src/main/resources/static/`:
 
 ```
 src/main/resources/static/
-├── index.html
-├── css/
-│   └── styles.css      # CSS customizado
-├── js/
-│   └── app.js          # JavaScript separado
-└── img/
-    └── logo.png        # Imagens
+â”œâ”€â”€ index.html
+â”œâ”€â”€ css/
+â”‚   â””â”€â”€ styles.css      # CSS customizado
+â”œâ”€â”€ js/
+â”‚   â””â”€â”€ app.js          # JavaScript separado
+â””â”€â”€ img/
+    â””â”€â”€ logo.png        # Imagens
 ```
 
 Referencie nos arquivos HTML:
@@ -3271,19 +3295,19 @@ Referencie nos arquivos HTML:
 <img src="img/logo.png">
 ```
 
-#### Separar JavaScript em arquivo próprio
+#### Separar JavaScript em arquivo prÃ³prio
 
-1. Criar `src/main/resources/static/js/app.js` com o código JavaScript
+1. Criar `src/main/resources/static/js/app.js` com o cÃ³digo JavaScript
 2. No `index.html`, substituir o `<script>` inline por:
    ```html
    <script src="js/app.js"></script>
    ```
 
-#### Adicionar novas páginas
+#### Adicionar novas pÃ¡ginas
 
 Criar novos arquivos HTML em `static/`:
-- `src/main/resources/static/categorias.html` → `http://localhost:8080/api/categorias.html`
-- `src/main/resources/static/sobre.html` → `http://localhost:8080/api/sobre.html`
+- `src/main/resources/static/categorias.html` â†’ `http://localhost:8080/api/categorias.html`
+- `src/main/resources/static/sobre.html` â†’ `http://localhost:8080/api/sobre.html`
 
 #### Integrar com novo CRUD (ex: Categorias)
 
@@ -3310,13 +3334,13 @@ function criarCategoria(dados) {
 
 ### Dicas de Desenvolvimento
 
-1. **Hot Reload**: Com Spring DevTools (já configurado), alterações em arquivos estáticos são recarregadas automaticamente. Basta atualizar o navegador (F5).
+1. **Hot Reload**: Com Spring DevTools (jÃ¡ configurado), alteraÃ§Ãµes em arquivos estÃ¡ticos sÃ£o recarregadas automaticamente. Basta atualizar o navegador (F5).
 
-2. **Console do Navegador**: Use F12 → Console para ver erros JavaScript e respostas da API.
+2. **Console do Navegador**: Use F12 â†’ Console para ver erros JavaScript e respostas da API.
 
-3. **Network Tab**: Use F12 → Network para inspecionar requisições HTTP para a API.
+3. **Network Tab**: Use F12 â†’ Network para inspecionar requisiÃ§Ãµes HTTP para a API.
 
-4. **CORS**: Não há problemas de CORS pois o frontend e a API estão no mesmo servidor/porta.
+4. **CORS**: NÃ£o hÃ¡ problemas de CORS pois o frontend e a API estÃ£o no mesmo servidor/porta.
 
 ### Alternativa: Framework Frontend Separado
 
@@ -3324,7 +3348,7 @@ Se preferir usar React, Vue, ou Angular:
 
 1. Crie o projeto frontend separado
 2. Configure o frontend para apontar para `http://localhost:8080/api`
-3. Adicione configuração CORS no Spring se necessário:
+3. Adicione configuraÃ§Ã£o CORS no Spring se necessÃ¡rio:
 
 ```java
 @Configuration
@@ -3345,42 +3369,42 @@ public class CorsConfig {
 
 ## Armazenamento de Arquivos (MinIO)
 
-O backend inclui um sistema completo de armazenamento de arquivos usando **MinIO** (S3 compatível). O backend atua como **proxy** entre o frontend e o MinIO, nunca expondo URLs diretas do storage.
+O backend inclui um sistema completo de armazenamento de arquivos usando **MinIO** (S3 compatÃ­vel). O backend atua como **proxy** entre o frontend e o MinIO, nunca expondo URLs diretas do storage.
 
 ### Arquitetura do Sistema
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         ARQUITETURA DE STORAGE                              │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌──────────┐        ┌───────────────────┐        ┌──────────────┐        │
-│   │ Frontend │ ─────► │   Backend (API)   │ ─────► │    MinIO     │        │
-│   │          │        │   (Proxy Layer)   │        │   (Storage)  │        │
-│   └──────────┘        └───────────────────┘        └──────────────┘        │
-│        │                      │                           │                │
-│        │                      │                           │                │
-│        │                      ▼                           │                │
-│        │              ┌───────────────────┐               │                │
-│        │              │     Database      │               │                │
-│        │              │   (StoredFile)    │               │                │
-│        │              └───────────────────┘               │                │
-│        │                                                                    │
-│   IMPORTANTE:                                                               │
-│   - Frontend NUNCA acessa MinIO diretamente                                 │
-│   - URLs sempre são /api/media/{uuid} (relativas ao backend)                │
-│   - Backend faz proxy/stream do conteúdo                                    │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                         ARQUITETURA DE STORAGE                              â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                                                                             â”‚
+â”‚   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”        â”‚
+â”‚   â”‚ Frontend â”‚ â”€â”€â”€â”€â”€â–º â”‚   Backend (API)   â”‚ â”€â”€â”€â”€â”€â–º â”‚    MinIO     â”‚        â”‚
+â”‚   â”‚          â”‚        â”‚   (Proxy Layer)   â”‚        â”‚   (Storage)  â”‚        â”‚
+â”‚   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜        â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜        â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜        â”‚
+â”‚        â”‚                      â”‚                           â”‚                â”‚
+â”‚        â”‚                      â”‚                           â”‚                â”‚
+â”‚        â”‚                      â–¼                           â”‚                â”‚
+â”‚        â”‚              â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”               â”‚                â”‚
+â”‚        â”‚              â”‚     Database      â”‚               â”‚                â”‚
+â”‚        â”‚              â”‚   (StoredFile)    â”‚               â”‚                â”‚
+â”‚        â”‚              â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜               â”‚                â”‚
+â”‚        â”‚                                                                    â”‚
+â”‚   IMPORTANTE:                                                               â”‚
+â”‚   - Frontend NUNCA acessa MinIO diretamente                                 â”‚
+â”‚   - URLs sempre sÃ£o /api/media/{uuid} (relativas ao backend)                â”‚
+â”‚   - Backend faz proxy/stream do conteÃºdo                                    â”‚
+â”‚                                                                             â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Por que o Backend atua como Proxy?
 
-1. **Segurança**: Credenciais do MinIO nunca são expostas ao cliente
-2. **Controle de Acesso**: Backend pode validar permissões antes de servir arquivos
-3. **Multi-Tenancy**: Isolamento por organização no banco de dados
+1. **SeguranÃ§a**: Credenciais do MinIO nunca sÃ£o expostas ao cliente
+2. **Controle de Acesso**: Backend pode validar permissÃµes antes de servir arquivos
+3. **Multi-Tenancy**: Isolamento por organizaÃ§Ã£o no banco de dados
 4. **Flexibilidade**: Pode trocar MinIO por S3/GCS sem alterar frontend
-5. **URLs Estáveis**: `/api/media/{uuid}` funciona mesmo se mudar o storage
+5. **URLs EstÃ¡veis**: `/api/media/{uuid}` funciona mesmo se mudar o storage
 
 ---
 
@@ -3391,11 +3415,11 @@ cd backend
 docker compose -f docker/docker-compose.minio.yml up -d
 ```
 
-Serviços:
+ServiÃ§os:
 - API S3: http://localhost:9000
 - Console web: http://localhost:9001 (login: MINIO_ROOT_USER / MINIO_ROOT_PASSWORD)
 
-Variáveis padrão (sobreponha conforme ambiente):
+VariÃ¡veis padrÃ£o (sobreponha conforme ambiente):
 - MINIO_ENDPOINT=http://localhost:9000
 - MINIO_ACCESS_KEY=linve
 - MINIO_SECRET_KEY=linve123456
@@ -3403,9 +3427,9 @@ Variáveis padrão (sobreponha conforme ambiente):
 
 ---
 
-### Configuração no Spring
+### ConfiguraÃ§Ã£o no Spring
 
-`application.yml` já contém:
+`application.yml` jÃ¡ contÃ©m:
 
 ```yaml
 storage:
@@ -3424,41 +3448,41 @@ spring:
 
 ---
 
-### Endpoints de Mídia
+### Endpoints de MÃ­dia
 
-| Endpoint | Método | Auth | Descrição |
+| Endpoint | MÃ©todo | Auth | DescriÃ§Ã£o |
 |----------|--------|------|-----------|
-| `/api/media` | POST | Sim | Upload genérico de arquivo |
-| `/api/media/{id}` | GET | **Não** (público) | Download/stream do arquivo |
+| `/api/media` | POST | Sim | Upload genÃ©rico de arquivo |
+| `/api/media/{id}` | GET | **NÃ£o** (pÃºblico) | Download/stream do arquivo |
 | `/api/media/{id}` | DELETE | Sim | Remove arquivo e metadados |
 
-**Importante sobre autenticação:**
-- **GET /api/media/{id}** é **público** (sem JWT) para que tags `<img src="...">` funcionem no browser
-- **POST e DELETE** requerem autenticação + header `X-Organization-Id`
+**Importante sobre autenticaÃ§Ã£o:**
+- **GET /api/media/{id}** Ã© **pÃºblico** (sem JWT) para que tags `<img src="...">` funcionem no browser
+- **POST e DELETE** requerem autenticaÃ§Ã£o + header `X-Organization-Id`
 
 ---
 
 ### Fluxo de Upload
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            FLUXO DE UPLOAD                                  │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  1. Cliente envia POST /api/media com multipart/form-data                   │
-│     Headers: Authorization: Bearer {token}, X-Organization-Id: 1            │
-│                                                                             │
-│  2. TenantFilter valida JWT e extrai organizationId                         │
-│                                                                             │
-│  3. MinioFileStorageService.store():                                        │
-│     a) Valida arquivo (não vazio)                                           │
-│     b) Gera storageKey: {orgId}/{ownerType}/{ownerId}/{uuid}-{filename}     │
-│     c) Faz upload para MinIO via putObject()                                │
-│     d) Salva metadados na tabela stored_file                                │
-│                                                                             │
-│  4. Retorna StoredFileResponse com URL relativa /api/media/{uuid}           │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                            FLUXO DE UPLOAD                                  â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                                                                             â”‚
+â”‚  1. Cliente envia POST /api/media com multipart/form-data                   â”‚
+â”‚     Headers: Authorization: Bearer {token}, X-Organization-Id: 1            â”‚
+â”‚                                                                             â”‚
+â”‚  2. TenantFilter valida JWT e extrai organizationId                         â”‚
+â”‚                                                                             â”‚
+â”‚  3. MinioFileStorageService.store():                                        â”‚
+â”‚     a) Valida arquivo (nÃ£o vazio)                                           â”‚
+â”‚     b) Gera storageKey: {orgId}/{ownerType}/{ownerId}/{uuid}-{filename}     â”‚
+â”‚     c) Faz upload para MinIO via putObject()                                â”‚
+â”‚     d) Salva metadados na tabela stored_file                                â”‚
+â”‚                                                                             â”‚
+â”‚  4. Retorna StoredFileResponse com URL relativa /api/media/{uuid}           â”‚
+â”‚                                                                             â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
@@ -3466,32 +3490,32 @@ spring:
 ### Fluxo de Download (Proxy Pattern)
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       FLUXO DE DOWNLOAD (PROXY)                             │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  1. Browser/Frontend requisita GET /api/media/{uuid}                        │
-│     (sem Authorization header - endpoint público)                           │
-│                                                                             │
-│  2. MediaController.download():                                             │
-│     a) Busca StoredFile por UUID no banco                                   │
-│     b) Não valida tenant (acesso público por UUID)                          │
-│                                                                             │
-│  3. MinioFileStorageService.getContent():                                   │
-│     a) Recupera metadados (contentType, filename)                           │
-│     b) Abre InputStream do MinIO via getObject()                            │
-│                                                                             │
-│  4. Controller faz stream para o response:                                  │
-│     - Content-Type: {contentType do arquivo}                                │
-│     - Content-Disposition: inline; filename="{filename}"                    │
-│     - Cache-Control: public, max-age=31536000, immutable (1 ano)            │
-│                                                                             │
-│  SEGURANÇA:                                                                 │
-│  - UUID é praticamente impossível de adivinhar (128 bits)                   │
-│  - Sem listagem de arquivos (precisa saber o UUID)                          │
-│  - Para arquivos sensíveis, usar endpoints autenticados específicos         │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                       FLUXO DE DOWNLOAD (PROXY)                             â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                                                                             â”‚
+â”‚  1. Browser/Frontend requisita GET /api/media/{uuid}                        â”‚
+â”‚     (sem Authorization header - endpoint pÃºblico)                           â”‚
+â”‚                                                                             â”‚
+â”‚  2. MediaController.download():                                             â”‚
+â”‚     a) Busca StoredFile por UUID no banco                                   â”‚
+â”‚     b) NÃ£o valida tenant (acesso pÃºblico por UUID)                          â”‚
+â”‚                                                                             â”‚
+â”‚  3. MinioFileStorageService.getContent():                                   â”‚
+â”‚     a) Recupera metadados (contentType, filename)                           â”‚
+â”‚     b) Abre InputStream do MinIO via getObject()                            â”‚
+â”‚                                                                             â”‚
+â”‚  4. Controller faz stream para o response:                                  â”‚
+â”‚     - Content-Type: {contentType do arquivo}                                â”‚
+â”‚     - Content-Disposition: inline; filename="{filename}"                    â”‚
+â”‚     - Cache-Control: public, max-age=31536000, immutable (1 ano)            â”‚
+â”‚                                                                             â”‚
+â”‚  SEGURANÃ‡A:                                                                 â”‚
+â”‚  - UUID Ã© praticamente impossÃ­vel de adivinhar (128 bits)                   â”‚
+â”‚  - Sem listagem de arquivos (precisa saber o UUID)                          â”‚
+â”‚  - Para arquivos sensÃ­veis, usar endpoints autenticados especÃ­ficos         â”‚
+â”‚                                                                             â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
@@ -3504,7 +3528,7 @@ spring:
 public class StoredFile {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;                    // UUID público (usado na URL)
+    private UUID id;                    // UUID pÃºblico (usado na URL)
 
     @Column(nullable = false)
     private Long organizationId;        // Multi-tenancy
@@ -3540,57 +3564,57 @@ Exemplo: `1/organization/1/a1b2c3d4-logo.png`
 
 ### Componentes Principais
 
-| Componente | Arquivo | Propósito |
+| Componente | Arquivo | PropÃ³sito |
 |------------|---------|-----------|
-| `MinioFileStorageService` | domain/service/ | Implementação do storage com MinIO |
-| `FileStorageService` | domain/service/ | Interface para abstração do storage |
-| `MediaController` | api/controller/ | Endpoints REST de mídia |
+| `MinioFileStorageService` | domain/service/ | ImplementaÃ§Ã£o do storage com MinIO |
+| `FileStorageService` | domain/service/ | Interface para abstraÃ§Ã£o do storage |
+| `MediaController` | api/controller/ | Endpoints REST de mÃ­dia |
 | `StoredFile` | domain/model/entity/ | Entidade JPA dos metadados |
 | `StoredFileRepository` | domain/repository/ | Acesso ao banco |
-| `StorageProperties` | config/ | Configurações do MinIO |
+| `StorageProperties` | config/ | ConfiguraÃ§Ãµes do MinIO |
 | `StorageConfig` | config/ | Bean do MinioClient |
 
 ---
 
-### Segurança: Público vs Autenticado
+### SeguranÃ§a: PÃºblico vs Autenticado
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           MATRIZ DE SEGURANÇA                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  ENDPOINTS PÚBLICOS (sem JWT):                                              │
-│  ├── GET /api/media/{id}     → Download por UUID (imagens em <img>)         │
-│  └── GET /api/auth/**        → Login, registro, refresh token               │
-│                                                                             │
-│  ENDPOINTS AUTENTICADOS (JWT + X-Organization-Id):                          │
-│  ├── POST /api/media         → Upload genérico                              │
-│  ├── DELETE /api/media/{id}  → Remover arquivo                              │
-│  ├── POST/DELETE /api/account/avatar    → Avatar próprio                    │
-│  └── POST/DELETE /api/organizations/{id}/logo → Logo da org (OWNER/ADMIN)   │
-│                                                                             │
-│  VALIDAÇÃO DE ROLE:                                                         │
-│  ├── Logo de organização: requer OWNER ou ADMIN na org alvo                 │
-│  ├── Avatar de outro usuário (admin): requer ADMIN na org                   │
-│  └── Avatar próprio: qualquer usuário autenticado                           │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                           MATRIZ DE SEGURANÃ‡A                               â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                                                                             â”‚
+â”‚  ENDPOINTS PÃšBLICOS (sem JWT):                                              â”‚
+â”‚  â”œâ”€â”€ GET /api/media/{id}     â†’ Download por UUID (imagens em <img>)         â”‚
+â”‚  â””â”€â”€ GET /api/auth/**        â†’ Login, registro, refresh token               â”‚
+â”‚                                                                             â”‚
+â”‚  ENDPOINTS AUTENTICADOS (JWT + X-Organization-Id):                          â”‚
+â”‚  â”œâ”€â”€ POST /api/media         â†’ Upload genÃ©rico                              â”‚
+â”‚  â”œâ”€â”€ DELETE /api/media/{id}  â†’ Remover arquivo                              â”‚
+â”‚  â”œâ”€â”€ POST/DELETE /api/account/avatar    â†’ Avatar prÃ³prio                    â”‚
+â”‚  â””â”€â”€ POST/DELETE /api/organizations/{id}/logo â†’ Logo da org (OWNER/ADMIN)   â”‚
+â”‚                                                                             â”‚
+â”‚  VALIDAÃ‡ÃƒO DE ROLE:                                                         â”‚
+â”‚  â”œâ”€â”€ Logo de organizaÃ§Ã£o: requer OWNER ou ADMIN na org alvo                 â”‚
+â”‚  â”œâ”€â”€ Avatar de outro usuÃ¡rio (admin): requer ADMIN na org                   â”‚
+â”‚  â””â”€â”€ Avatar prÃ³prio: qualquer usuÃ¡rio autenticado                           â”‚
+â”‚                                                                             â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
-**Configuração no SecurityConfig.java:**
+**ConfiguraÃ§Ã£o no SecurityConfig.java:**
 ```java
 .authorizeHttpRequests(auth -> auth
     .requestMatchers("/api/auth/**").permitAll()
-    .requestMatchers("/api/media/**").permitAll()  // Download público
+    .requestMatchers("/api/media/**").permitAll()  // Download pÃºblico
     // ...
     .anyRequest().authenticated())
 ```
 
 ---
 
-### Exemplos de Requisições
+### Exemplos de RequisiÃ§Ãµes
 
-**Upload genérico:**
+**Upload genÃ©rico:**
 ```bash
 curl -X POST "http://localhost:8080/api/media?ownerType=ORGANIZATION&ownerId=1" \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
@@ -3598,7 +3622,7 @@ curl -X POST "http://localhost:8080/api/media?ownerType=ORGANIZATION&ownerId=1" 
   -F "file=@./documento.pdf"
 ```
 
-**Download (público, sem auth):**
+**Download (pÃºblico, sem auth):**
 ```bash
 curl http://localhost:8080/api/media/550e8400-e29b-41d4-a716-446655440000
 
@@ -3631,31 +3655,31 @@ curl -X DELETE http://localhost:8080/api/media/550e8400-e29b-41d4-a716-446655440
 
 Endpoints especializados que usam o sistema de storage para gerenciar imagens de perfil.
 
-### Endpoints de Logo de Organização
+### Endpoints de Logo de OrganizaÃ§Ã£o
 
-| Endpoint | Método | Auth | Role | Descrição |
+| Endpoint | MÃ©todo | Auth | Role | DescriÃ§Ã£o |
 |----------|--------|------|------|-----------|
-| `/api/organizations/{id}/logo` | POST | Sim | OWNER/ADMIN | Upload/substituição do logo |
+| `/api/organizations/{id}/logo` | POST | Sim | OWNER/ADMIN | Upload/substituiÃ§Ã£o do logo |
 | `/api/organizations/{id}/logo` | DELETE | Sim | OWNER/ADMIN | Remove o logo |
 
 **Formatos aceitos**: PNG, JPEG, WEBP
 
-**Comportamento importante**: O usuário pode editar o logo de **qualquer organização** onde seja OWNER ou ADMIN, mesmo que não seja a organização atual (do header `X-Organization-Id`). Isso permite que administradores de múltiplas organizações gerenciem logos sem trocar de contexto.
+**Comportamento importante**: O usuÃ¡rio pode editar o logo de **qualquer organizaÃ§Ã£o** onde seja OWNER ou ADMIN, mesmo que nÃ£o seja a organizaÃ§Ã£o atual (do header `X-Organization-Id`). Isso permite que administradores de mÃºltiplas organizaÃ§Ãµes gerenciem logos sem trocar de contexto.
 
-### Endpoints de Avatar de Usuário
+### Endpoints de Avatar de UsuÃ¡rio
 
-| Endpoint | Método | Auth | Role | Descrição |
+| Endpoint | MÃ©todo | Auth | Role | DescriÃ§Ã£o |
 |----------|--------|------|------|-----------|
-| `/api/account/avatar` | POST | Sim | Qualquer | Usuário atualiza seu próprio avatar |
-| `/api/account/avatar` | DELETE | Sim | Qualquer | Usuário remove seu próprio avatar |
-| `/api/admin/users/{userId}/avatar` | POST | Sim | ADMIN | Admin atualiza avatar de outro usuário |
-| `/api/admin/users/{userId}/avatar` | DELETE | Sim | ADMIN | Admin remove avatar de outro usuário |
+| `/api/account/avatar` | POST | Sim | Qualquer | UsuÃ¡rio atualiza seu prÃ³prio avatar |
+| `/api/account/avatar` | DELETE | Sim | Qualquer | UsuÃ¡rio remove seu prÃ³prio avatar |
+| `/api/admin/users/{userId}/avatar` | POST | Sim | ADMIN | Admin atualiza avatar de outro usuÃ¡rio |
+| `/api/admin/users/{userId}/avatar` | DELETE | Sim | ADMIN | Admin remove avatar de outro usuÃ¡rio |
 
-**Proteção especial**: ADMIN não pode alterar avatar de um OWNER.
+**ProteÃ§Ã£o especial**: ADMIN nÃ£o pode alterar avatar de um OWNER.
 
-### Exemplos de Requisições
+### Exemplos de RequisiÃ§Ãµes
 
-**Upload de logo da organização:**
+**Upload de logo da organizaÃ§Ã£o:**
 ```bash
 curl -X POST http://localhost:8080/api/organizations/1/logo \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
@@ -3663,7 +3687,7 @@ curl -X POST http://localhost:8080/api/organizations/1/logo \
   -F "file=@./logo.png"
 ```
 
-**Upload de avatar próprio:**
+**Upload de avatar prÃ³prio:**
 ```bash
 curl -X POST http://localhost:8080/api/account/avatar \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
@@ -3680,7 +3704,7 @@ curl -X DELETE http://localhost:8080/api/organizations/1/logo \
 
 ### Uso nos DTOs
 
-As URLs de avatar/logo são retornadas automaticamente nos DTOs de resposta:
+As URLs de avatar/logo sÃ£o retornadas automaticamente nos DTOs de resposta:
 
 ```json
 // GET /api/organizations/1
@@ -3693,7 +3717,7 @@ As URLs de avatar/logo são retornadas automaticamente nos DTOs de resposta:
 // GET /api/account (ou resposta de login)
 {
   "id": 10,
-  "nome": "João Silva",
+  "nome": "JoÃ£o Silva",
   "avatar": "/api/media/660e8400-e29b-41d4-a716-446655440001"
 }
 ```

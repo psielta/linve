@@ -15,6 +15,9 @@ import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
 import br.com.exemplo.todo.domain.exception.UserNotFoundException;
 import br.com.exemplo.todo.domain.service.exception.CategoriaNaoEncontradaException;
 import br.com.exemplo.todo.domain.service.exception.CategoriaOpcaoNaoEncontradaException;
+import br.com.exemplo.todo.domain.service.exception.AdicionalNaoEncontradoException;
+import br.com.exemplo.todo.domain.service.exception.AdicionalItemNaoEncontradoException;
+import br.com.exemplo.todo.domain.service.exception.AdicionalSelecaoInvalidaException;
 import br.com.exemplo.todo.domain.service.exception.ProdutoNaoEncontradoException;
 import br.com.exemplo.todo.domain.service.exception.ProdutoPrecoCategoriaInvalidaException;
 import br.com.exemplo.todo.domain.service.exception.ProdutoPrecoNaoEncontradoException;
@@ -148,6 +151,22 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         ProblemDetail problemDetail = createProblem(ex, status);
 
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler({AdicionalNaoEncontradoException.class, AdicionalItemNaoEncontradoException.class})
+    public ResponseEntity<Object> handleAdicionalNotFound(RuntimeException ex, WebRequest request) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ProblemDetail problemDetail = createProblem(ex, status);
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(AdicionalSelecaoInvalidaException.class)
+    public ResponseEntity<Object> handleAdicionalSelecaoInvalida(
+            AdicionalSelecaoInvalidaException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ProblemDetail problemDetail = createProblem(ex, status);
         return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
     }
 
