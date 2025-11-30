@@ -9,7 +9,7 @@ import { RequestBuilder } from '../../request-builder';
 
 import { UserAdminOutput } from '../../models/user-admin-output';
 
-export interface Buscar1$Params {
+export interface Buscar2$Params {
 
 /**
  * ID do usuario
@@ -17,8 +17,8 @@ export interface Buscar1$Params {
   userId: number;
 }
 
-export function buscar1(http: HttpClient, rootUrl: string, params: Buscar1$Params, context?: HttpContext): Observable<StrictHttpResponse<UserAdminOutput>> {
-  const rb = new RequestBuilder(rootUrl, buscar1.PATH, 'get');
+export function buscar2(http: HttpClient, rootUrl: string, params: Buscar2$Params, context?: HttpContext): Observable<StrictHttpResponse<UserAdminOutput>> {
+  const rb = new RequestBuilder(rootUrl, buscar2.PATH, 'get');
   if (params) {
     rb.path('userId', params.userId, {});
   }
@@ -33,4 +33,4 @@ export function buscar1(http: HttpClient, rootUrl: string, params: Buscar1$Param
   );
 }
 
-buscar1.PATH = '/api/admin/users/{userId}';
+buscar2.PATH = '/api/admin/users/{userId}';

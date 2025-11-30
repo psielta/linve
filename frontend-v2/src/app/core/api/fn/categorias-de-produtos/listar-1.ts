@@ -7,17 +7,20 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { UserAdminInput } from '../../models/user-admin-input';
-import { UserPasswordResetOutput } from '../../models/user-password-reset-output';
+import { CategoriaOutput } from '../../models/categoria-output';
 
-export interface Criar2$Params {
-      body: UserAdminInput
+export interface Listar1$Params {
+
+/**
+ * ID da culinaria para filtro opcional
+ */
+  id_culinaria?: number;
 }
 
-export function criar2(http: HttpClient, rootUrl: string, params: Criar2$Params, context?: HttpContext): Observable<StrictHttpResponse<UserPasswordResetOutput>> {
-  const rb = new RequestBuilder(rootUrl, criar2.PATH, 'post');
+export function listar1(http: HttpClient, rootUrl: string, params?: Listar1$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<CategoriaOutput>>> {
+  const rb = new RequestBuilder(rootUrl, listar1.PATH, 'get');
   if (params) {
-    rb.body(params.body, 'application/json');
+    rb.query('id_culinaria', params.id_culinaria, {});
   }
 
   return http.request(
@@ -25,9 +28,9 @@ export function criar2(http: HttpClient, rootUrl: string, params: Criar2$Params,
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<UserPasswordResetOutput>;
+      return r as StrictHttpResponse<Array<CategoriaOutput>>;
     })
   );
 }
 
-criar2.PATH = '/api/admin/users';
+listar1.PATH = '/api/categorias';

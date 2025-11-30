@@ -924,6 +924,28 @@ java -jar target/todo-api.jar
 | PATCH | /todos/{id}/concluir | Marcar como concluída | Authorization, X-Organization-Id | 200 / 404 |
 | PATCH | /todos/{id}/reabrir | Reabrir tarefa | Authorization, X-Organization-Id | 200 / 404 |
 
+### Categorias de Produtos (autenticados - requer Bearer token)
+
+| MActodo | Endpoint | DescriA15A2o | Headers | Status |
+|--------|----------|-----------|---------|--------|
+| GET | /categorias | Listar categorias ativas da org (filtro opcional id_culinaria) | Authorization, X-Organization-Id | 200 |
+| GET | /categorias/{id} | Buscar categoria com opcoes ativas | Authorization, X-Organization-Id | 200 / 404 |
+| POST | /categorias | Criar categoria e opcoes ativas | Authorization, X-Organization-Id | 201 / 400 |
+| PUT | /categorias/{id} | Atualizar categoria e sincronizar opcoes (desativa removidas) | Authorization, X-Organization-Id | 200 / 400 / 404 |
+| DELETE | /categorias/{id} | Desativar categoria e opcoes (soft delete) | Authorization, X-Organization-Id | 204 / 404 |
+| GET | /categorias/{id}/opcoes | Listar opcoes ativas da categoria | Authorization, X-Organization-Id | 200 / 404 |
+| POST | /categorias/{id}/opcoes | Criar nova opcao ativa | Authorization, X-Organization-Id | 201 / 400 / 404 |
+| PUT | /categorias/{id}/opcoes/{idOpcao} | Renomear opcao (unicidade na categoria) | Authorization, X-Organization-Id | 200 / 400 / 404 |
+| DELETE | /categorias/{id}/opcoes/{idOpcao} | Desativar opcao (soft delete) | Authorization, X-Organization-Id | 204 / 404 |
+
+**Regras de negocio (categoria/opcoes)**
+- `id_culinaria` obrigatorio e deve existir em CULINARIA.
+- `opcoes` precisa ter ao menos um nome (unicidade case-insensitive dentro da categoria).
+- `opcao_meia` apenas `''`, `M` ou `V`.
+- Horarios: `inicio` e `fim` juntos, formato `HH:mm`, e `inicio < fim`.
+- `ordem` nao pode repetir dentro da mesma organizacao (unico em `CAT_ORG_ID + CAT_ORDEM`).
+- Soft delete: campos `ativo` em categoria e opcoes; DELETE apenas desativa.
+
 ### Administração de Usuários (requer OWNER ou ADMIN)
 
 | Método | Endpoint | Descrição | Headers | Status |

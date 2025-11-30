@@ -7,16 +7,20 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { CulinariaOutput } from '../../models/culinaria-output';
+import { CategoriaOpcaoOutput } from '../../models/categoria-opcao-output';
 
-export interface Listar2$Params {
-  meioMeio?: boolean;
+export interface ListarOpcoes$Params {
+
+/**
+ * ID da categoria
+ */
+  idCategoria: number;
 }
 
-export function listar2(http: HttpClient, rootUrl: string, params?: Listar2$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<CulinariaOutput>>> {
-  const rb = new RequestBuilder(rootUrl, listar2.PATH, 'get');
+export function listarOpcoes(http: HttpClient, rootUrl: string, params: ListarOpcoes$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<CategoriaOpcaoOutput>>> {
+  const rb = new RequestBuilder(rootUrl, listarOpcoes.PATH, 'get');
   if (params) {
-    rb.query('meioMeio', params.meioMeio, {});
+    rb.path('idCategoria', params.idCategoria, {});
   }
 
   return http.request(
@@ -24,9 +28,9 @@ export function listar2(http: HttpClient, rootUrl: string, params?: Listar2$Para
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<Array<CulinariaOutput>>;
+      return r as StrictHttpResponse<Array<CategoriaOpcaoOutput>>;
     })
   );
 }
 
-listar2.PATH = '/api/culinarias';
+listarOpcoes.PATH = '/api/categorias/{idCategoria}/opcoes';

@@ -7,22 +7,22 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { UserAdminOutput } from '../../models/user-admin-output';
-import { UserUpdateInput } from '../../models/user-update-input';
+import { CategoriaInput } from '../../models/categoria-input';
+import { CategoriaOutput } from '../../models/categoria-output';
 
 export interface Atualizar2$Params {
 
 /**
- * ID do usuario
+ * ID da categoria
  */
-  userId: number;
-      body: UserUpdateInput
+  id: number;
+      body: CategoriaInput
 }
 
-export function atualizar2(http: HttpClient, rootUrl: string, params: Atualizar2$Params, context?: HttpContext): Observable<StrictHttpResponse<UserAdminOutput>> {
+export function atualizar2(http: HttpClient, rootUrl: string, params: Atualizar2$Params, context?: HttpContext): Observable<StrictHttpResponse<CategoriaOutput>> {
   const rb = new RequestBuilder(rootUrl, atualizar2.PATH, 'put');
   if (params) {
-    rb.path('userId', params.userId, {});
+    rb.path('id', params.id, {});
     rb.body(params.body, 'application/json');
   }
 
@@ -31,9 +31,9 @@ export function atualizar2(http: HttpClient, rootUrl: string, params: Atualizar2
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<UserAdminOutput>;
+      return r as StrictHttpResponse<CategoriaOutput>;
     })
   );
 }
 
-atualizar2.PATH = '/api/admin/users/{userId}';
+atualizar2.PATH = '/api/categorias/{id}';

@@ -13,6 +13,8 @@ import br.com.exemplo.todo.domain.exception.StorageException;
 import br.com.exemplo.todo.domain.exception.CulinariaNotFoundException;
 import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
 import br.com.exemplo.todo.domain.exception.UserNotFoundException;
+import br.com.exemplo.todo.domain.service.exception.CategoriaNaoEncontradaException;
+import br.com.exemplo.todo.domain.service.exception.CategoriaOpcaoNaoEncontradaException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
 import lombok.Getter;
 import lombok.NonNull;
@@ -25,6 +27,12 @@ public enum ProblemType {
 
     TODO_NAO_ENCONTRADO(TodoNaoEncontradoException.class,
             "Tarefa nao encontrada", "todo-nao-encontrado"),
+
+    CATEGORIA_NAO_ENCONTRADA(CategoriaNaoEncontradaException.class,
+            "Categoria nao encontrada", "categoria-nao-encontrada"),
+
+    CATEGORIA_OPCAO_NAO_ENCONTRADA(CategoriaOpcaoNaoEncontradaException.class,
+            "Opcao de categoria nao encontrada", "categoria-opcao-nao-encontrada"),
 
     CAMPO_INVALIDO(IllegalArgumentException.class,
             "Campo invalido", "campo-invalido"),

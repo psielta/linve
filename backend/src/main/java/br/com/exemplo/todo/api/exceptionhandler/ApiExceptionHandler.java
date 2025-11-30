@@ -13,6 +13,8 @@ import br.com.exemplo.todo.domain.exception.StorageException;
 import br.com.exemplo.todo.domain.exception.CulinariaNotFoundException;
 import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
 import br.com.exemplo.todo.domain.exception.UserNotFoundException;
+import br.com.exemplo.todo.domain.service.exception.CategoriaNaoEncontradaException;
+import br.com.exemplo.todo.domain.service.exception.CategoriaOpcaoNaoEncontradaException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -89,6 +91,26 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(TodoNaoEncontradoException.class)
     public ResponseEntity<Object> handleTodoNaoEncontradoException(
             TodoNaoEncontradoException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(CategoriaNaoEncontradaException.class)
+    public ResponseEntity<Object> handleCategoriaNaoEncontradaException(
+            CategoriaNaoEncontradaException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(CategoriaOpcaoNaoEncontradaException.class)
+    public ResponseEntity<Object> handleCategoriaOpcaoNaoEncontradaException(
+            CategoriaOpcaoNaoEncontradaException ex, WebRequest request) {
 
         HttpStatus status = HttpStatus.NOT_FOUND;
         ProblemDetail problemDetail = createProblem(ex, status);
