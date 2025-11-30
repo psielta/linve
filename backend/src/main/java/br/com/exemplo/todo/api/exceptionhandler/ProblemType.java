@@ -15,6 +15,9 @@ import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
 import br.com.exemplo.todo.domain.exception.UserNotFoundException;
 import br.com.exemplo.todo.domain.service.exception.CategoriaNaoEncontradaException;
 import br.com.exemplo.todo.domain.service.exception.CategoriaOpcaoNaoEncontradaException;
+import br.com.exemplo.todo.domain.service.exception.ProdutoNaoEncontradoException;
+import br.com.exemplo.todo.domain.service.exception.ProdutoPrecoCategoriaInvalidaException;
+import br.com.exemplo.todo.domain.service.exception.ProdutoPrecoNaoEncontradoException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
 import lombok.Getter;
 import lombok.NonNull;
@@ -33,6 +36,15 @@ public enum ProblemType {
 
     CATEGORIA_OPCAO_NAO_ENCONTRADA(CategoriaOpcaoNaoEncontradaException.class,
             "Opcao de categoria nao encontrada", "categoria-opcao-nao-encontrada"),
+
+    PRODUTO_NAO_ENCONTRADO(ProdutoNaoEncontradoException.class,
+            "Produto nao encontrado", "produto-nao-encontrado"),
+
+    PRODUTO_PRECO_NAO_ENCONTRADO(ProdutoPrecoNaoEncontradoException.class,
+            "Preco de produto nao encontrado", "produto-preco-nao-encontrado"),
+
+    PRODUTO_PRECO_CATEGORIA_INVALIDA(ProdutoPrecoCategoriaInvalidaException.class,
+            "Opcao de categoria nao pertence a categoria do produto", "produto-preco-categoria-invalida"),
 
     CAMPO_INVALIDO(IllegalArgumentException.class,
             "Campo invalido", "campo-invalido"),

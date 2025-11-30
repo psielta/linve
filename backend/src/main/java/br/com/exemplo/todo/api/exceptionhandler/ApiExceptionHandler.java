@@ -15,6 +15,9 @@ import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
 import br.com.exemplo.todo.domain.exception.UserNotFoundException;
 import br.com.exemplo.todo.domain.service.exception.CategoriaNaoEncontradaException;
 import br.com.exemplo.todo.domain.service.exception.CategoriaOpcaoNaoEncontradaException;
+import br.com.exemplo.todo.domain.service.exception.ProdutoNaoEncontradoException;
+import br.com.exemplo.todo.domain.service.exception.ProdutoPrecoCategoriaInvalidaException;
+import br.com.exemplo.todo.domain.service.exception.ProdutoPrecoNaoEncontradoException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -113,6 +116,36 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             CategoriaOpcaoNaoEncontradaException ex, WebRequest request) {
 
         HttpStatus status = HttpStatus.NOT_FOUND;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(ProdutoNaoEncontradoException.class)
+    public ResponseEntity<Object> handleProdutoNaoEncontradoException(
+            ProdutoNaoEncontradoException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(ProdutoPrecoNaoEncontradoException.class)
+    public ResponseEntity<Object> handleProdutoPrecoNaoEncontradoException(
+            ProdutoPrecoNaoEncontradoException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(ProdutoPrecoCategoriaInvalidaException.class)
+    public ResponseEntity<Object> handleProdutoPrecoCategoriaInvalidaException(
+            ProdutoPrecoCategoriaInvalidaException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
         ProblemDetail problemDetail = createProblem(ex, status);
 
         return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
