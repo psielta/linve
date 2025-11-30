@@ -10,6 +10,7 @@ import br.com.exemplo.todo.domain.exception.InvalidRefreshTokenException;
 import br.com.exemplo.todo.domain.exception.OrganizationAccessDeniedException;
 import br.com.exemplo.todo.domain.exception.StoredFileNotFoundException;
 import br.com.exemplo.todo.domain.exception.StorageException;
+import br.com.exemplo.todo.domain.exception.CulinariaNotFoundException;
 import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
 import br.com.exemplo.todo.domain.exception.UserNotFoundException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
@@ -199,6 +200,16 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleStorageException(StorageException ex, WebRequest request) {
 
         HttpStatus status = HttpStatus.BAD_GATEWAY;
+        ProblemDetail problemDetail = createProblem(ex, status);
+
+        return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(CulinariaNotFoundException.class)
+    public ResponseEntity<Object> handleCulinariaNotFoundException(
+            CulinariaNotFoundException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.NOT_FOUND;
         ProblemDetail problemDetail = createProblem(ex, status);
 
         return handleExceptionInternal(ex, problemDetail, new HttpHeaders(), status, request);

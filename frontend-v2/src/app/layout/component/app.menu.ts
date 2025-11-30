@@ -26,7 +26,10 @@ export class AppMenu {
             },
             {
                 label: 'Gestão',
-                items: [{ label: 'Tarefas', icon: 'pi pi-fw pi-check-square', routerLink: ['/app/todos'] }]
+                items: [
+                    { label: 'Tarefas', icon: 'pi pi-fw pi-check-square', routerLink: ['/app/todos'] },
+                    { label: 'Culinárias', icon: 'pi pi-fw pi-th-large', routerLink: ['/app/culinarias'] }
+                ]
             },
             {
                 label: 'UI Components',

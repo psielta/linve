@@ -59,6 +59,10 @@ export type { Register$Params as Register$Params } from './fn/autenticacao/regis
 export { register as register } from './fn/autenticacao/register';
 export type { Refresh$Params as Refresh$Params } from './fn/autenticacao/refresh';
 export { refresh as refresh } from './fn/autenticacao/refresh';
+export type { SolicitarMagicLink$Params as SolicitarMagicLink$Params } from './fn/autenticacao/solicitar-magic-link';
+export { solicitarMagicLink as solicitarMagicLink } from './fn/autenticacao/solicitar-magic-link';
+export type { ConfirmarMagicLink$Params as ConfirmarMagicLink$Params } from './fn/autenticacao/confirmar-magic-link';
+export { confirmarMagicLink as confirmarMagicLink } from './fn/autenticacao/confirmar-magic-link';
 export type { Logout$Params as Logout$Params } from './fn/autenticacao/logout';
 export { logout as logout } from './fn/autenticacao/logout';
 export type { Login$Params as Login$Params } from './fn/autenticacao/login';
@@ -67,3 +71,7 @@ export type { AtualizarAvatar1$Params as AtualizarAvatar1$Params } from './fn/co
 export { atualizarAvatar1 as atualizarAvatar1 } from './fn/conta/atualizar-avatar-1';
 export type { RemoverAvatar1$Params as RemoverAvatar1$Params } from './fn/conta/remover-avatar-1';
 export { removerAvatar1 as removerAvatar1 } from './fn/conta/remover-avatar-1';
+export type { Listar2$Params as Listar2$Params } from './fn/culinarias/listar-2';
+export { listar2 as listar2 } from './fn/culinarias/listar-2';
+export type { BuscarPorId$Params as BuscarPorId$Params } from './fn/culinarias/buscar-por-id';
+export { buscarPorId as buscarPorId } from './fn/culinarias/buscar-por-id';

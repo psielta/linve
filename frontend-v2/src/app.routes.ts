@@ -22,6 +22,7 @@ export const appRoutes: Routes = [
             { path: 'documentation', component: Documentation },
             { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') },
             { path: 'todos', loadChildren: () => import('./app/features/todos/todos.routes') },
+            { path: 'culinarias', loadChildren: () => import('./app/features/culinarias/culinarias.routes') },
             { path: 'account', loadChildren: () => import('./app/pages/account/account.routes') }
         ]
     },

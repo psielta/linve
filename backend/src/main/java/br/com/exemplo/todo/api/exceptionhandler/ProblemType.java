@@ -10,6 +10,7 @@ import br.com.exemplo.todo.domain.exception.OrganizationAccessDeniedException;
 import br.com.exemplo.todo.domain.exception.OrganizationNotFoundException;
 import br.com.exemplo.todo.domain.exception.StoredFileNotFoundException;
 import br.com.exemplo.todo.domain.exception.StorageException;
+import br.com.exemplo.todo.domain.exception.CulinariaNotFoundException;
 import br.com.exemplo.todo.domain.exception.PasswordExpiredException;
 import br.com.exemplo.todo.domain.exception.UserNotFoundException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
@@ -54,6 +55,9 @@ public enum ProblemType {
 
     ERRO_ARMAZENAMENTO(StorageException.class,
             "Erro ao acessar o armazenamento de arquivos", "erro-armazenamento"),
+
+    CULINARIA_NAO_ENCONTRADA(CulinariaNotFoundException.class,
+            "Culinaria nao encontrada", "culinaria-nao-encontrada"),
 
     NAO_PODE_MODIFICAR_OWNER(CannotModifyOwnerException.class,
             "Nao e permitido modificar o proprietario", "nao-pode-modificar-owner"),
