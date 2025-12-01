@@ -26,7 +26,7 @@ Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-back
 16. [Resumo: Checklist para Novo CRUD](#resumo-checklist-para-novo-crud)
 17. [OpenAPI/Swagger para GeraÃ§Ã£o de Clientes](#openapiswagger-para-geraÃ§Ã£o-de-clientes)
 18. [Frontend (Interface Web)](#frontend-interface-web)
-19. [Armazenamento de Arquivos (MinIO)](#armazenamento-de-arquivos-minio)
+19. [Armazenamento de Arquivos (AWS S3)](#armazenamento-de-arquivos-aws-s3)
 20. [Fotos de OrganizaÃ§Ã£o e UsuÃ¡rio](#fotos-de-organizacao-e-usuario)
 
 ---
@@ -853,7 +853,7 @@ public class TodoApplication {
 2. Localize a classe `TodoApplication.java` em `src/main/java/br/com/exemplo/todo/`
 3. Clique com botÃ£o direito â†’ Run (ou use o atalho da IDE)
 
-### Banco de dados e migrations (SQLite + Flyway)
+    ### Banco de dados e migrations (SQLite + Flyway)
 
 - **Sem servidor externo:** o SQLite cria o arquivo `./data/todo.db` automaticamente na primeira execucao.
 - **Schema gerenciado pelo Flyway:** o Hibernate esta com `spring.jpa.hibernate.ddl-auto=none`, e o **Flyway** gerencia o schema automaticamente.
@@ -3417,9 +3417,9 @@ public class CorsConfig {
 }
 
 
-## Armazenamento de Arquivos (MinIO)
+## Armazenamento de Arquivos (AWS S3)
 
-O backend inclui um sistema completo de armazenamento de arquivos usando **MinIO** (S3 compatÃ­vel). O backend atua como **proxy** entre o frontend e o MinIO, nunca expondo URLs diretas do storage.
+O backend inclui um sistema completo de armazenamento de arquivos usando **AWS S3**. O backend atua como **proxy** entre o frontend e o S3, nunca expondo URLs diretas do storage.
 
 ### Arquitetura do Sistema
 
@@ -3429,8 +3429,8 @@ O backend inclui um sistema completo de armazenamento de arquivos usando **MinIO
 â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
 â”‚                                                                             â”‚
 â”‚   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”        â”‚
-â”‚   â”‚ Frontend â”‚ â”€â”€â”€â”€â”€â–º â”‚   Backend (API)   â”‚ â”€â”€â”€â”€â”€â–º â”‚    MinIO     â”‚        â”‚
-â”‚   â”‚          â”‚        â”‚   (Proxy Layer)   â”‚        â”‚   (Storage)  â”‚        â”‚
+â"‚   â"‚ Frontend â"‚ â"€â"€â"€â"€â"€â–º â"‚   Backend (API)   â"‚ â"€â"€â"€â"€â"€â–º â"‚   AWS S3     â"‚        â"‚
+â"‚   â"‚          â"‚        â"‚   (Proxy Layer)   â"‚        â"‚   (Storage)  â"‚        â"‚
 â”‚   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜        â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜        â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜        â”‚
 â”‚        â”‚                      â”‚                           â”‚                â”‚
 â”‚        â”‚                      â”‚                           â”‚                â”‚
@@ -3440,8 +3440,8 @@ O backend inclui um sistema completo de armazenamento de arquivos usando **MinIO
 â”‚        â”‚              â”‚   (StoredFile)    â”‚               â”‚                â”‚
 â”‚        â”‚              â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜               â”‚                â”‚
 â”‚        â”‚                                                                    â”‚
-â”‚   IMPORTANTE:                                                               â”‚
-â”‚   - Frontend NUNCA acessa MinIO diretamente                                 â”‚
+â"‚   IMPORTANTE:                                                               â"‚
+â"‚   - Frontend NUNCA acessa S3 diretamente                                    â"‚
 â”‚   - URLs sempre sÃ£o /api/media/{uuid} (relativas ao backend)                â”‚
 â”‚   - Backend faz proxy/stream do conteÃºdo                                    â”‚
 â”‚                                                                             â”‚
@@ -3450,30 +3450,32 @@ O backend inclui um sistema completo de armazenamento de arquivos usando **MinIO
 
 ### Por que o Backend atua como Proxy?
 
-1. **SeguranÃ§a**: Credenciais do MinIO nunca sÃ£o expostas ao cliente
+1. **SeguranÃ§a**: Credenciais AWS nunca sÃ£o expostas ao cliente
 2. **Controle de Acesso**: Backend pode validar permissÃµes antes de servir arquivos
 3. **Multi-Tenancy**: Isolamento por organizaÃ§Ã£o no banco de dados
-4. **Flexibilidade**: Pode trocar MinIO por S3/GCS sem alterar frontend
-5. **URLs EstÃ¡veis**: `/api/media/{uuid}` funciona mesmo se mudar o storage
+4. **Flexibilidade**: AbstraÃ§Ã£o permite trocar provider sem alterar frontend
+5. **URLs EstÃ¡veis**: `/api/media/{uuid}` funciona independente do storage
 
 ---
 
-### Subir o MinIO em Docker
+### ConfiguraÃ§Ã£o AWS S3
+
+#### VariÃ¡veis de Ambiente
+
+Copie o arquivo `.env.example` para `.env` e configure suas credenciais:
 
 ```bash
-cd backend
-docker compose -f docker/docker-compose.minio.yml up -d
+cp .env.example .env
 ```
 
-ServiÃ§os:
-- API S3: http://localhost:9000
-- Console web: http://localhost:9001 (login: MINIO_ROOT_USER / MINIO_ROOT_PASSWORD)
+| VariÃ¡vel | DescriÃ§Ã£o | Exemplo |
+|----------|-----------|---------|
+| `AWS_ACCESS_KEY_ID` | Chave de acesso AWS | `AKIA...` |
+| `AWS_SECRET_ACCESS_KEY` | Chave secreta AWS | `wJalr...` |
+| `AWS_REGION` | RegiÃ£o AWS (opcional) | `us-east-1` |
+| `AWS_S3_BUCKET` | Nome do bucket S3 | `meu-app-media` |
 
-VariÃ¡veis padrÃ£o (sobreponha conforme ambiente):
-- MINIO_ENDPOINT=http://localhost:9000
-- MINIO_ACCESS_KEY=linve
-- MINIO_SECRET_KEY=linve123456
-- MINIO_BUCKET=linve-media
+**IMPORTANTE**: O arquivo `.env` estÃ¡ no `.gitignore` e nunca deve ser commitado.
 
 ---
 
@@ -3483,18 +3485,21 @@ VariÃ¡veis padrÃ£o (sobreponha conforme ambiente):
 
 ```yaml
 storage:
-  minio:
-    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
-    access-key: ${MINIO_ACCESS_KEY:linve}
-    secret-key: ${MINIO_SECRET_KEY:linve123456}
-    bucket: ${MINIO_BUCKET:linve-media}
-    secure: false
+  s3:
+    enabled: true
+    region: ${AWS_REGION:us-east-1}
+    bucket: ${AWS_S3_BUCKET:linve-media}
 spring:
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
 ```
+
+O AWS SDK v2 busca credenciais automaticamente via `DefaultCredentialsProvider`:
+1. VariÃ¡veis de ambiente (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
+2. Arquivo `~/.aws/credentials`
+3. IAM Roles (para EC2/ECS/Lambda)
 
 ---
 
@@ -3524,11 +3529,11 @@ spring:
 â”‚                                                                             â”‚
 â”‚  2. TenantFilter valida JWT e extrai organizationId                         â”‚
 â”‚                                                                             â”‚
-â”‚  3. MinioFileStorageService.store():                                        â”‚
-â”‚     a) Valida arquivo (nÃ£o vazio)                                           â”‚
-â”‚     b) Gera storageKey: {orgId}/{ownerType}/{ownerId}/{uuid}-{filename}     â”‚
-â”‚     c) Faz upload para MinIO via putObject()                                â”‚
-â”‚     d) Salva metadados na tabela stored_file                                â”‚
+â"‚  3. AwsS3FileStorageService.store():                                        â"‚
+â"‚     a) Valida arquivo (nÃ£o vazio)                                           â"‚
+â"‚     b) Gera storageKey: {orgId}/{ownerType}/{ownerId}/{uuid}-{filename}     â"‚
+â"‚     c) Faz upload para S3 via s3Client.putObject()                          â"‚
+â"‚     d) Salva metadados na tabela stored_file                                â"‚
 â”‚                                                                             â”‚
 â”‚  4. Retorna StoredFileResponse com URL relativa /api/media/{uuid}           â”‚
 â”‚                                                                             â”‚
@@ -3551,9 +3556,9 @@ spring:
 â”‚     a) Busca StoredFile por UUID no banco                                   â”‚
 â”‚     b) NÃ£o valida tenant (acesso pÃºblico por UUID)                          â”‚
 â”‚                                                                             â”‚
-â”‚  3. MinioFileStorageService.getContent():                                   â”‚
-â”‚     a) Recupera metadados (contentType, filename)                           â”‚
-â”‚     b) Abre InputStream do MinIO via getObject()                            â”‚
+â"‚  3. AwsS3FileStorageService.getContent():                                   â"‚
+â"‚     a) Recupera metadados (contentType, filename)                           â"‚
+â"‚     b) Abre InputStream do S3 via s3Client.getObject()                      â"‚
 â”‚                                                                             â”‚
 â”‚  4. Controller faz stream para o response:                                  â”‚
 â”‚     - Content-Type: {contentType do arquivo}                                â”‚
@@ -3597,7 +3602,7 @@ public class StoredFile {
     private Long size;                  // Tamanho em bytes
 
     @Column(nullable = false)
-    private String storageKey;          // Caminho no MinIO
+    private String storageKey;          // Caminho no S3
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -3616,13 +3621,13 @@ Exemplo: `1/organization/1/a1b2c3d4-logo.png`
 
 | Componente | Arquivo | PropÃ³sito |
 |------------|---------|-----------|
-| `MinioFileStorageService` | domain/service/ | ImplementaÃ§Ã£o do storage com MinIO |
+| `AwsS3FileStorageService` | domain/service/ | ImplementaÃ§Ã£o do storage com AWS S3 |
 | `FileStorageService` | domain/service/ | Interface para abstraÃ§Ã£o do storage |
 | `MediaController` | api/controller/ | Endpoints REST de mÃ­dia |
 | `StoredFile` | domain/model/entity/ | Entidade JPA dos metadados |
 | `StoredFileRepository` | domain/repository/ | Acesso ao banco |
-| `StorageProperties` | config/ | ConfiguraÃ§Ãµes do MinIO |
-| `StorageConfig` | config/ | Bean do MinioClient |
+| `StorageProperties` | config/ | ConfiguraÃ§Ãµes do S3 |
+| `StorageConfig` | config/ | Bean do S3Client |
 
 ---
 
@@ -3835,15 +3840,14 @@ Toda a aplicacao de dominio depende apenas dessa interface, sem conhecer SMTP/Ma
 
 ### Subindo o MailHog em Docker
 
-O mesmo `docker-compose` usado para o MinIO tambem sobe o MailHog:
+Para subir o MailHog em Docker (servidor SMTP para desenvolvimento):
 
 ```bash
 cd backend
-docker compose -f docker/docker-compose.minio.yml up -d
+docker compose -f docker/docker-compose.dev.yml up -d
 ```
 
 Servicos:
-- MinIO: `http://localhost:9000` (API), `http://localhost:9001` (console)
 - MailHog:
   - SMTP: `localhost:1025`
   - UI Web: `http://localhost:8025`

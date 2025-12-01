@@ -12,11 +12,11 @@ import java.util.UUID;
 
 /**
  * Implementacao no-op do FileStorageService.
- * Usada quando o armazenamento MinIO esta desabilitado (ex: testes).
+ * Usada quando o armazenamento S3 esta desabilitado (ex: testes).
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "storage.minio.enabled", havingValue = "false")
+@ConditionalOnProperty(name = "storage.s3.enabled", havingValue = "false")
 public class NoOpFileStorageService implements FileStorageService {
 
     @Override

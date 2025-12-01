@@ -21,7 +21,7 @@
 		<openapi.version>2.8.9</openapi.version>
 		<modelmapper.version>3.2.5</modelmapper.version>
 		<jjwt.version>0.12.6</jjwt.version>
-		<minio.version>8.5.7</minio.version>
+		<aws.sdk.version>2.29.51</aws.sdk.version>
 	</properties>
 	<dependencies>
 		<!-- Spring Boot Core -->
@@ -126,6 +126,12 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>dotenv-java</artifactId>
+			<version>3.0.0</version>
+			<scope>test</scope>
+		</dependency>
 		<!-- DevTools -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -138,11 +144,11 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<!-- Object Storage (S3-compatible) -->
+		<!-- AWS S3 Storage -->
 		<dependency>
-			<groupId>io.minio</groupId>
-			<artifactId>minio</artifactId>
-			<version>${minio.version}</version>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+			<version>${aws.sdk.version}</version>
 		</dependency>
 		<!-- Email / SMTP -->
 		<dependency>

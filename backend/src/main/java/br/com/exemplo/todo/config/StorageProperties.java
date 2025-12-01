@@ -6,25 +6,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "storage.minio")
+@ConfigurationProperties(prefix = "storage.s3")
 public class StorageProperties {
     /**
-     * Endpoint completo, ex.: http://localhost:9000
+     * Regiao AWS, ex.: us-east-1
      */
-    private String endpoint;
-
-    private String accessKey;
-
-    private String secretKey;
+    private String region = "us-east-1";
 
     /**
-     * Nome do bucket padrao para armazenar objetos.
+     * Nome do bucket S3 para armazenar objetos.
      */
     private String bucket;
-
-    /**
-     * Se true, utiliza HTTPS. Mantido para compatibilidade futura
-     * (o endpoint ja carrega o schema).
-     */
-    private boolean secure = false;
 }

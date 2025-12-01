@@ -23,9 +23,9 @@ spring:
 
 # Removido context-path pois controllers ja usam /api/...
 
-# Desabilita MinIO nos testes
+# Desabilita S3 nos testes
 storage:
-  minio:
+  s3:
     enabled: false
 
 logging:

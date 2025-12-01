@@ -8,15 +8,16 @@ import br.com.exemplo.todo.domain.model.enums.MediaOwnerType;
 import br.com.exemplo.todo.domain.repository.StoredFileRepository;
 import br.com.exemplo.todo.security.TenantContext;
 import br.com.exemplo.todo.security.TenantInfo;
-import io.minio.GetObjectArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import io.minio.RemoveObjectArgs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.InputStream;
 import java.util.Optional;
@@ -24,11 +25,11 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "storage.minio.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "storage.s3.enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
-public class MinioFileStorageService implements FileStorageService {
+public class AwsS3FileStorageService implements FileStorageService {
 
-    private final MinioClient minioClient;
+    private final S3Client s3Client;
     private final StorageProperties properties;
     private final StoredFileRepository storedFileRepository;
 
@@ -45,16 +46,16 @@ public class MinioFileStorageService implements FileStorageService {
         String storageKey = buildStorageKey(tenant.organizationId(), ownerType, ownerId, safeFilename);
 
         try (InputStream inputStream = file.getInputStream()) {
-            minioClient.putObject(
-                    PutObjectArgs.builder()
-                            .bucket(properties.getBucket())
-                            .object(storageKey)
-                            .stream(inputStream, file.getSize(), -1)
-                            .contentType(file.getContentType())
-                            .build()
-            );
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(properties.getBucket())
+                    .key(storageKey)
+                    .contentType(file.getContentType())
+                    .contentLength(file.getSize())
+                    .build();
+
+            s3Client.putObject(putRequest, RequestBody.fromInputStream(inputStream, file.getSize()));
         } catch (Exception e) {
-            throw new StorageException("Erro ao salvar arquivo no armazenamento", e);
+            throw new StorageException("Erro ao salvar arquivo no S3", e);
         }
 
         StoredFile storedFile = new StoredFile();
@@ -68,19 +69,17 @@ public class MinioFileStorageService implements FileStorageService {
         storedFile.setCreatedBy(tenant.userId());
 
         StoredFile saved = storedFileRepository.save(storedFile);
-        log.debug("Arquivo salvo no MinIO: org={}, key={}, id={}", tenant.organizationId(), storageKey, saved.getId());
+        log.debug("Arquivo salvo no S3: org={}, key={}, id={}", tenant.organizationId(), storageKey, saved.getId());
         return saved;
     }
 
     @Override
     public StoredFile getMetadata(UUID id) {
-        // Se TenantContext estiver disponível, valida organização
         if (TenantContext.isSet()) {
             Long orgId = TenantContext.getOrganizationId();
             return storedFileRepository.findByIdAndOrganizationId(id, orgId)
                     .orElseThrow(() -> new StoredFileNotFoundException(id));
         }
-        // Sem TenantContext (endpoint público), busca apenas pelo ID
         return storedFileRepository.findById(id)
                 .orElseThrow(() -> new StoredFileNotFoundException(id));
     }
@@ -89,15 +88,15 @@ public class MinioFileStorageService implements FileStorageService {
     public FileContent getContent(UUID id) {
         StoredFile metadata = getMetadata(id);
         try {
-            InputStream stream = minioClient.getObject(
-                    GetObjectArgs.builder()
-                            .bucket(properties.getBucket())
-                            .object(metadata.getStorageKey())
-                            .build()
-            );
+            GetObjectRequest getRequest = GetObjectRequest.builder()
+                    .bucket(properties.getBucket())
+                    .key(metadata.getStorageKey())
+                    .build();
+
+            InputStream stream = s3Client.getObject(getRequest);
             return new FileContent(metadata, stream);
         } catch (Exception e) {
-            throw new StorageException("Erro ao ler arquivo do armazenamento", e);
+            throw new StorageException("Erro ao ler arquivo do S3", e);
         }
     }
 
@@ -106,18 +105,18 @@ public class MinioFileStorageService implements FileStorageService {
         StoredFile metadata = getMetadata(id);
 
         try {
-            minioClient.removeObject(
-                    RemoveObjectArgs.builder()
-                            .bucket(properties.getBucket())
-                            .object(metadata.getStorageKey())
-                            .build()
-            );
+            DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                    .bucket(properties.getBucket())
+                    .key(metadata.getStorageKey())
+                    .build();
+
+            s3Client.deleteObject(deleteRequest);
         } catch (Exception e) {
-            throw new StorageException("Erro ao remover arquivo do armazenamento", e);
+            throw new StorageException("Erro ao remover arquivo do S3", e);
         }
 
         storedFileRepository.delete(metadata);
-        log.debug("Arquivo removido: org={}, id={}", metadata.getOrganizationId(), metadata.getId());
+        log.debug("Arquivo removido do S3: org={}, id={}", metadata.getOrganizationId(), metadata.getId());
     }
 
     private String buildStorageKey(Long orgId, MediaOwnerType ownerType, Long ownerId, String filename) {

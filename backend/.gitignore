@@ -54,3 +54,6 @@ rebel.xml
 
 # Crash reports
 hs_err_pid*
+
+# Environment variables (contains secrets)
+.env
