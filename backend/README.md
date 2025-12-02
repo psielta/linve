@@ -733,6 +733,46 @@ public class ModelMapperConfig {
 
 - **Quem registra os beans:** `LinveApplication.java` usa `@SpringBootApplication`, que habilita `@ComponentScan` no pacote base `br.com.exemplo.todo`. Qualquer classe abaixo dele anotada com `@Component`, `@Service`, `@Repository`, `@RestController` ou `@Configuration` vira bean automaticamente.
 - **Ciclo de vida:** por padrao os beans sao `singleton` (similar a `AddSingleton`). Para um bean por requisicao existe `@RequestScope` (equivalente a `AddScoped`). Nada aqui usa escopo `prototype`/`transient`.
+
+  **Lembrete - Tipos de Escopo:**
+
+  | Escopo | Spring | ASP.NET Core | Quando usar |
+  |--------|--------|--------------|-------------|
+  | **Singleton** | `@Scope("singleton")` (padrao) | `AddSingleton` | Uma unica instancia para toda a aplicacao. Ideal para services stateless, configs, caches. |
+  | **Scoped** | `@RequestScope` | `AddScoped` | Uma instancia por requisicao HTTP. Util para DbContext, dados de usuario logado. |
+  | **Prototype/Transient** | `@Scope("prototype")` | `AddTransient` | Nova instancia toda vez que for injetado (ver exemplo abaixo). |
+
+  *No Spring, 99% dos beans sao singleton (services, repositories, configs). Use `@RequestScope` apenas quando precisar de dados especificos da requisicao.*
+
+  **Entendendo Transient/Prototype:**
+
+  ```
+  SINGLETON (padrao):
+  ┌─────────────────────────────────────────────────────┐
+  │  Aplicacao inteira compartilha A MESMA instancia    │
+  │                                                     │
+  │  Controller1 ──┐                                    │
+  │                ├──▶ TodoService (instancia unica)   │
+  │  Controller2 ──┘                                    │
+  └─────────────────────────────────────────────────────┘
+
+  PROTOTYPE/TRANSIENT:
+  ┌─────────────────────────────────────────────────────┐
+  │  Cada injecao recebe uma instancia NOVA             │
+  │                                                     │
+  │  Controller1 ────▶ RelatorioPDF (instancia #1)      │
+  │  Controller2 ────▶ RelatorioPDF (instancia #2)      │
+  │  Controller1 ────▶ RelatorioPDF (instancia #3)      │
+  │  (mesmo controller pedindo de novo = nova instancia)│
+  └─────────────────────────────────────────────────────┘
+  ```
+
+  **Quando usar Prototype?** Raramente. Exemplos:
+  - Objetos que acumulam estado interno (ex: builder de relatorio que vai agregando dados)
+  - Objetos descartaveis que nao podem ser reusados
+  - Quando voce precisa de uma "folha em branco" toda vez
+
+  **Por que Singleton e o padrao?** Porque services normalmente sao stateless (nao guardam estado entre chamadas). Um `TodoService` apenas executa operacoes - ele nao "lembra" do ultimo Todo criado.
 - **Injecao pelo construtor:** Lombok `@RequiredArgsConstructor` gera o construtor com os campos `final` e o Spring injeta. Ex.: `api/controller/AuthController.java` recebe `AuthService`; `domain/service/TodoService.java` recebe `TodoRepository` e `ModelMapper`.
 - **Repositorios:** interfaces em `domain/repository` estendem `JpaRepository`; o Spring Data cria a implementacao e a registra, entao nao ha classe concreta nem registro manual.
 - **Filtros e configs:** `security/JwtAuthenticationFilter.java` e `security/TenantFilter.java` sao `@Component` e sao injetados em `config/SecurityConfig.java`, que tambem expoe beans como `SecurityFilterChain`, `PasswordEncoder` e `AuthenticationManager` via metodos `@Bean`. `config/ModelMapperConfig.java` expoe o `ModelMapper`.
@@ -761,6 +801,110 @@ public class ModelMapperConfig {
     }
 }
 ```
+
+#### Beans Condicionais com @ConditionalOnProperty
+
+Um recurso poderoso do Spring e a capacidade de registrar beans **condicionalmente** baseado em configuracoes. Isso permite ter multiplas implementacoes de uma interface e o Spring escolher qual usar em tempo de execucao.
+
+**Exemplo pratico do projeto - FileStorageService:**
+
+Temos uma interface `FileStorageService` que define operacoes de armazenamento de arquivos:
+
+```java
+// domain/service/FileStorageService.java
+public interface FileStorageService {
+    StoredFile store(MultipartFile file, MediaOwnerType ownerType, Long ownerId);
+    StoredFile getMetadata(UUID id);
+    FileContent getContent(UUID id);
+    void delete(UUID id);
+}
+```
+
+E duas implementacoes dessa interface:
+
+**1. AwsS3FileStorageService** - Implementacao real usando AWS S3:
+
+```java
+// domain/service/AwsS3FileStorageService.java
+@Service
+@ConditionalOnProperty(name = "storage.s3.enabled", havingValue = "true", matchIfMissing = true)
+@RequiredArgsConstructor
+public class AwsS3FileStorageService implements FileStorageService {
+
+    private final S3Client s3Client;
+    private final StorageProperties properties;
+    private final StoredFileRepository storedFileRepository;
+
+    @Override
+    public StoredFile store(MultipartFile file, MediaOwnerType ownerType, Long ownerId) {
+        // Implementacao real que salva no S3
+        s3Client.putObject(putRequest, RequestBody.fromInputStream(...));
+        return storedFileRepository.save(storedFile);
+    }
+    // ... outros metodos
+}
+```
+
+**2. NoOpFileStorageService** - Implementacao "fake" para quando S3 esta desabilitado:
+
+```java
+// domain/service/NoOpFileStorageService.java
+@Service
+@ConditionalOnProperty(name = "storage.s3.enabled", havingValue = "false")
+public class NoOpFileStorageService implements FileStorageService {
+
+    @Override
+    public StoredFile store(MultipartFile file, MediaOwnerType ownerType, Long ownerId) {
+        log.warn("NoOpFileStorageService: store() chamado, mas armazenamento esta desabilitado.");
+        throw new UnsupportedOperationException("Armazenamento de arquivos desabilitado.");
+    }
+    // ... outros metodos lancam excecao tambem
+}
+```
+
+**Como funciona:**
+
+| Valor de `storage.s3.enabled` | Bean registrado |
+|-------------------------------|-----------------|
+| `true` | `AwsS3FileStorageService` |
+| `false` | `NoOpFileStorageService` |
+| nao definido | `AwsS3FileStorageService` (por causa do `matchIfMissing = true`) |
+
+**Configuracao no application.yml:**
+
+```yaml
+storage:
+  s3:
+    enabled: true  # ou false para desabilitar
+    region: us-east-1
+    bucket: linve-media
+```
+
+**Quem consome nao precisa saber qual implementacao:**
+
+```java
+@Service
+@RequiredArgsConstructor
+public class ProdutoService {
+    // Spring injeta AwsS3FileStorageService OU NoOpFileStorageService
+    // dependendo da configuracao - o codigo aqui nao muda!
+    private final FileStorageService fileStorageService;
+
+    public void salvarFotoProduto(MultipartFile foto, Long produtoId) {
+        fileStorageService.store(foto, MediaOwnerType.PRODUTO, produtoId);
+    }
+}
+```
+
+**Comparando com ASP.NET Core:**
+
+| Spring Boot | ASP.NET Core |
+|-------------|--------------|
+| `@ConditionalOnProperty` | `if (config["S3:Enabled"]) services.AddScoped<IStorage, S3Storage>()` |
+| Declarativo (anotacao) | Imperativo (codigo no Program.cs) |
+| Condicao na propria classe | Condicao no registro central |
+
+No Spring, a logica de "quando usar esta implementacao" fica na propria classe, nao em um arquivo central de configuracao.
 
 ### Bean Validation (Jakarta Validation)
 
