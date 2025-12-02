@@ -101,7 +101,7 @@ import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
                         @if (userAvatar()) {
                             <p-avatar [image]="$any(userAvatar() | mediaUrl)" shape="circle" />
                         } @else {
-                            <p-avatar [label]="userInitials()" shape="circle" styleClass="bg-primary text-primary-contrast" />
+                            <i class="pi pi-user"></i>
                         }
                     </button>
                 </div>
