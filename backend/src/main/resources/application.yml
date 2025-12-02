@@ -4,7 +4,7 @@ info:
 
 spring:
   application:
-    name: todo-api
+    name: linve-api
   profiles:
     active: default
   threads:

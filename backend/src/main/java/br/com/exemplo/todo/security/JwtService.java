@@ -42,7 +42,7 @@ public class JwtService {
                     .type("JWT")
                     .and()
                 .subject(user.getId().toString())
-                .issuer("todo-api")
+                .issuer("linve-api")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiration))
                 .claim("email", user.getEmail())

@@ -8,10 +8,10 @@ import org.springframework.cache.annotation.EnableCaching;
 
 @EnableCaching
 @SpringBootApplication
-public class TodoApplication {
+public class LinveApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(TodoApplication.class, args);
+		SpringApplication.run(LinveApplication.class, args);
 	}
 
 	@Bean

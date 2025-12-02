@@ -28,10 +28,10 @@ public class OpenApiSecurityConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Todo API")
+                        .title("Linve API")
                         .version("2.0.0")
                         .description("""
-                                API de gerenciamento de tarefas com autenticacao JWT e multi-tenancy.
+                                Linve API - Backend do sistema de delivery multi-tenant.
 
                                 ## Autenticacao
 

@@ -10,10 +10,10 @@
 		<relativePath />
 	</parent>
 	<groupId>br.com.exemplo</groupId>
-	<artifactId>todo-api</artifactId>
+	<artifactId>linve-api</artifactId>
 	<version>1.0.0</version>
-	<name>todo-api</name>
-	<description>API de CRUD de Todo - Exemplo Spring Boot com SQLite</description>
+	<name>linve-api</name>
+	<description>Linve API - Backend do sistema de delivery multi-tenant</description>
 	<properties>
 		<java.version>21</java.version>
 		<maven.compiler.source>21</maven.compiler.source>

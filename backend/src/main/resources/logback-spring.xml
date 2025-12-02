@@ -3,7 +3,7 @@
 
     <!-- Propriedades -->
     <property name="LOG_PATH" value="${LOG_PATH:-./logs}"/>
-    <property name="LOG_FILE" value="${LOG_FILE:-todo-api}"/>
+    <property name="LOG_FILE" value="${LOG_FILE:-linve-api}"/>
     <property name="LOG_MAX_SIZE" value="${LOG_MAX_SIZE:-10MB}"/>
     <property name="LOG_MAX_HISTORY" value="${LOG_MAX_HISTORY:-30}"/>
     <property name="LOG_TOTAL_SIZE_CAP" value="${LOG_TOTAL_SIZE_CAP:-1GB}"/>

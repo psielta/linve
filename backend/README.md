@@ -1,8 +1,8 @@
-# Todo API - Spring Boot + SQLite + JWT + Multi-Tenancy
+# Linve API - Spring Boot + SQLite + JWT + Multi-Tenancy
 
-API REST de CRUD de tarefas (Todo) com **autenticacao JWT** e **multi-tenancy por organizacao**, desenvolvida como exemplo para aprendizado de Spring Boot com SQLite.
+Backend do sistema **Linve** - um sistema de gestão multi-tenant para delivery, desenvolvido com **Spring Boot**, **autenticação JWT** e **multi-tenancy por organização**.
 
-Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-backend`, usando as mesmas versões e padrões.
+Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-backend`, usando as mesmas versões e padrões. O módulo de Todo serve como exemplo arquitetural para validar a estrutura.
 
 ---
 
@@ -57,7 +57,7 @@ Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-back
 ## Arquitetura do Projeto
 
 ```
-todo-api/
+linve-api/
 ├── pom.xml                                    # Configuração Maven (dependências)
 ├── flyway/sql/
 │   ├── V0001__criar_tabela_todo.sql           # Migration inicial (tabela TODO)
@@ -148,7 +148,7 @@ O sistema usa **JWT (JSON Web Token)** para autenticação stateless:
 ```json
 {
   "sub": "1",              // User ID
-  "iss": "todo-api",       // Issuer
+  "iss": "linve-api",      // Issuer
   "iat": 1700000000,       // Issued At
   "exp": 1700000900,       // Expiration (15 min)
   "email": "user@email.com",
@@ -731,7 +731,7 @@ public class ModelMapperConfig {
 
 > Vindo de ASP.NET Core? Pense que o `Program.cs` (onde voce chama `AddScoped`/`AddTransient`) aqui e substituido pelo **component scan** do Spring.
 
-- **Quem registra os beans:** `TodoApplication.java` usa `@SpringBootApplication`, que habilita `@ComponentScan` no pacote base `br.com.exemplo.todo`. Qualquer classe abaixo dele anotada com `@Component`, `@Service`, `@Repository`, `@RestController` ou `@Configuration` vira bean automaticamente.
+- **Quem registra os beans:** `LinveApplication.java` usa `@SpringBootApplication`, que habilita `@ComponentScan` no pacote base `br.com.exemplo.todo`. Qualquer classe abaixo dele anotada com `@Component`, `@Service`, `@Repository`, `@RestController` ou `@Configuration` vira bean automaticamente.
 - **Ciclo de vida:** por padrao os beans sao `singleton` (similar a `AddSingleton`). Para um bean por requisicao existe `@RequestScope` (equivalente a `AddScoped`). Nada aqui usa escopo `prototype`/`transient`.
 - **Injecao pelo construtor:** Lombok `@RequiredArgsConstructor` gera o construtor com os campos `final` e o Spring injeta. Ex.: `api/controller/AuthController.java` recebe `AuthService`; `domain/service/TodoService.java` recebe `TodoRepository` e `ModelMapper`.
 - **Repositorios:** interfaces em `domain/repository` estendem `JpaRepository`; o Spring Data cria a implementacao e a registra, entao nao ha classe concreta nem registro manual.
@@ -740,9 +740,9 @@ public class ModelMapperConfig {
 
 ```java
 @SpringBootApplication            // ativa component scan em br.com.exemplo.todo
-public class TodoApplication {    // nao existe um Program.cs separado
+public class LinveApplication {    // nao existe um Program.cs separado
     public static void main(String[] args) {
-        SpringApplication.run(TodoApplication.class, args);
+        SpringApplication.run(LinveApplication.class, args);
     }
 }
 
@@ -835,23 +835,23 @@ Todo todo = optional.orElseThrow(() -> new TodoNaoEncontradoException(id));
 
 ```
 src/main/java/br/com/exemplo/todo/
-└── TodoApplication.java    ← PONTO DE ENTRADA (classe main)
+└── LinveApplication.java    ← PONTO DE ENTRADA (classe main)
 ```
 
-O arquivo `TodoApplication.java` contém o método `main()` que inicia a aplicação Spring Boot:
+O arquivo `LinveApplication.java` contém o método `main()` que inicia a aplicação Spring Boot:
 
 ```java
 @SpringBootApplication
-public class TodoApplication {
+public class LinveApplication {
     public static void main(String[] args) {
-        SpringApplication.run(TodoApplication.class, args);  // Inicia o servidor
+        SpringApplication.run(LinveApplication.class, args);  // Inicia o servidor
     }
 }
 ```
 
 **Para rodar o projeto na IDE:**
 1. Abra o projeto como projeto Maven
-2. Localize a classe `TodoApplication.java` em `src/main/java/br/com/exemplo/todo/`
+2. Localize a classe `LinveApplication.java` em `src/main/java/br/com/exemplo/todo/`
 3. Clique com botão direito → Run (ou use o atalho da IDE)
 
     ### Banco de dados e migrations (SQLite + Flyway)
@@ -925,9 +925,9 @@ A aplicacao ficara disponivel em: http://localhost:8080/api
 
 | IDE | Como Executar |
 |-----|---------------|
-| **IntelliJ IDEA** | Abra `TodoApplication.java` → Clique no ícone ▶️ verde ao lado do método `main` → Run |
-| **VS Code** | Abra `TodoApplication.java` → Clique em "Run" acima do método `main` (ou F5) |
-| **Eclipse/STS** | Clique direito em `TodoApplication.java` → Run As → Spring Boot App (ou Java Application) |
+| **IntelliJ IDEA** | Abra `LinveApplication.java` → Clique no ícone ▶️ verde ao lado do método `main` → Run |
+| **VS Code** | Abra `LinveApplication.java` → Clique em "Run" acima do método `main` (ou F5) |
+| **Eclipse/STS** | Clique direito em `LinveApplication.java` → Run As → Spring Boot App (ou Java Application) |
 | **NetBeans** | Clique direito no projeto → Run (ou F6) |
 
 ### Swagger UI
@@ -946,7 +946,7 @@ mvn compile
 mvn package
 
 # Executar o JAR
-java -jar target/todo-api.jar
+java -jar target/linve-api.jar
 ```
 
 ---
@@ -1862,7 +1862,7 @@ curl http://localhost:8080/api/admin/users/5/login-history \
 
 ## Comparação com o Projeto Base
 
-| Aspecto | Todo API | Reforma Tributária |
+| Aspecto | Linve API | Reforma Tributária |
 |---------|----------|-------------------|
 | Controllers | 3 (Auth + Todo + UserAdmin) | Múltiplos |
 | Entities | 7 (User, Org, Todo, LoginAttempt...) | 50+ tabelas |
@@ -3860,7 +3860,7 @@ Toda a aplicacao de dominio depende apenas dessa interface, sem conhecer SMTP/Ma
 
 - Classe: `infrastructure/email/MailgunEmailService.java`
 - Anotacao: `@Service` + `@Profile("prod")`
-- Usa `WebClient` (bean `WebClient.Builder` em `TodoApplication`) para chamar:
+- Usa `WebClient` (bean `WebClient.Builder` em `LinveApplication`) para chamar:
   - `POST https://api.mailgun.net/v3/{domain}/messages`
 - Configuracao em `application-prod.yml`:
   ```yaml
@@ -3996,11 +3996,11 @@ O sistema utiliza **Logback** (incluso no Spring Boot) para gerenciamento de log
 
 ```
 logs/
-├── todo-api.log                    # Log principal (atual)
-├── todo-api-error.log              # Apenas erros (atual)
-├── todo-api.2024-01-15.0.log.gz    # Arquivo rotacionado (comprimido)
-├── todo-api.2024-01-15.1.log.gz    # Segundo arquivo do mesmo dia
-└── todo-api-error.2024-01-15.0.log.gz
+├── linve-api.log                    # Log principal (atual)
+├── linve-api-error.log              # Apenas erros (atual)
+├── linve-api.2024-01-15.0.log.gz    # Arquivo rotacionado (comprimido)
+├── linve-api.2024-01-15.1.log.gz    # Segundo arquivo do mesmo dia
+└── linve-api-error.2024-01-15.0.log.gz
 ```
 
 ### Configuração Padrão
@@ -4008,7 +4008,7 @@ logs/
 | Parâmetro | Valor Padrão | Descrição |
 |-----------|---------------|-------------|
 | `LOG_PATH` | `./logs` | Diretório dos arquivos de log |
-| `LOG_FILE` | `todo-api` | Nome base dos arquivos |
+| `LOG_FILE` | `linve-api` | Nome base dos arquivos |
 | `LOG_MAX_SIZE` | `10MB` | Tamanho máximo por arquivo antes de rotacionar |
 | `LOG_MAX_HISTORY` | `30` | Dias de histórico a manter |
 | `LOG_TOTAL_SIZE_CAP` | `1GB` | Tamanho total máximo de todos os arquivos |
@@ -4030,7 +4030,7 @@ logs/
 
 ```bash
 # Alterar diretório de logs
-export LOG_PATH=/var/log/todo-api
+export LOG_PATH=/var/log/linve-api
 
 # Aumentar tamanho máximo por arquivo
 export LOG_MAX_SIZE=50MB
@@ -4042,7 +4042,7 @@ export LOG_MAX_HISTORY=90
 export LOG_TOTAL_SIZE_CAP=5GB
 
 # Executar aplicação
-java -jar todo-api.jar
+java -jar linve-api.jar
 ```
 
 ### Perfis de Log
@@ -4084,13 +4084,13 @@ public class MeuService {
 
 ```bash
 # Ver logs em tempo real
-tail -f logs/todo-api.log
+tail -f logs/linve-api.log
 
 # Ver apenas erros
-tail -f logs/todo-api-error.log
+tail -f logs/linve-api-error.log
 
 # Filtrar por padrao
-tail -f logs/todo-api.log | grep "ERROR\|WARN"
+tail -f logs/linve-api.log | grep "ERROR\|WARN"
 ```
 
 ### Arquivo de Configuração
