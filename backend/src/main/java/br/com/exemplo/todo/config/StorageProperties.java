@@ -17,4 +17,14 @@ public class StorageProperties {
      * Nome do bucket S3 para armazenar objetos.
      */
     private String bucket;
+
+    /**
+     * AWS Access Key ID (opcional - usa DefaultCredentialsProvider se nao informado)
+     */
+    private String accessKey;
+
+    /**
+     * AWS Secret Access Key (opcional - usa DefaultCredentialsProvider se nao informado)
+     */
+    private String secretKey;
 }

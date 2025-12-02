@@ -110,12 +110,13 @@ management:
         prometheus: "metrics"
 
 # Armazenamento de arquivos (AWS S3)
-# Credenciais via variaveis de ambiente: AWS_ACCESS_KEY_ID e AWS_SECRET_ACCESS_KEY
 storage:
   s3:
     enabled: true
     region: ${AWS_REGION:us-east-1}
     bucket: ${AWS_S3_BUCKET:linve-media}
+    access-key: ${AWS_ACCESS_KEY_ID:}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:}
 
 # Security Configuration
 security:
