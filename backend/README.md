@@ -26,7 +26,7 @@ Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-back
 16. [Resumo: Checklist para Novo CRUD](#resumo-checklist-para-novo-crud)
 17. [OpenAPI/Swagger para Geração de Clientes](#openapiswagger-para-geração-de-clientes)
 18. [Frontend (Interface Web)](#frontend-interface-web)
-19. [Armazenamento de Arquivos (AWS S3)](#armazenamento-de-arquivos-aws-s3)
+19. [Armazenamento de Arquivos com AWS S3](#armazenamento-de-arquivos-com-aws-s3)
 20. [Fotos de Organização e Usuário](#fotos-de-organizacao-e-usuario)
 21. [Logging e Rotação de Logs](#logging-e-rotação-de-logs)
 
@@ -58,20 +58,20 @@ Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-back
 
 ```
 todo-api/
-â”œâ”€â”€ pom.xml                                    # Configuração Maven (dependências)
-â”œâ”€â”€ flyway/sql/
-â”‚   â”œâ”€â”€ V0001__criar_tabela_todo.sql           # Migration inicial (tabela TODO)
-â”‚   â”œâ”€â”€ V0002__criar_tabelas_autenticacao.sql  # Tabelas de auth (USUARIO, ORGANIZATION, etc)
-â”‚   â””â”€â”€ V0003__adicionar_organizacao_todo.sql  # Adiciona org_id Ã  tabela TODO
-â”œâ”€â”€ data/                                      # Banco SQLite (criado automaticamente)
-â”‚   â””â”€â”€ todo.db
-â””â”€â”€ src/
-    â”œâ”€â”€ main/
-    â”‚   â”œâ”€â”€ java/br/com/exemplo/todo/         # Código fonte (controllers, services, repos)
-    â”‚   â””â”€â”€ resources/
-    â”‚       â”œâ”€â”€ application.yml               # Configuração principal (SQLite + JWT)
-    â”‚       â””â”€â”€ application-testes.yml        # Config profile testes
-    â””â”€â”€ test/java/br/com/exemplo/todo/        # Testes unitários/integração
+├── pom.xml                                    # Configuração Maven (dependências)
+├── flyway/sql/
+│   ├── V0001__criar_tabela_todo.sql           # Migration inicial (tabela TODO)
+│   ├── V0002__criar_tabelas_autenticacao.sql  # Tabelas de auth (USUARIO, ORGANIZATION, etc)
+│   └── V0003__adicionar_organizacao_todo.sql  # Adiciona org_id à tabela TODO
+├── data/                                      # Banco SQLite (criado automaticamente)
+│   └── todo.db
+└── src/
+    ├── main/
+    │   ├── java/br/com/exemplo/todo/         # Código fonte (controllers, services, repos)
+    │   └── resources/
+    │       ├── application.yml               # Configuração principal (SQLite + JWT)
+    │       └── application-testes.yml        # Config profile testes
+    └── test/java/br/com/exemplo/todo/        # Testes unitários/integração
 ```
 
 ---
@@ -83,63 +83,63 @@ todo-api/
 O sistema usa **JWT (JSON Web Token)** para autenticação stateless:
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚                          FLUXO DE AUTENTICAÃ‡ÃƒO                              â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚                                                                             â”‚
-â”‚  1. LOGIN                                                                   â”‚
-â”‚     POST /auth/login { email, senha }                                       â”‚
-â”‚          â”‚                                                                  â”‚
-â”‚          â–¼                                                                  â”‚
-â”‚     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”            â”‚
-â”‚     â”‚ AuthService                                              â”‚            â”‚
-â”‚     â”‚  - Valida credenciais                                    â”‚            â”‚
-â”‚     â”‚  - Gera Access Token (15 min)                            â”‚            â”‚
-â”‚     â”‚  - Gera Refresh Token (30 dias)                          â”‚            â”‚
-â”‚     â”‚  - Persiste hash do refresh token                        â”‚            â”‚
-â”‚     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜            â”‚
-â”‚          â”‚                                                                  â”‚
-â”‚          â–¼                                                                  â”‚
-â”‚     { accessToken, refreshToken, user, organizations }                      â”‚
-â”‚                                                                             â”‚
-â”‚  2. REQUISIÃ‡Ã•ES AUTENTICADAS                                                â”‚
-â”‚     GET /todos                                                              â”‚
-â”‚     Headers:                                                                â”‚
-â”‚       - Authorization: Bearer {accessToken}                                 â”‚
-â”‚       - X-Organization-Id: 1                                                â”‚
-â”‚          â”‚                                                                  â”‚
-â”‚          â–¼                                                                  â”‚
-â”‚     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”            â”‚
-â”‚     â”‚ JwtAuthenticationFilter                                  â”‚            â”‚
-â”‚     â”‚  - Extrai token do header                                â”‚            â”‚
-â”‚     â”‚  - Valida assinatura e expiração                         â”‚            â”‚
-â”‚     â”‚  - Popula SecurityContext com AuthenticatedUser          â”‚            â”‚
-â”‚     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜            â”‚
-â”‚          â”‚                                                                  â”‚
-â”‚          â–¼                                                                  â”‚
-â”‚     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”            â”‚
-â”‚     â”‚ TenantFilter                                             â”‚            â”‚
-â”‚     â”‚  - Lê X-Organization-Id do header                        â”‚            â”‚
-â”‚     â”‚  - Valida membership do usuário na org                   â”‚            â”‚
-â”‚     â”‚  - Popula TenantContext (ThreadLocal)                    â”‚            â”‚
-â”‚     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜            â”‚
-â”‚          â”‚                                                                  â”‚
-â”‚          â–¼                                                                  â”‚
-â”‚     Controller â†’ Service â†’ Repository (com isolamento por org)              â”‚
-â”‚                                                                             â”‚
-â”‚  3. REFRESH TOKEN                                                           â”‚
-â”‚     POST /auth/refresh { refreshToken }                                     â”‚
-â”‚          â”‚                                                                  â”‚
-â”‚          â–¼                                                                  â”‚
-â”‚     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”            â”‚
-â”‚     â”‚ AuthService                                              â”‚            â”‚
-â”‚     â”‚  - Valida refresh token (hash no banco)                  â”‚            â”‚
-â”‚     â”‚  - Revoga token antigo (rotação)                         â”‚            â”‚
-â”‚     â”‚  - Gera novos tokens                                     â”‚            â”‚
-â”‚     â”‚  - Detecta roubo (token já revogado = revoga família)    â”‚            â”‚
-â”‚     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜            â”‚
-â”‚                                                                             â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          FLUXO DE AUTENTICAÇÃO                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. LOGIN                                                                   │
+│     POST /auth/login { email, senha }                                       │
+│          │                                                                  │
+│          ▼                                                                  │
+│     ┌─────────────────────────────────────────────────────────┐            │
+│     │ AuthService                                              │            │
+│     │  - Valida credenciais                                    │            │
+│     │  - Gera Access Token (15 min)                            │            │
+│     │  - Gera Refresh Token (30 dias)                          │            │
+│     │  - Persiste hash do refresh token                        │            │
+│     └─────────────────────────────────────────────────────────┘            │
+│          │                                                                  │
+│          ▼                                                                  │
+│     { accessToken, refreshToken, user, organizations }                      │
+│                                                                             │
+│  2. REQUISIÇÕES AUTENTICADAS                                                │
+│     GET /todos                                                              │
+│     Headers:                                                                │
+│       - Authorization: Bearer {accessToken}                                 │
+│       - X-Organization-Id: 1                                                │
+│          │                                                                  │
+│          ▼                                                                  │
+│     ┌─────────────────────────────────────────────────────────┐            │
+│     │ JwtAuthenticationFilter                                  │            │
+│     │  - Extrai token do header                                │            │
+│     │  - Valida assinatura e expiração                         │            │
+│     │  - Popula SecurityContext com AuthenticatedUser          │            │
+│     └─────────────────────────────────────────────────────────┘            │
+│          │                                                                  │
+│          ▼                                                                  │
+│     ┌─────────────────────────────────────────────────────────┐            │
+│     │ TenantFilter                                             │            │
+│     │  - Lê X-Organization-Id do header                        │            │
+│     │  - Valida membership do usuário na org                   │            │
+│     │  - Popula TenantContext (ThreadLocal)                    │            │
+│     └─────────────────────────────────────────────────────────┘            │
+│          │                                                                  │
+│          ▼                                                                  │
+│     Controller → Service → Repository (com isolamento por org)              │
+│                                                                             │
+│  3. REFRESH TOKEN                                                           │
+│     POST /auth/refresh { refreshToken }                                     │
+│          │                                                                  │
+│          ▼                                                                  │
+│     ┌─────────────────────────────────────────────────────────┐            │
+│     │ AuthService                                              │            │
+│     │  - Valida refresh token (hash no banco)                  │            │
+│     │  - Revoga token antigo (rotação)                         │            │
+│     │  - Gera novos tokens                                     │            │
+│     │  - Detecta roubo (token já revogado = revoga família)    │            │
+│     └─────────────────────────────────────────────────────────┘            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Estrutura do JWT
@@ -230,39 +230,39 @@ protected void doFilterInternal(HttpServletRequest request, ...) {
 Multi-tenancy permite que múltiplas organizações usem a mesma aplicação com dados isolados.
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚                          MODELO DE MULTI-TENANCY                            â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚                                                                             â”‚
-â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                      â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                       â”‚
-â”‚  â”‚   User A    â”‚                      â”‚   User B    â”‚                       â”‚
-â”‚  â”‚  (João)     â”‚                      â”‚  (Maria)    â”‚                       â”‚
-â”‚  â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜                      â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜                       â”‚
-â”‚         â”‚                                    â”‚                              â”‚
-â”‚         â”‚  Membership                        â”‚  Membership                  â”‚
-â”‚         â”‚  (OWNER)                           â”‚  (MEMBER)                    â”‚
-â”‚         â”‚                                    â”‚                              â”‚
-â”‚         â–¼                                    â–¼                              â”‚
-â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”           â”‚
-â”‚  â”‚                    Organization 1                            â”‚           â”‚
-â”‚  â”‚                    "Empresa ABC"                             â”‚           â”‚
-â”‚  â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                   â”‚           â”‚
-â”‚  â”‚  â”‚  Todo 1  â”‚  â”‚  Todo 2  â”‚  â”‚  Todo 3  â”‚  (org_id = 1)     â”‚           â”‚
-â”‚  â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                   â”‚           â”‚
-â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜           â”‚
-â”‚                                                                             â”‚
-â”‚         â”‚  Membership                                                       â”‚
-â”‚         â”‚  (ADMIN)                                                          â”‚
-â”‚         â–¼                                                                   â”‚
-â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”           â”‚
-â”‚  â”‚                    Organization 2                            â”‚           â”‚
-â”‚  â”‚                    "Startup XYZ"                             â”‚           â”‚
-â”‚  â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  (org_id = 2)                   â”‚           â”‚
-â”‚  â”‚  â”‚  Todo 4  â”‚  â”‚  Todo 5  â”‚  â† João também acessa aqui      â”‚           â”‚
-â”‚  â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                                 â”‚           â”‚
-â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜           â”‚
-â”‚                                                                             â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          MODELO DE MULTI-TENANCY                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────┐                      ┌─────────────┐                       │
+│  │   User A    │                      │   User B    │                       │
+│  │  (João)     │                      │  (Maria)    │                       │
+│  └──────┬──────┘                      └──────┬──────┘                       │
+│         │                                    │                              │
+│         │  Membership                        │  Membership                  │
+│         │  (OWNER)                           │  (MEMBER)                    │
+│         │                                    │                              │
+│         ▼                                    ▼                              │
+│  ┌─────────────────────────────────────────────────────────────┐           │
+│  │                    Organization 1                            │           │
+│  │                    "Empresa ABC"                             │           │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐                   │           │
+│  │  │  Todo 1  │  │  Todo 2  │  │  Todo 3  │  (org_id = 1)     │           │
+│  │  └──────────┘  └──────────┘  └──────────┘                   │           │
+│  └─────────────────────────────────────────────────────────────┘           │
+│                                                                             │
+│         │  Membership                                                       │
+│         │  (ADMIN)                                                          │
+│         ▼                                                                   │
+│  ┌─────────────────────────────────────────────────────────────┐           │
+│  │                    Organization 2                            │           │
+│  │                    "Startup XYZ"                             │           │
+│  │  ┌──────────┐  ┌──────────┐  (org_id = 2)                   │           │
+│  │  │  Todo 4  │  │  Todo 5  │  ← João também acessa aqui      │           │
+│  │  └──────────┘  └──────────┘                                 │           │
+│  └─────────────────────────────────────────────────────────────┘           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Entidades do Multi-Tenancy
@@ -271,7 +271,7 @@ Multi-tenancy permite que múltiplas organizações usem a mesma aplicação com
 |----------|-----------|
 | **User** | Usuário do sistema (pode pertencer a várias orgs) |
 | **Organization** | Organização/tenant (agrupa tarefas) |
-| **Membership** | Vínculo usuário â†” organização com papel |
+| **Membership** | Vínculo usuário ↔ organização com papel |
 | **Account** | Credenciais (email/senha, OAuth, etc) |
 | **RefreshToken** | Tokens de refresh persistidos |
 
@@ -299,8 +299,8 @@ Long userId = TenantContext.getUserId();
 MembershipRole role = TenantContext.getRole();
 
 // Verificações de permissão
-TenantContext.isOwner();  // Ã‰ dono?
-TenantContext.isAdmin();  // Ã‰ admin ou dono?
+TenantContext.isOwner();  // É dono?
+TenantContext.isAdmin();  // É admin ou dono?
 
 // IMPORTANTE: Limpar ao final (feito automaticamente pelo TenantFilter)
 TenantContext.clear();
@@ -431,62 +431,62 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 }
 ```
 
-**Como funciona a conexão Controller â†” Exception Handler:**
+**Como funciona a conexão Controller ↔ Exception Handler:**
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  O SPRING FAZ TUDO AUTOMATICAMENTE - NÃƒO PRECISA "LIGAR" NADA!              â”‚
-â”‚                                                                             â”‚
-â”‚  1. @RestControllerAdvice é um interceptador GLOBAL                         â”‚
-â”‚     â†’ Spring detecta automaticamente na inicialização                       â”‚
-â”‚     â†’ Aplica-se a TODOS os @RestController da aplicação                     â”‚
-â”‚                                                                             â”‚
-â”‚  2. @ExceptionHandler define QUAL exceção esse método trata                 â”‚
-â”‚     â†’ Quando qualquer Controller lançar essa exceção                        â”‚
-â”‚     â†’ O Spring redireciona automaticamente para este método                 â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  O SPRING FAZ TUDO AUTOMATICAMENTE - NÃO PRECISA "LIGAR" NADA!              │
+│                                                                             │
+│  1. @RestControllerAdvice é um interceptador GLOBAL                         │
+│     → Spring detecta automaticamente na inicialização                       │
+│     → Aplica-se a TODOS os @RestController da aplicação                     │
+│                                                                             │
+│  2. @ExceptionHandler define QUAL exceção esse método trata                 │
+│     → Quando qualquer Controller lançar essa exceção                        │
+│     → O Spring redireciona automaticamente para este método                 │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Fluxo de uma exceção:**
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  TodoController  â”‚     â”‚   TodoService    â”‚     â”‚   ApiExceptionHandler    â”‚
-â”‚                  â”‚     â”‚                  â”‚     â”‚                          â”‚
-â”‚  GET /todos/999  â”‚â”€â”€â”€â”€â–¶â”‚  buscarPorId(999)â”‚     â”‚                          â”‚
-â”‚                  â”‚     â”‚        â”‚         â”‚     â”‚                          â”‚
-â”‚                  â”‚     â”‚        â–¼         â”‚     â”‚                          â”‚
-â”‚                  â”‚     â”‚  repository      â”‚     â”‚                          â”‚
-â”‚                  â”‚     â”‚  .findById(999)  â”‚     â”‚                          â”‚
-â”‚                  â”‚     â”‚        â”‚         â”‚     â”‚                          â”‚
-â”‚                  â”‚     â”‚        â–¼         â”‚     â”‚                          â”‚
-â”‚                  â”‚     â”‚  Optional.empty()â”‚     â”‚                          â”‚
-â”‚                  â”‚     â”‚        â”‚         â”‚     â”‚                          â”‚
-â”‚                  â”‚     â”‚        â–¼         â”‚     â”‚                          â”‚
-â”‚                  â”‚â—€â”€ â”€ â”‚  throw new       â”‚     â”‚                          â”‚
-â”‚                  â”‚  â”€ â”€â”‚  TodoNaoEncon-   â”‚â”€ â”€ â”€â”‚â”€ â”€ â”€ â”€ â”€ â”€ â”€ â”€ â”         â”‚
-â”‚                  â”‚     â”‚  tradoException()â”‚     â”‚                â–¼         â”‚
-â”‚                  â”‚     â”‚                  â”‚     â”‚  @ExceptionHandler(      â”‚
-â”‚                  â”‚     â”‚                  â”‚     â”‚    TodoNaoEncontrado-    â”‚
-â”‚                  â”‚     â”‚                  â”‚     â”‚    Exception.class)      â”‚
-â”‚                  â”‚     â”‚                  â”‚     â”‚         â”‚                â”‚
-â”‚                  â”‚     â”‚                  â”‚     â”‚         â–¼                â”‚
-â”‚                  â”‚     â”‚                  â”‚     â”‚  Cria ProblemDetail      â”‚
-â”‚                  â”‚     â”‚                  â”‚     â”‚  com status 404          â”‚
-â”‚                  â”‚     â”‚                  â”‚     â”‚         â”‚                â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”‚â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                                                            â–¼
-                                               â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-                                               â”‚     HTTP Response        â”‚
-                                               â”‚     Status: 404          â”‚
-                                               â”‚     Body: ProblemDetail  â”‚
-                                               â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌──────────────────┐     ┌──────────────────┐     ┌──────────────────────────┐
+│  TodoController  │     │   TodoService    │     │   ApiExceptionHandler    │
+│                  │     │                  │     │                          │
+│  GET /todos/999  │────▶│  buscarPorId(999)│     │                          │
+│                  │     │        │         │     │                          │
+│                  │     │        ▼         │     │                          │
+│                  │     │  repository      │     │                          │
+│                  │     │  .findById(999)  │     │                          │
+│                  │     │        │         │     │                          │
+│                  │     │        ▼         │     │                          │
+│                  │     │  Optional.empty()│     │                          │
+│                  │     │        │         │     │                          │
+│                  │     │        ▼         │     │                          │
+│                  │◀─ ─ │  throw new       │     │                          │
+│                  │  ─ ─│  TodoNaoEncon-   │─ ─ ─│─ ─ ─ ─ ─ ─ ─ ─ ┐         │
+│                  │     │  tradoException()│     │                ▼         │
+│                  │     │                  │     │  @ExceptionHandler(      │
+│                  │     │                  │     │    TodoNaoEncontrado-    │
+│                  │     │                  │     │    Exception.class)      │
+│                  │     │                  │     │         │                │
+│                  │     │                  │     │         ▼                │
+│                  │     │                  │     │  Cria ProblemDetail      │
+│                  │     │                  │     │  com status 404          │
+│                  │     │                  │     │         │                │
+└──────────────────┘     └──────────────────┘     └─────────│────────────────┘
+                                                            ▼
+                                               ┌──────────────────────────┐
+                                               │     HTTP Response        │
+                                               │     Status: 404          │
+                                               │     Body: ProblemDetail  │
+                                               └──────────────────────────┘
 ```
 
-**Exemplo prático - Controller NÃƒO trata exceção, apenas lança:**
+**Exemplo prático - Controller NÃO trata exceção, apenas lança:**
 
 ```java
-// TodoController.java - NÃƒO precisa try/catch!
+// TodoController.java - NÃO precisa try/catch!
 @GetMapping("/{id}")
 public TodoOutput buscar(@PathVariable Long id) {
     // Se não encontrar, o Service lança TodoNaoEncontradoException
@@ -498,7 +498,7 @@ public TodoOutput buscar(@PathVariable Long id) {
 // TodoService.java - Lança a exceção
 public Todo buscarPorId(Long id) {
     return repository.findById(id)
-        .orElseThrow(() -> new TodoNaoEncontradoException(id));  // LANÃ‡A!
+        .orElseThrow(() -> new TodoNaoEncontradoException(id));  // LANÇA!
 }
 
 // ApiExceptionHandler.java - CAPTURA automaticamente
@@ -531,7 +531,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return ... // 404 Not Found
     }
 
-    // 3. GENÃ‰RICA: Captura qualquer Exception não tratada acima
+    // 3. GENÉRICA: Captura qualquer Exception não tratada acima
     //    (funciona como "catch all" - fallback de segurança)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGenericException(...) {
@@ -555,10 +555,10 @@ Se lançar `NullPointerException`, vai para o handler genérico (500).
 **Por que estender `ResponseEntityExceptionHandler`?**
 
 Essa classe base já trata automaticamente várias exceções do Spring:
-- `MethodArgumentNotValidException` â†’ Erros de validação (`@Valid`)
-- `HttpMessageNotReadableException` â†’ JSON malformado
-- `HttpRequestMethodNotSupportedException` â†’ Método HTTP errado (POST em endpoint GET)
-- `MissingServletRequestParameterException` â†’ Parâmetro obrigatório ausente
+- `MethodArgumentNotValidException` → Erros de validação (`@Valid`)
+- `HttpMessageNotReadableException` → JSON malformado
+- `HttpRequestMethodNotSupportedException` → Método HTTP errado (POST em endpoint GET)
+- `MissingServletRequestParameterException` → Parâmetro obrigatório ausente
 - E muitas outras...
 
 Você pode sobrescrever esses métodos para customizar a resposta.
@@ -641,7 +641,7 @@ public class TodoService {
 
     @Transactional           // Operação em transação (commit/rollback automático)
     public Todo criar(TodoInput input) {
-        Todo todo = modelMapper.map(input, Todo.class);  // Converte DTO â†’ Entity
+        Todo todo = modelMapper.map(input, Todo.class);  // Converte DTO → Entity
         todo.setDataCriacao(LocalDateTime.now());
         todo.setConcluido(false);
         return repository.save(todo);  // Persiste no banco
@@ -676,51 +676,51 @@ public class ModelMapperConfig {
 ## Fluxo de uma Requisição
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚                           POST /api/todos                                   â”‚
-â”‚                    {"titulo": "Comprar pão", "descricao": "..."}            â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                                      â”‚
-                                      â–¼
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  1. CONTROLLER (TodoController)                                             â”‚
-â”‚     - Recebe a requisição HTTP                                              â”‚
-â”‚     - @Valid valida o TodoInput (Bean Validation)                           â”‚
-â”‚     - Se inválido â†’ ApiExceptionHandler retorna 400                         â”‚
-â”‚     - Se válido â†’ chama todoService.criar(input)                            â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                                      â”‚
-                                      â–¼
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  2. SERVICE (TodoService)                                                   â”‚
-â”‚     - Aplica lógica de negócio                                              â”‚
-â”‚     - Converte TodoInput â†’ Todo (ModelMapper)                               â”‚
-â”‚     - Define dataCriacao = agora                                            â”‚
-â”‚     - Define concluido = false                                              â”‚
-â”‚     - Chama repository.save(todo)                                           â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                                      â”‚
-                                      â–¼
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  3. REPOSITORY (TodoRepository)                                             â”‚
-â”‚     - Spring Data JPA gera o SQL automaticamente                            â”‚
-â”‚     - INSERT INTO TODO (TODO_TITULO, ...) VALUES (?, ...)                   â”‚
-â”‚     - Retorna entidade com ID preenchido                                    â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                                      â”‚
-                                      â–¼
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  4. CONTROLLER (volta)                                                      â”‚
-â”‚     - Recebe Todo do Service                                                â”‚
-â”‚     - Converte Todo â†’ TodoOutput (ModelMapper)                              â”‚
-â”‚     - Retorna ResponseEntity com status 201 (CREATED)                       â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                                      â”‚
-                                      â–¼
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚                         HTTP 201 Created                                    â”‚
-â”‚  {"id": 1, "titulo": "Comprar pão", "concluido": false, ...}               â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           POST /api/todos                                   │
+│                    {"titulo": "Comprar pão", "descricao": "..."}            │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  1. CONTROLLER (TodoController)                                             │
+│     - Recebe a requisição HTTP                                              │
+│     - @Valid valida o TodoInput (Bean Validation)                           │
+│     - Se inválido → ApiExceptionHandler retorna 400                         │
+│     - Se válido → chama todoService.criar(input)                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  2. SERVICE (TodoService)                                                   │
+│     - Aplica lógica de negócio                                              │
+│     - Converte TodoInput → Todo (ModelMapper)                               │
+│     - Define dataCriacao = agora                                            │
+│     - Define concluido = false                                              │
+│     - Chama repository.save(todo)                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  3. REPOSITORY (TodoRepository)                                             │
+│     - Spring Data JPA gera o SQL automaticamente                            │
+│     - INSERT INTO TODO (TODO_TITULO, ...) VALUES (?, ...)                   │
+│     - Retorna entidade com ID preenchido                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  4. CONTROLLER (volta)                                                      │
+│     - Recebe Todo do Service                                                │
+│     - Converte Todo → TodoOutput (ModelMapper)                              │
+│     - Retorna ResponseEntity com status 201 (CREATED)                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         HTTP 201 Created                                    │
+│  {"id": 1, "titulo": "Comprar pão", "concluido": false, ...}               │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -835,7 +835,7 @@ Todo todo = optional.orElseThrow(() -> new TodoNaoEncontradoException(id));
 
 ```
 src/main/java/br/com/exemplo/todo/
-â””â”€â”€ TodoApplication.java    â† PONTO DE ENTRADA (classe main)
+└── TodoApplication.java    ← PONTO DE ENTRADA (classe main)
 ```
 
 O arquivo `TodoApplication.java` contém o método `main()` que inicia a aplicação Spring Boot:
@@ -852,7 +852,7 @@ public class TodoApplication {
 **Para rodar o projeto na IDE:**
 1. Abra o projeto como projeto Maven
 2. Localize a classe `TodoApplication.java` em `src/main/java/br/com/exemplo/todo/`
-3. Clique com botão direito â†’ Run (ou use o atalho da IDE)
+3. Clique com botão direito → Run (ou use o atalho da IDE)
 
     ### Banco de dados e migrations (SQLite + Flyway)
 
@@ -925,10 +925,10 @@ A aplicacao ficara disponivel em: http://localhost:8080/api
 
 | IDE | Como Executar |
 |-----|---------------|
-| **IntelliJ IDEA** | Abra `TodoApplication.java` â†’ Clique no ícone â–¶ï¸ verde ao lado do método `main` â†’ Run |
-| **VS Code** | Abra `TodoApplication.java` â†’ Clique em "Run" acima do método `main` (ou F5) |
-| **Eclipse/STS** | Clique direito em `TodoApplication.java` â†’ Run As â†’ Spring Boot App (ou Java Application) |
-| **NetBeans** | Clique direito no projeto â†’ Run (ou F6) |
+| **IntelliJ IDEA** | Abra `TodoApplication.java` → Clique no ícone ▶️ verde ao lado do método `main` → Run |
+| **VS Code** | Abra `TodoApplication.java` → Clique em "Run" acima do método `main` (ou F5) |
+| **Eclipse/STS** | Clique direito em `TodoApplication.java` → Run As → Spring Boot App (ou Java Application) |
+| **NetBeans** | Clique direito no projeto → Run (ou F6) |
 
 ### Swagger UI
 
@@ -1166,7 +1166,7 @@ curl -X POST http://localhost:8080/api/todos \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Organization-Id: $ORG_ID" \
-  -d '{"titulo": "Comprar pão", "descricao": "Ir Ã  padaria do João"}'
+  -d '{"titulo": "Comprar pão", "descricao": "Ir à padaria do João"}'
 ```
 
 **Resposta (201 Created):**
@@ -1174,7 +1174,7 @@ curl -X POST http://localhost:8080/api/todos \
 {
   "id": 1,
   "titulo": "Comprar pão",
-  "descricao": "Ir Ã  padaria do João",
+  "descricao": "Ir à padaria do João",
   "concluido": false,
   "dataCriacao": "2024-01-15T10:30:00"
 }
@@ -1380,46 +1380,46 @@ O SQLite é um banco de dados em arquivo. Não precisa de servidor separado.
 ### Modelo de Dados (ER)
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚                              MODELO DE DADOS                                     â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚                                                                                  â”‚
-â”‚   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”           â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”           â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
-â”‚   â”‚   USUARIO    â”‚           â”‚    MEMBERSHIP    â”‚           â”‚ ORGANIZATION â”‚   â”‚
-â”‚   â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤           â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤           â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤   â”‚
-â”‚   â”‚ USR_ID (PK)  â”‚â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€<â”‚ MBS_USR_ID (FK)  â”‚>â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”‚ ORG_ID (PK)  â”‚   â”‚
-â”‚   â”‚ USR_NOME     â”‚           â”‚ MBS_ORG_ID (FK)  â”‚           â”‚ ORG_NOME     â”‚   â”‚
-â”‚   â”‚ USR_EMAIL    â”‚           â”‚ MBS_PAPEL        â”‚           â”‚ ORG_SLUG     â”‚   â”‚
-â”‚   â”‚ USR_ATIVO    â”‚           â”‚ MBS_ATIVO        â”‚           â”‚ ORG_ATIVA    â”‚   â”‚
-â”‚   â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜           â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜           â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
-â”‚          â”‚                                                          â”‚           â”‚
-â”‚          â”‚ 1:N                                                      â”‚ 1:N       â”‚
-â”‚          â–¼                                                          â–¼           â”‚
-â”‚   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                                           â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
-â”‚   â”‚   ACCOUNT    â”‚                                           â”‚     TODO     â”‚   â”‚
-â”‚   â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤                                           â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤   â”‚
-â”‚   â”‚ ACC_ID (PK)  â”‚                                           â”‚ TODO_ID (PK) â”‚   â”‚
-â”‚   â”‚ ACC_USR_ID   â”‚                                           â”‚ TODO_ORG_ID  â”‚   â”‚
-â”‚   â”‚ ACC_PROVIDER â”‚                                           â”‚ TODO_TITULO  â”‚   â”‚
-â”‚   â”‚ ACC_SENHA    â”‚                                           â”‚ TODO_DESCR   â”‚   â”‚
-â”‚   â”‚ ACC_BLOQUEADOâ”‚                                           â”‚ TODO_CONCL   â”‚   â”‚
-â”‚   â”‚ ACC_TENTATIVASâ”‚                                          â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
-â”‚   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                                                              â”‚
-â”‚          â”‚                                                                       â”‚
-â”‚          â”‚ 1:N                                                                   â”‚
-â”‚          â–¼                                                                       â”‚
-â”‚   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                                                          â”‚
-â”‚   â”‚  REFRESH_TOKEN   â”‚                                                          â”‚
-â”‚   â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤                                                          â”‚
-â”‚   â”‚ RTK_ID (PK)      â”‚                                                          â”‚
-â”‚   â”‚ RTK_USR_ID (FK)  â”‚                                                          â”‚
-â”‚   â”‚ RTK_TOKEN_HASH   â”‚                                                          â”‚
-â”‚   â”‚ RTK_FAMILIA_ID   â”‚   â—„â”€â”€ Agrupa tokens para rotação                         â”‚
-â”‚   â”‚ RTK_REVOGADO     â”‚                                                          â”‚
-â”‚   â”‚ RTK_DATA_EXPIRACAOâ”‚                                                         â”‚
-â”‚   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                                                          â”‚
-â”‚                                                                                  â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              MODELO DE DADOS                                     │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│   ┌──────────────┐           ┌──────────────────┐           ┌──────────────┐   │
+│   │   USUARIO    │           │    MEMBERSHIP    │           │ ORGANIZATION │   │
+│   ├──────────────┤           ├──────────────────┤           ├──────────────┤   │
+│   │ USR_ID (PK)  │──────────<│ MBS_USR_ID (FK)  │>──────────│ ORG_ID (PK)  │   │
+│   │ USR_NOME     │           │ MBS_ORG_ID (FK)  │           │ ORG_NOME     │   │
+│   │ USR_EMAIL    │           │ MBS_PAPEL        │           │ ORG_SLUG     │   │
+│   │ USR_ATIVO    │           │ MBS_ATIVO        │           │ ORG_ATIVA    │   │
+│   └──────┬───────┘           └──────────────────┘           └──────┬───────┘   │
+│          │                                                          │           │
+│          │ 1:N                                                      │ 1:N       │
+│          ▼                                                          ▼           │
+│   ┌──────────────┐                                           ┌──────────────┐   │
+│   │   ACCOUNT    │                                           │     TODO     │   │
+│   ├──────────────┤                                           ├──────────────┤   │
+│   │ ACC_ID (PK)  │                                           │ TODO_ID (PK) │   │
+│   │ ACC_USR_ID   │                                           │ TODO_ORG_ID  │   │
+│   │ ACC_PROVIDER │                                           │ TODO_TITULO  │   │
+│   │ ACC_SENHA    │                                           │ TODO_DESCR   │   │
+│   │ ACC_BLOQUEADO│                                           │ TODO_CONCL   │   │
+│   │ ACC_TENTATIVAS│                                          └──────────────┘   │
+│   └──────────────┘                                                              │
+│          │                                                                       │
+│          │ 1:N                                                                   │
+│          ▼                                                                       │
+│   ┌──────────────────┐                                                          │
+│   │  REFRESH_TOKEN   │                                                          │
+│   ├──────────────────┤                                                          │
+│   │ RTK_ID (PK)      │                                                          │
+│   │ RTK_USR_ID (FK)  │                                                          │
+│   │ RTK_TOKEN_HASH   │                                                          │
+│   │ RTK_FAMILIA_ID   │   ◄── Agrupa tokens para rotação                         │
+│   │ RTK_REVOGADO     │                                                          │
+│   │ RTK_DATA_EXPIRACAO│                                                         │
+│   └──────────────────┘                                                          │
+│                                                                                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Configuração (application.yml)
@@ -1462,10 +1462,10 @@ Para recomeçar do zero, basta apagar o arquivo `data/todo.db` antes de rodar.
 
 ```
 src/test/java/br/com/exemplo/todo/
-â”œâ”€â”€ testesunitarios/           # Testes isolados (com mocks)
-â”‚   â””â”€â”€ TodoServiceTest.java
-â””â”€â”€ testesintegracao/          # Testes end-to-end (com banco real + auth)
-    â””â”€â”€ TodoControllerIntegracaoTest.java
+├── testesunitarios/           # Testes isolados (com mocks)
+│   └── TodoServiceTest.java
+└── testesintegracao/          # Testes end-to-end (com banco real + auth)
+    └── TodoControllerIntegracaoTest.java
 ```
 
 ### Executar Testes
@@ -1484,7 +1484,7 @@ mvn test -Dtest="**/testesintegracao/**"
 ### Testes Unitários (com TenantContext)
 
 Testam uma classe isolada, usando mocks para dependências.
-**Importante:** Ã‰ necessário configurar o `TenantContext` nos testes para simular o multi-tenancy.
+**Importante:** É necessário configurar o `TenantContext` nos testes para simular o multi-tenancy.
 
 ```java
 @ExtendWith(MockitoExtension.class)  // Ativa Mockito
@@ -1651,30 +1651,30 @@ Sistema completo de CRUD de usuários da organização com controle de acesso po
 
 ```
 domain/
-â”œâ”€â”€ exception/
-â”‚   â”œâ”€â”€ UserNotFoundException.java          # Usuário não encontrado
-â”‚   â”œâ”€â”€ CannotModifyOwnerException.java     # Não pode modificar OWNER
-â”‚   â”œâ”€â”€ CannotModifySelfException.java      # Não pode modificar a si mesmo
-â”‚   â””â”€â”€ PasswordExpiredException.java       # Senha expirada
-â”œâ”€â”€ model/entity/
-â”‚   â””â”€â”€ LoginAttempt.java                   # Registro de tentativas de login
-â”œâ”€â”€ repository/
-â”‚   â””â”€â”€ LoginAttemptRepository.java         # Repository para histórico de login
-â””â”€â”€ service/
-    â””â”€â”€ UserAdminService.java               # Lógica de negócio
+├── exception/
+│   ├── UserNotFoundException.java          # Usuário não encontrado
+│   ├── CannotModifyOwnerException.java     # Não pode modificar OWNER
+│   ├── CannotModifySelfException.java      # Não pode modificar a si mesmo
+│   └── PasswordExpiredException.java       # Senha expirada
+├── model/entity/
+│   └── LoginAttempt.java                   # Registro de tentativas de login
+├── repository/
+│   └── LoginAttemptRepository.java         # Repository para histórico de login
+└── service/
+    └── UserAdminService.java               # Lógica de negócio
 
 api/
-â”œâ”€â”€ controller/
-â”‚   â””â”€â”€ UserAdminController.java            # REST endpoints
-â”œâ”€â”€ dto/admin/
-â”‚   â”œâ”€â”€ UserAdminOutput.java                # Dados completos do usuário
-â”‚   â”œâ”€â”€ UserAdminInput.java                 # Input para criar usuário
-â”‚   â”œâ”€â”€ UserUpdateInput.java                # Input para atualizar
-â”‚   â”œâ”€â”€ UserRoleUpdateInput.java            # Input para alterar role
-â”‚   â”œâ”€â”€ UserPasswordResetOutput.java        # Resposta com senha temporária
-â”‚   â””â”€â”€ LoginAttemptOutput.java             # Tentativa de login
-â””â”€â”€ openapi/
-    â””â”€â”€ UserAdminControllerOpenApi.java     # Documentação Swagger
+├── controller/
+│   └── UserAdminController.java            # REST endpoints
+├── dto/admin/
+│   ├── UserAdminOutput.java                # Dados completos do usuário
+│   ├── UserAdminInput.java                 # Input para criar usuário
+│   ├── UserUpdateInput.java                # Input para atualizar
+│   ├── UserRoleUpdateInput.java            # Input para alterar role
+│   ├── UserPasswordResetOutput.java        # Resposta com senha temporária
+│   └── LoginAttemptOutput.java             # Tentativa de login
+└── openapi/
+    └── UserAdminControllerOpenApi.java     # Documentação Swagger
 ```
 
 ### Tabela LOGIN_ATTEMPT (Migration V0004)
@@ -1762,7 +1762,7 @@ public class UserAdminService {
 
 | Exceção | Status | Quando |
 |---------|--------|--------|
-| `UserNotFoundException` | 404 | Usuário não existe ou não pertence Ã  org |
+| `UserNotFoundException` | 404 | Usuário não existe ou não pertence à org |
 | `CannotModifyOwnerException` | 403 | Tentativa de modificar OWNER |
 | `CannotModifySelfException` | 400 | Tentativa de desativar/alterar a si mesmo |
 | `EmailAlreadyExistsException` | 409 | Email já cadastrado |
@@ -1793,7 +1793,7 @@ public class UserAdminController {
 - Alterar role (sucesso como OWNER, falha como ADMIN, definir como OWNER, alterar próprio)
 - Resetar senha (sucesso, sem conta local)
 - Desbloquear conta
-- Histórico de login (sucesso, usuário não pertence Ã  org)
+- Histórico de login (sucesso, usuário não pertence à org)
 
 ### Exemplos de Requisições
 
@@ -1879,7 +1879,7 @@ curl http://localhost:8080/api/admin/users/5/login-history \
 
 **Básico (estrutura):**
 - **Estrutura de pastas** - Organização `api/`, `domain/`, `security/`, `config/`
-- **Padrão de camadas** - Controller â†’ Service â†’ Repository
+- **Padrão de camadas** - Controller → Service → Repository
 - **DTOs separados** - Input/Output para controle da API
 - **Exception Handler** - Tratamento centralizado com ProblemDetail (RFC 7807)
 - **OpenAPI/Swagger** - Documentação automática com autenticação
@@ -2121,9 +2121,9 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 | `deleteByAtivo(Boolean)` | `DELETE WHERE ativo = ?` |
 
 **Ordenação:**
-- `findByAtivoOrderByNomeAsc` â†’ `ORDER BY nome ASC`
-- `findByAtivoOrderByNomeDesc` â†’ `ORDER BY nome DESC`
-- `findAllByOrderByDataCriacaoDesc` â†’ `ORDER BY dataCriacao DESC`
+- `findByAtivoOrderByNomeAsc` → `ORDER BY nome ASC`
+- `findByAtivoOrderByNomeDesc` → `ORDER BY nome DESC`
+- `findAllByOrderByDataCriacaoDesc` → `ORDER BY dataCriacao DESC`
 
 ---
 
@@ -2481,7 +2481,7 @@ public class CategoriaService {
         return inativada;
     }
 
-    // ==================== VALIDAÃ‡Ã•ES PRIVADAS ====================
+    // ==================== VALIDAÇÕES PRIVADAS ====================
 
     /**
      * Valida se já existe categoria com o mesmo nome.
@@ -2736,7 +2736,7 @@ public class CategoriaController implements CategoriaControllerOpenApi {
         return toOutput(categoria);
     }
 
-    // ==================== MÃ‰TODOS AUXILIARES ====================
+    // ==================== MÉTODOS AUXILIARES ====================
 
     private CategoriaOutput toOutput(Categoria categoria) {
         return modelMapper.map(categoria, CategoriaOutput.class);
@@ -3019,7 +3019,7 @@ class CategoriaControllerIntegracaoTest {
 
 ### 11. Relacionamento entre Entidades
 
-Para adicionar categoria Ã s tarefas (relacionamento ManyToOne):
+Para adicionar categoria às tarefas (relacionamento ManyToOne):
 
 #### 11.1 Migration
 
@@ -3074,22 +3074,22 @@ public Todo criar(TodoInput input) {
 ## Resumo: Checklist para Novo CRUD
 
 ```
-â–¡ 1. Migration SQL (src/main/resources/db/migration/V000X__*.sql)
-â–¡ 2. Entity (domain/model/entity/*.java)
-â–¡ 3. Repository (domain/repository/*Repository.java)
-â–¡ 4. Exception (domain/service/exception/*Exception.java)
-â–¡ 5. Input DTO (api/model/input/*Input.java)
-â–¡ 6. Output DTO (api/model/output/*Output.java)
-â–¡ 7. Service (domain/service/*Service.java)
-â–¡ 8. OpenAPI Interface (api/openapi/*ControllerOpenApi.java)
-â–¡ 9. Controller (api/controller/*Controller.java)
-â–¡ 10. Registrar Exception no Handler
-â–¡ 11. Testes Unitários (testesunitarios/*ServiceTest.java)
-â–¡ 12. Testes de Integração (testesintegracao/*ControllerIntegracaoTest.java)
+☐ 1. Migration SQL (src/main/resources/db/migration/V000X__*.sql)
+☐ 2. Entity (domain/model/entity/*.java)
+☐ 3. Repository (domain/repository/*Repository.java)
+☐ 4. Exception (domain/service/exception/*Exception.java)
+☐ 5. Input DTO (api/model/input/*Input.java)
+☐ 6. Output DTO (api/model/output/*Output.java)
+☐ 7. Service (domain/service/*Service.java)
+☐ 8. OpenAPI Interface (api/openapi/*ControllerOpenApi.java)
+☐ 9. Controller (api/controller/*Controller.java)
+☐ 10. Registrar Exception no Handler
+☐ 11. Testes Unitários (testesunitarios/*ServiceTest.java)
+☐ 12. Testes de Integração (testesintegracao/*ControllerIntegracaoTest.java)
 ```
 
 **Ordem recomendada de criação:**
-1. Migration â†’ 2. Entity â†’ 3. Repository â†’ 4. Exception â†’ 5. DTOs â†’ 6. Service â†’ 7. OpenAPI â†’ 8. Controller â†’ 9. Handler â†’ 10. Testes
+1. Migration → 2. Entity → 3. Repository → 4. Exception → 5. DTOs → 6. Service → 7. OpenAPI → 8. Controller → 9. Handler → 10. Testes
 
 ---
 
@@ -3231,7 +3231,7 @@ O projeto inclui uma interface web simples para gerenciar as tarefas.
 
 ```
 src/main/resources/static/
-â””â”€â”€ index.html          # Página principal (Single Page Application)
+└── index.html          # Página principal (Single Page Application)
 ```
 
 ### Tecnologias do Frontend
@@ -3330,13 +3330,13 @@ Coloque arquivos em `src/main/resources/static/`:
 
 ```
 src/main/resources/static/
-â”œâ”€â”€ index.html
-â”œâ”€â”€ css/
-â”‚   â””â”€â”€ styles.css      # CSS customizado
-â”œâ”€â”€ js/
-â”‚   â””â”€â”€ app.js          # JavaScript separado
-â””â”€â”€ img/
-    â””â”€â”€ logo.png        # Imagens
+├── index.html
+├── css/
+│   └── styles.css      # CSS customizado
+├── js/
+│   └── app.js          # JavaScript separado
+└── img/
+    └── logo.png        # Imagens
 ```
 
 Referencie nos arquivos HTML:
@@ -3357,8 +3357,8 @@ Referencie nos arquivos HTML:
 #### Adicionar novas páginas
 
 Criar novos arquivos HTML em `static/`:
-- `src/main/resources/static/categorias.html` â†’ `http://localhost:8080/api/categorias.html`
-- `src/main/resources/static/sobre.html` â†’ `http://localhost:8080/api/sobre.html`
+- `src/main/resources/static/categorias.html` → `http://localhost:8080/api/categorias.html`
+- `src/main/resources/static/sobre.html` → `http://localhost:8080/api/sobre.html`
 
 #### Integrar com novo CRUD (ex: Categorias)
 
@@ -3387,9 +3387,9 @@ function criarCategoria(dados) {
 
 1. **Hot Reload**: Com Spring DevTools (já configurado), alterações em arquivos estáticos são recarregadas automaticamente. Basta atualizar o navegador (F5).
 
-2. **Console do Navegador**: Use F12 â†’ Console para ver erros JavaScript e respostas da API.
+2. **Console do Navegador**: Use F12 → Console para ver erros JavaScript e respostas da API.
 
-3. **Network Tab**: Use F12 â†’ Network para inspecionar requisições HTTP para a API.
+3. **Network Tab**: Use F12 → Network para inspecionar requisições HTTP para a API.
 
 4. **CORS**: Não há problemas de CORS pois o frontend e a API estão no mesmo servidor/porta.
 
@@ -3416,37 +3416,39 @@ public class CorsConfig {
         };
     }
 }
+```
 
+---
 
-## Armazenamento de Arquivos (AWS S3)
+## Armazenamento de Arquivos com AWS S3
 
 O backend inclui um sistema completo de armazenamento de arquivos usando **AWS S3**. O backend atua como **proxy** entre o frontend e o S3, nunca expondo URLs diretas do storage.
 
 ### Arquitetura do Sistema
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚                         ARQUITETURA DE STORAGE                              â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚                                                                             â”‚
-â”‚   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”        â”‚
-â"‚   â"‚ Frontend â"‚ â"€â"€â"€â"€â"€â–º â"‚   Backend (API)   â"‚ â"€â"€â"€â"€â"€â–º â"‚   AWS S3     â"‚        â"‚
-â"‚   â"‚          â"‚        â"‚   (Proxy Layer)   â"‚        â"‚   (Storage)  â"‚        â"‚
-â”‚   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜        â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜        â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜        â”‚
-â”‚        â”‚                      â”‚                           â”‚                â”‚
-â”‚        â”‚                      â”‚                           â”‚                â”‚
-â”‚        â”‚                      â–¼                           â”‚                â”‚
-â”‚        â”‚              â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”               â”‚                â”‚
-â”‚        â”‚              â”‚     Database      â”‚               â”‚                â”‚
-â”‚        â”‚              â”‚   (StoredFile)    â”‚               â”‚                â”‚
-â”‚        â”‚              â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜               â”‚                â”‚
-â”‚        â”‚                                                                    â”‚
-â"‚   IMPORTANTE:                                                               â"‚
-â"‚   - Frontend NUNCA acessa S3 diretamente                                    â"‚
-â”‚   - URLs sempre são /api/media/{uuid} (relativas ao backend)                â”‚
-â”‚   - Backend faz proxy/stream do conteúdo                                    â”‚
-â”‚                                                                             â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         ARQUITETURA DE STORAGE                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   ┌──────────┐        ┌───────────────────┐        ┌──────────────┐        │
+│   │ Frontend │ ─────► │   Backend (API)   │ ─────► │   AWS S3     │        │
+│   │          │        │   (Proxy Layer)   │        │   (Storage)  │        │
+│   └──────────┘        └───────────────────┘        └──────────────┘        │
+│        │                      │                           │                │
+│        │                      │                           │                │
+│        │                      ▼                           │                │
+│        │              ┌───────────────────┐               │                │
+│        │              │     Database      │               │                │
+│        │              │   (StoredFile)    │               │                │
+│        │              └───────────────────┘               │                │
+│        │                                                                    │
+│   IMPORTANTE:                                                               │
+│   - Frontend NUNCA acessa S3 diretamente                                    │
+│   - URLs sempre são /api/media/{uuid} (relativas ao backend)                │
+│   - Backend faz proxy/stream do conteúdo                                    │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Por que o Backend atua como Proxy?
@@ -3550,24 +3552,24 @@ Em produção, **não use arquivo `.env`**. Configure as variáveis de ambiente 
 ### Fluxo de Upload
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚                            FLUXO DE UPLOAD                                  â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚                                                                             â”‚
-â”‚  1. Cliente envia POST /api/media com multipart/form-data                   â”‚
-â”‚     Headers: Authorization: Bearer {token}, X-Organization-Id: 1            â”‚
-â”‚                                                                             â”‚
-â”‚  2. TenantFilter valida JWT e extrai organizationId                         â”‚
-â”‚                                                                             â”‚
-â"‚  3. AwsS3FileStorageService.store():                                        â"‚
-â"‚     a) Valida arquivo (não vazio)                                           â"‚
-â"‚     b) Gera storageKey: {orgId}/{ownerType}/{ownerId}/{uuid}-{filename}     â"‚
-â"‚     c) Faz upload para S3 via s3Client.putObject()                          â"‚
-â"‚     d) Salva metadados na tabela stored_file                                â"‚
-â”‚                                                                             â”‚
-â”‚  4. Retorna StoredFileResponse com URL relativa /api/media/{uuid}           â”‚
-â”‚                                                                             â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            FLUXO DE UPLOAD                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. Cliente envia POST /api/media com multipart/form-data                   │
+│     Headers: Authorization: Bearer {token}, X-Organization-Id: 1            │
+│                                                                             │
+│  2. TenantFilter valida JWT e extrai organizationId                         │
+│                                                                             │
+│  3. AwsS3FileStorageService.store():                                        │
+│     a) Valida arquivo (não vazio)                                           │
+│     b) Gera storageKey: {orgId}/{ownerType}/{ownerId}/{uuid}-{filename}     │
+│     c) Faz upload para S3 via s3Client.putObject()                          │
+│     d) Salva metadados na tabela stored_file                                │
+│                                                                             │
+│  4. Retorna StoredFileResponse com URL relativa /api/media/{uuid}           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -3575,32 +3577,32 @@ Em produção, **não use arquivo `.env`**. Configure as variáveis de ambiente 
 ### Fluxo de Download (Proxy Pattern)
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚                       FLUXO DE DOWNLOAD (PROXY)                             â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚                                                                             â”‚
-â”‚  1. Browser/Frontend requisita GET /api/media/{uuid}                        â”‚
-â”‚     (sem Authorization header - endpoint público)                           â”‚
-â”‚                                                                             â”‚
-â”‚  2. MediaController.download():                                             â”‚
-â”‚     a) Busca StoredFile por UUID no banco                                   â”‚
-â”‚     b) Não valida tenant (acesso público por UUID)                          â”‚
-â”‚                                                                             â”‚
-â"‚  3. AwsS3FileStorageService.getContent():                                   â"‚
-â"‚     a) Recupera metadados (contentType, filename)                           â"‚
-â"‚     b) Abre InputStream do S3 via s3Client.getObject()                      â"‚
-â”‚                                                                             â”‚
-â”‚  4. Controller faz stream para o response:                                  â”‚
-â”‚     - Content-Type: {contentType do arquivo}                                â”‚
-â”‚     - Content-Disposition: inline; filename="{filename}"                    â”‚
-â”‚     - Cache-Control: public, max-age=31536000, immutable (1 ano)            â”‚
-â”‚                                                                             â”‚
-â”‚  SEGURANÃ‡A:                                                                 â”‚
-â”‚  - UUID é praticamente impossível de adivinhar (128 bits)                   â”‚
-â”‚  - Sem listagem de arquivos (precisa saber o UUID)                          â”‚
-â”‚  - Para arquivos sensíveis, usar endpoints autenticados específicos         â”‚
-â”‚                                                                             â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       FLUXO DE DOWNLOAD (PROXY)                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. Browser/Frontend requisita GET /api/media/{uuid}                        │
+│     (sem Authorization header - endpoint público)                           │
+│                                                                             │
+│  2. MediaController.download():                                             │
+│     a) Busca StoredFile por UUID no banco                                   │
+│     b) Não valida tenant (acesso público por UUID)                          │
+│                                                                             │
+│  3. AwsS3FileStorageService.getContent():                                   │
+│     a) Recupera metadados (contentType, filename)                           │
+│     b) Abre InputStream do S3 via s3Client.getObject()                      │
+│                                                                             │
+│  4. Controller faz stream para o response:                                  │
+│     - Content-Type: {contentType do arquivo}                                │
+│     - Content-Disposition: inline; filename="{filename}"                    │
+│     - Cache-Control: public, max-age=31536000, immutable (1 ano)            │
+│                                                                             │
+│  SEGURANÇA:                                                                 │
+│  - UUID é praticamente impossível de adivinhar (128 bits)                   │
+│  - Sem listagem de arquivos (precisa saber o UUID)                          │
+│  - Para arquivos sensíveis, usar endpoints autenticados específicos         │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -3664,26 +3666,26 @@ Exemplo: `1/organization/1/a1b2c3d4-logo.png`
 ### Segurança: Público vs Autenticado
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚                           MATRIZ DE SEGURANÃ‡A                               â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚                                                                             â”‚
-â”‚  ENDPOINTS PÃšBLICOS (sem JWT):                                              â”‚
-â”‚  â”œâ”€â”€ GET /api/media/{id}     â†’ Download por UUID (imagens em <img>)         â”‚
-â”‚  â””â”€â”€ GET /api/auth/**        â†’ Login, registro, refresh token               â”‚
-â”‚                                                                             â”‚
-â”‚  ENDPOINTS AUTENTICADOS (JWT + X-Organization-Id):                          â”‚
-â”‚  â”œâ”€â”€ POST /api/media         â†’ Upload genérico                              â”‚
-â”‚  â”œâ”€â”€ DELETE /api/media/{id}  â†’ Remover arquivo                              â”‚
-â”‚  â”œâ”€â”€ POST/DELETE /api/account/avatar    â†’ Avatar próprio                    â”‚
-â”‚  â””â”€â”€ POST/DELETE /api/organizations/{id}/logo â†’ Logo da org (OWNER/ADMIN)   â”‚
-â”‚                                                                             â”‚
-â”‚  VALIDAÃ‡ÃƒO DE ROLE:                                                         â”‚
-â”‚  â”œâ”€â”€ Logo de organização: requer OWNER ou ADMIN na org alvo                 â”‚
-â”‚  â”œâ”€â”€ Avatar de outro usuário (admin): requer ADMIN na org                   â”‚
-â”‚  â””â”€â”€ Avatar próprio: qualquer usuário autenticado                           â”‚
-â”‚                                                                             â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           MATRIZ DE SEGURANÇA                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ENDPOINTS PÚBLICOS (sem JWT):                                              │
+│  ├── GET /api/media/{id}     → Download por UUID (imagens em <img>)         │
+│  └── GET /api/auth/**        → Login, registro, refresh token               │
+│                                                                             │
+│  ENDPOINTS AUTENTICADOS (JWT + X-Organization-Id):                          │
+│  ├── POST /api/media         → Upload genérico                              │
+│  ├── DELETE /api/media/{id}  → Remover arquivo                              │
+│  ├── POST/DELETE /api/account/avatar    → Avatar próprio                    │
+│  └── POST/DELETE /api/organizations/{id}/logo → Logo da org (OWNER/ADMIN)   │
+│                                                                             │
+│  VALIDAÇÃO DE ROLE:                                                         │
+│  ├── Logo de organização: requer OWNER ou ADMIN na org alvo                 │
+│  ├── Avatar de outro usuário (admin): requer ADMIN na org                   │
+│  └── Avatar próprio: qualquer usuário autenticado                           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Configuração no SecurityConfig.java:**
@@ -3994,11 +3996,11 @@ O sistema utiliza **Logback** (incluso no Spring Boot) para gerenciamento de log
 
 ```
 logs/
-â"œâ"€â"€ todo-api.log                    # Log principal (atual)
-â"œâ"€â"€ todo-api-error.log              # Apenas erros (atual)
-â"œâ"€â"€ todo-api.2024-01-15.0.log.gz    # Arquivo rotacionado (comprimido)
-â"œâ"€â"€ todo-api.2024-01-15.1.log.gz    # Segundo arquivo do mesmo dia
-â""â"€â"€ todo-api-error.2024-01-15.0.log.gz
+├── todo-api.log                    # Log principal (atual)
+├── todo-api-error.log              # Apenas erros (atual)
+├── todo-api.2024-01-15.0.log.gz    # Arquivo rotacionado (comprimido)
+├── todo-api.2024-01-15.1.log.gz    # Segundo arquivo do mesmo dia
+└── todo-api-error.2024-01-15.0.log.gz
 ```
 
 ### Configuração Padrão
@@ -4047,9 +4049,9 @@ java -jar todo-api.jar
 
 | Perfil | Console | Arquivo | Nível |
 |--------|---------|---------|-------|
-| `default` | âœ" | âœ" | INFO |
-| `prod` | âœ" | âœ" | INFO |
-| `testes` | âœ" | âœ— | WARN |
+| `default` | ✓ | ✓ | INFO |
+| `prod` | ✓ | ✓ | INFO |
+| `testes` | ✓ | ✗ | WARN |
 
 ### Níveis por Pacote
 
