@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <!-- Propriedades -->
+    <property name="LOG_PATH" value="${LOG_PATH:-./logs}"/>
+    <property name="LOG_FILE" value="${LOG_FILE:-todo-api}"/>
+    <property name="LOG_MAX_SIZE" value="${LOG_MAX_SIZE:-10MB}"/>
+    <property name="LOG_MAX_HISTORY" value="${LOG_MAX_HISTORY:-30}"/>
+    <property name="LOG_TOTAL_SIZE_CAP" value="${LOG_TOTAL_SIZE_CAP:-1GB}"/>
+
+    <!-- Pattern de log -->
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+    <property name="LOG_PATTERN_COLORED" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36}) - %msg%n"/>
+
+    <!-- Console Appender (com cores) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN_COLORED}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- File Appender com rotacao por tamanho e tempo -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}.log</file>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- Arquivo rotacionado por dia -->
+            <fileNamePattern>${LOG_PATH}/${LOG_FILE}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <!-- Tamanho maximo por arquivo -->
+            <maxFileSize>${LOG_MAX_SIZE}</maxFileSize>
+            <!-- Dias de historico -->
+            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
+            <!-- Tamanho total maximo de todos os arquivos -->
+            <totalSizeCap>${LOG_TOTAL_SIZE_CAP}</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Appender separado para erros -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}-error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/${LOG_FILE}-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${LOG_MAX_SIZE}</maxFileSize>
+            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>${LOG_TOTAL_SIZE_CAP}</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Niveis de log por pacote -->
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.springframework.data.jpa" level="INFO"/>
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+    <logger name="org.hibernate.type" level="INFO"/>
+    <logger name="br.com.exemplo.todo" level="DEBUG"/>
+
+    <!-- Perfil de desenvolvimento (apenas console) -->
+    <springProfile name="default">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </root>
+    </springProfile>
+
+    <!-- Perfil de producao (arquivo + console) -->
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </root>
+    </springProfile>
+
+    <!-- Perfil de testes (apenas console, nivel WARN) -->
+    <springProfile name="testes">
+        <root level="WARN">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+</configuration>
