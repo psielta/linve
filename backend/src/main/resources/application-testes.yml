@@ -5,6 +5,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  flyway:
+    enabled: false  # Desabilitado pois testes usam ddl-auto: create-drop
   datasource:
     url: jdbc:sqlite:file:./todo/db/todo-test.db?date_class=TEXT&date_string_format=yyyy-MM-dd HH:mm:ss
     username: sa

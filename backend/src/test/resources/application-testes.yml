@@ -5,6 +5,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  flyway:
+    enabled: false  # Desabilitado pois testes usam ddl-auto: create-drop
   datasource:
     url: jdbc:sqlite::memory:?date_class=TEXT&date_string_format=yyyy-MM-dd HH:mm:ss
     username: sa
@@ -35,3 +37,22 @@ logging:
       com:
         exemplo:
           todo: INFO
+
+# Cache Caffeine - entidades estaticas (read-only)
+cache:
+  specs:
+    - name: MunicipioService.listarTodos
+      expireAfterWrite: "P1D"
+      initialCapacity: 1
+    - name: MunicipioService.listarPorUf
+      expireAfterWrite: "P1D"
+      initialCapacity: 27
+    - name: CulinariaService.listarTodas
+      expireAfterWrite: "P1D"
+      initialCapacity: 1
+    - name: CulinariaService.listarMeioMeio
+      expireAfterWrite: "P1D"
+      initialCapacity: 1
+    - name: UfService.listarTodas
+      expireAfterWrite: "P1D"
+      initialCapacity: 1
