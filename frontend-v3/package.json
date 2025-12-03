@@ -19,7 +19,8 @@
     "build": "ng build",
     "build:pages": "ng build --base-href=/bibliotecas/wbc/govbr-ds-wbc-quickstart-angular/",
     "ng": "ng",
-    "start": "ng serve"
+    "start": "ng serve",
+    "generate-api": "ng-openapi-gen"
   },
   "dependencies": {
     "@angular/animations": "^19.2.7",
@@ -42,6 +43,7 @@
     "@angular/cli": "^19.2.8",
     "@angular/compiler-cli": "^19.2.7",
     "@govbr-ds/release-config": "4.3.0",
+    "ng-openapi-gen": "^1.0.5",
     "typescript": "~5.5.2"
   }
 }
