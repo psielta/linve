@@ -1,0 +1,59 @@
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.collapsed]="!sidebarOpen()">
+    <div class="sidebar-header">
+      <i class="fas fa-utensils fa-lg"></i>
+      <span class="ml-2 text-weight-bold">LINVE</span>
+    </div>
+
+    <nav class="sidebar-menu">
+      <a *ngFor="let item of menuItems"
+         [routerLink]="item.route"
+         routerLinkActive="active"
+         [routerLinkActiveOptions]="{ exact: item.route === '/app' }"
+         class="menu-item">
+        <i [class]="item.icon"></i>
+        <span class="menu-label">{{ item.label }}</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <button class="toggle-btn mr-3" (click)="toggleSidebar()">
+          <i class="fas fa-bars"></i>
+        </button>
+        <span class="text-weight-semi-bold" *ngIf="tenantService.currentOrganizationName()">
+          {{ tenantService.currentOrganizationName() }}
+        </span>
+      </div>
+
+      <div class="header-right">
+        <div class="user-info">
+          <div class="user-avatar">
+            {{ authService.currentUserName().charAt(0).toUpperCase() }}
+          </div>
+          <span>{{ authService.currentUserName() }}</span>
+        </div>
+
+        <br-button emphasis="secondary" (click)="logout()">
+          <i class="fas fa-sign-out-alt mr-2"></i>
+          Sair
+        </br-button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="app-main">
+      <router-outlet></router-outlet>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      © 2024 Linve. Todos os direitos reservados.
+    </footer>
+  </div>
+</div>

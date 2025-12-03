@@ -1,0 +1,162 @@
+<div class="container-lg py-5">
+  <div class="row justify-content-center">
+    <div class="col-sm-8 col-md-6 col-lg-5 col-xl-4">
+      <div class="br-card">
+        <div class="card-header text-center">
+          <div class="mb-3">
+            <i class="fas fa-utensils fa-3x" style="color: var(--blue-warm-vivid-70)"></i>
+          </div>
+          <h2 class="mb-1">Criar Conta</h2>
+          <p class="text-base">Preencha os dados para se registrar</p>
+        </div>
+        <div class="card-content">
+          <!-- Mensagem de erro -->
+          <br-message
+            *ngIf="errorMessage()"
+            state="danger"
+            [message]="errorMessage()"
+            class="mb-3"
+          ></br-message>
+
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+            <!-- Nome -->
+            <div class="mb-3">
+              <br-input
+                formControlName="nome"
+                ngDefaultControl
+                type="text"
+                label="Nome"
+                placeholder="Digite seu nome"
+                [state]="registerForm.get('nome')!.invalid && registerForm.get('nome')!.touched ? 'danger' : undefined"
+              ></br-input>
+              <br-message
+                *ngIf="registerForm.get('nome')!.hasError('required') && registerForm.get('nome')!.touched"
+                state="danger"
+                is-feedback
+                message="Nome é obrigatório"
+              ></br-message>
+              <br-message
+                *ngIf="registerForm.get('nome')!.hasError('minlength') && registerForm.get('nome')!.touched"
+                state="danger"
+                is-feedback
+                message="Nome deve ter pelo menos 2 caracteres"
+              ></br-message>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <br-input
+                formControlName="email"
+                ngDefaultControl
+                type="email"
+                label="Email"
+                placeholder="Digite seu email"
+                [state]="registerForm.get('email')!.invalid && registerForm.get('email')!.touched ? 'danger' : undefined"
+              ></br-input>
+              <br-message
+                *ngIf="registerForm.get('email')!.hasError('required') && registerForm.get('email')!.touched"
+                state="danger"
+                is-feedback
+                message="Email é obrigatório"
+              ></br-message>
+              <br-message
+                *ngIf="registerForm.get('email')!.hasError('email') && registerForm.get('email')!.touched"
+                state="danger"
+                is-feedback
+                message="Email inválido"
+              ></br-message>
+            </div>
+
+            <!-- Senha -->
+            <div class="mb-3">
+              <br-input
+                formControlName="senha"
+                ngDefaultControl
+                [type]="showPassword ? 'text' : 'password'"
+                label="Senha"
+                placeholder="Digite sua senha"
+                [state]="registerForm.get('senha')!.invalid && registerForm.get('senha')!.touched ? 'danger' : undefined"
+              >
+                <button
+                  slot="suffix"
+                  class="br-button"
+                  type="button"
+                  (click)="showPassword = !showPassword"
+                  aria-label="Alternar visibilidade"
+                >
+                  <i [ngClass]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </br-input>
+              <br-message
+                *ngIf="registerForm.get('senha')!.hasError('required') && registerForm.get('senha')!.touched"
+                state="danger"
+                is-feedback
+                message="Senha é obrigatória"
+              ></br-message>
+              <br-message
+                *ngIf="registerForm.get('senha')!.hasError('minlength') && registerForm.get('senha')!.touched"
+                state="danger"
+                is-feedback
+                message="Senha deve ter pelo menos 6 caracteres"
+              ></br-message>
+            </div>
+
+            <!-- Confirmar Senha -->
+            <div class="mb-3">
+              <br-input
+                formControlName="confirmarSenha"
+                ngDefaultControl
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                label="Confirmar Senha"
+                placeholder="Confirme sua senha"
+                [state]="registerForm.get('confirmarSenha')!.touched && registerForm.hasError('passwordMismatch') ? 'danger' : undefined"
+              >
+                <button
+                  slot="suffix"
+                  class="br-button"
+                  type="button"
+                  (click)="showConfirmPassword = !showConfirmPassword"
+                  aria-label="Alternar visibilidade"
+                >
+                  <i [ngClass]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </br-input>
+              <br-message
+                *ngIf="registerForm.get('confirmarSenha')!.touched && registerForm.hasError('passwordMismatch')"
+                state="danger"
+                is-feedback
+                message="As senhas não conferem"
+              ></br-message>
+            </div>
+
+            <!-- Nome da Organização (opcional) -->
+            <div class="mb-4">
+              <br-input
+                formControlName="nomeOrganizacao"
+                ngDefaultControl
+                type="text"
+                label="Nome da Organização (opcional)"
+                placeholder="Ex: Minha Empresa"
+              ></br-input>
+            </div>
+
+            <br-button
+              type="submit"
+              emphasis="primary"
+              [disabled]="registerForm.invalid || loading()"
+              style="width: 100%"
+            >
+              {{ loading() ? 'Criando conta...' : 'Criar Conta' }}
+            </br-button>
+          </form>
+
+          <!-- Link para login -->
+          <div class="text-center mt-4">
+            <span class="text-base">Já tem uma conta? </span>
+            <a routerLink="/auth/login" class="text-primary">Entrar</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

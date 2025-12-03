@@ -1,0 +1,58 @@
+.landing-header {
+  background-color: var(--background);
+  padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.hero-section {
+  background: linear-gradient(135deg, var(--blue-warm-vivid-10) 0%, var(--blue-warm-vivid-20) 100%);
+  padding: 4rem 0;
+  min-height: 500px;
+}
+
+.feature-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.feature-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pricing-card {
+  border: 2px solid var(--gray-20);
+  border-radius: 10px;
+  transition: border-color 0.3s ease;
+
+  &:hover {
+    border-color: var(--blue-warm-vivid-50);
+  }
+}
+
+.highlight-image {
+  background: var(--blue-warm-vivid-10);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.nav-link {
+  cursor: pointer;
+  color: var(--gray-80);
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    color: var(--blue-warm-vivid-50);
+  }
+}

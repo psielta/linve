@@ -1,0 +1,161 @@
+<div class="container-lg py-5">
+  <div class="row justify-content-center">
+    <div class="col-sm-8 col-md-6 col-lg-5 col-xl-4">
+      <div class="br-card">
+        <div class="card-header text-center">
+          <div class="mb-3">
+            <i class="fas fa-utensils fa-3x" style="color: var(--blue-warm-vivid-70)"></i>
+          </div>
+          <h2 class="mb-1">Bem-vindo ao Linve!</h2>
+          <p class="text-base">Entre para continuar</p>
+        </div>
+        <div class="card-content">
+          <!-- Mensagem de erro -->
+          <br-message
+            *ngIf="errorMessage()"
+            state="danger"
+            [message]="errorMessage()"
+            class="mb-3"
+          ></br-message>
+
+          <!-- Mensagem de sucesso Magic Link -->
+          <br-message
+            *ngIf="magicLinkSent()"
+            state="success"
+            message="Link de acesso enviado! Verifique seu email."
+            class="mb-3"
+          ></br-message>
+
+          <!-- Formulário de login com senha -->
+          <form *ngIf="!showMagicLinkForm()" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+            <div class="mb-3">
+              <br-input
+                formControlName="email"
+                ngDefaultControl
+                type="email"
+                label="Email"
+                placeholder="Digite seu email"
+                [state]="loginForm.get('email')!.invalid && loginForm.get('email')!.touched ? 'danger' : undefined"
+              ></br-input>
+              <br-message
+                *ngIf="loginForm.get('email')!.hasError('required') && loginForm.get('email')!.touched"
+                state="danger"
+                is-feedback
+                message="Email é obrigatório"
+              ></br-message>
+              <br-message
+                *ngIf="loginForm.get('email')!.hasError('email') && loginForm.get('email')!.touched"
+                state="danger"
+                is-feedback
+                message="Email inválido"
+              ></br-message>
+            </div>
+
+            <div class="mb-3">
+              <br-input
+                formControlName="senha"
+                ngDefaultControl
+                [type]="showPassword ? 'text' : 'password'"
+                label="Senha"
+                placeholder="Digite sua senha"
+                [state]="loginForm.get('senha')!.invalid && loginForm.get('senha')!.touched ? 'danger' : undefined"
+              >
+                <button
+                  slot="suffix"
+                  class="br-button"
+                  type="button"
+                  (click)="showPassword = !showPassword"
+                  aria-label="Alternar visibilidade"
+                >
+                  <i [ngClass]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </br-input>
+              <br-message
+                *ngIf="loginForm.get('senha')!.hasError('required') && loginForm.get('senha')!.touched"
+                state="danger"
+                is-feedback
+                message="Senha é obrigatória"
+              ></br-message>
+            </div>
+
+            <div class="mb-4">
+              <br-checkbox
+                formControlName="rememberMe"
+                ngDefaultControl
+                label="Lembrar de mim"
+              ></br-checkbox>
+            </div>
+
+            <br-button
+              type="submit"
+              emphasis="primary"
+              [disabled]="loginForm.invalid || loading()"
+              style="width: 100%"
+            >
+              {{ loading() ? 'Entrando...' : 'Entrar' }}
+            </br-button>
+          </form>
+
+          <!-- Divisor -->
+          <div *ngIf="!showMagicLinkForm()" class="text-center my-4">
+            <span class="text-base">ou</span>
+          </div>
+
+          <!-- Botão Magic Link -->
+          <br-button
+            *ngIf="!showMagicLinkForm()"
+            type="button"
+            emphasis="secondary"
+            (click)="toggleMagicLinkForm()"
+            style="width: 100%"
+          >
+            <i class="fas fa-envelope mr-2"></i>
+            Entrar com Magic Link
+          </br-button>
+
+          <!-- Formulário Magic Link -->
+          <form *ngIf="showMagicLinkForm()" [formGroup]="magicLinkForm" (ngSubmit)="onRequestMagicLink()">
+            <div class="mb-3">
+              <br-input
+                formControlName="email"
+                ngDefaultControl
+                type="email"
+                label="Email"
+                placeholder="Digite seu email"
+                [state]="magicLinkForm.get('email')!.invalid && magicLinkForm.get('email')!.touched ? 'danger' : undefined"
+              ></br-input>
+              <br-message
+                *ngIf="magicLinkForm.get('email')!.hasError('required') && magicLinkForm.get('email')!.touched"
+                state="danger"
+                is-feedback
+                message="Email é obrigatório"
+              ></br-message>
+            </div>
+
+            <br-button
+              type="submit"
+              emphasis="primary"
+              [disabled]="magicLinkForm.invalid || magicLinkLoading()"
+              style="width: 100%"
+            >
+              <i class="fas fa-paper-plane mr-2"></i>
+              {{ magicLinkLoading() ? 'Enviando...' : 'Enviar Link de Acesso' }}
+            </br-button>
+
+            <div class="text-center mt-4">
+              <a (click)="toggleMagicLinkForm()" class="text-primary" style="cursor: pointer">
+                <i class="fas fa-arrow-left mr-2"></i>Voltar ao login com senha
+              </a>
+            </div>
+          </form>
+
+          <!-- Link para registro -->
+          <div class="text-center mt-4">
+            <span class="text-base">Não tem uma conta? </span>
+            <a routerLink="/auth/register" class="text-primary">Criar conta</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
