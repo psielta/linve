@@ -1,0 +1,44 @@
+<div class="d-flex flex-wrap justify-content-evenly mt-5">
+  <br-footer [theme]="theme">
+    <!-- Slot de logo principal -->
+    <br-footer-logo
+      slot="logo"
+      [src]="mainLogo.url"
+      [description]="mainLogo.description"
+    ></br-footer-logo>
+
+    <!-- Slots de categorias (adicionamos slot="category") -->
+    <ng-container *ngFor="let category of categories">
+      <br-footer-category [label]="category.label">
+        <br-footer-item *ngFor="let item of category.items" [href]="item.href">
+          {{ item.text }}
+        </br-footer-item>
+      </br-footer-category>
+    </ng-container>
+
+    <!-- Slot de redes sociais -->
+    <ng-container *ngFor="let social of socialLinks">
+      <br-footer-social
+        slot="social-network"
+        [href]="social.href"
+        [icon]="social.icon"
+        [description]="social.description"
+      ></br-footer-social>
+    </ng-container>
+
+    <!-- Slot de logos de parceiros -->
+    <ng-container *ngFor="let logo of partnerLogos">
+      <br-footer-logo
+        slot="partner-logo"
+        is-partner
+        [src]="logo.src"
+        [description]="logo.description"
+      ></br-footer-logo>
+    </ng-container>
+
+    <!-- Slot de conteúdo legal (usando innerHTML para não escapar o <strong>) -->
+    <br-footer-legal slot="legal">
+      <div [innerHTML]="licenseText"></div>
+    </br-footer-legal>
+  </br-footer>
+</div>

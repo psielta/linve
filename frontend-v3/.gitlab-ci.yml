@@ -1,0 +1,55 @@
+image: node:20.11.0-alpine
+
+cache:
+  paths:
+    - node_modules/
+
+stages:
+  - Dependências
+  - Pages
+  - Release
+
+Instalar Dependências:
+  stage: Dependências
+  when: always
+  script:
+    - apk --no-cache add git
+    - npm install
+  artifacts:
+    paths:
+      - node_modules
+    expire_in: 1 hour
+  rules:
+    - when: always
+
+pages:
+  stage: Pages
+  interruptible: true
+  needs: ["Instalar Dependências"]
+  artifacts:
+    paths:
+      - public
+    expire_in: 1 week
+  script:
+    - rm -rf public
+    - npm run build:pages
+    - mkdir -p public
+    - cp -R dist/webcomponents-quickstart-angular/browser/* public/
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"
+      when: always
+
+semantic_release:
+  stage: Release
+  interruptible: true
+  before_script:
+    - apk --no-cache add git zip
+  script:
+    - npx semantic-release
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: always
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE != "schedule" && "$CI_PIPELINE_SOURCE" != "merge_request_event"'
+      when: manual

@@ -1,0 +1,297 @@
+<h1 class="mb-4">Formulários com Validação</h1>
+
+<p className="mb-4">
+  O exemplo abaixo mostra como implementar validações em tempo real, feedback
+  visual e mensagens de erro.
+</p>
+
+<div class="br-card mb-5">
+  <div class="card-header">
+    <h2>Cadastro de Usuário</h2>
+  </div>
+  <div class="card-content">
+    <form [formGroup]="cadastroForm" (ngSubmit)="onSubmit()">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <br-input
+            formControlName="nome"
+            ngDefaultControl
+            [state]="
+              cadastroForm.get('nome')!.invalid &&
+              cadastroForm.get('nome')!.touched
+                ? 'danger'
+                : undefined
+            "
+            label="Nome Completo: (Obrigatório)"
+          ></br-input>
+          <br-message
+            *ngIf="
+              cadastroForm.get('nome')!.hasError('required') &&
+              cadastroForm.get('nome')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="O nome é obrigatório"
+          ></br-message>
+          <br-message
+            *ngIf="
+              cadastroForm.get('nome')!.hasError('minlength') &&
+              cadastroForm.get('nome')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="Mínimo 3 caracteres"
+          ></br-message>
+        </div>
+        <div class="col-md-6 mb-3">
+          <br-input
+            ngDefaultControl
+            formControlName="email"
+            type="email"
+            [state]="
+              cadastroForm.get('email')!.invalid &&
+              cadastroForm.get('email')!.touched
+                ? 'danger'
+                : undefined
+            "
+            label="E-mail: (Obrigatório)"
+          ></br-input>
+          <br-message
+            *ngIf="
+              cadastroForm.get('email')!.hasError('required') &&
+              cadastroForm.get('email')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="O e-mail é obrigatório"
+          ></br-message>
+          <br-message
+            *ngIf="
+              cadastroForm.get('email')!.hasError('email') &&
+              cadastroForm.get('email')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="Por favor, insira um e-mail válido"
+          ></br-message>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <br-input
+            ngDefaultControl
+            formControlName="cpf"
+            [state]="
+              cadastroForm.get('cpf')!.invalid &&
+              cadastroForm.get('cpf')!.touched
+                ? 'danger'
+                : undefined
+            "
+            label="CPF: (Obrigatório)"
+            placeholder="000.000.000-00"
+          ></br-input>
+          <br-message
+            *ngIf="
+              cadastroForm.get('cpf')!.hasError('required') &&
+              cadastroForm.get('cpf')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="O CPF é obrigatório"
+          ></br-message>
+          <br-message
+            *ngIf="
+              cadastroForm.get('cpf')!.hasError('pattern') &&
+              cadastroForm.get('cpf')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="Por favor, insira um CPF válido"
+          ></br-message>
+        </div>
+        <div class="col-md-6 mb-3">
+          <br-input
+            ngDefaultControl
+            formControlName="telefone"
+            [state]="
+              cadastroForm.get('telefone')!.invalid &&
+              cadastroForm.get('telefone')!.touched
+                ? 'danger'
+                : undefined
+            "
+            label="Telefone: (Obrigatório)"
+            placeholder="(00) 00000-0000"
+          ></br-input>
+          <br-message
+            *ngIf="
+              cadastroForm.get('telefone')!.hasError('required') &&
+              cadastroForm.get('telefone')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="O telefone é obrigatório"
+          ></br-message>
+          <br-message
+            *ngIf="
+              cadastroForm.get('telefone')!.hasError('pattern') &&
+              cadastroForm.get('telefone')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="Por favor, insira um telefone válido"
+          ></br-message>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <br-input
+            ngDefaultControl
+            formControlName="senha"
+            [type]="mostrarSenha ? 'text' : 'password'"
+            [state]="
+              cadastroForm.get('senha')!.invalid &&
+              cadastroForm.get('senha')!.touched
+                ? 'danger'
+                : undefined
+            "
+            label="Senha: (Obrigatório)"
+          >
+            <button
+              slot="suffix"
+              class="br-button"
+              type="button"
+              (click)="mostrarSenha = !mostrarSenha"
+              aria-label="Alternar visibilidade"
+            >
+              <i
+                [ngClass]="mostrarSenha ? 'fas fa-eye-slash' : 'fas fa-eye'"
+              ></i>
+            </button>
+          </br-input>
+          <br-message
+            *ngIf="
+              cadastroForm.get('senha')!.hasError('required') &&
+              cadastroForm.get('senha')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="A senha é obrigatória"
+          ></br-message>
+          <br-message
+            *ngIf="
+              cadastroForm.get('senha')!.hasError('minlength') &&
+              cadastroForm.get('senha')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="Mínimo 8 caracteres"
+          ></br-message>
+          <br-message
+            *ngIf="
+              cadastroForm.get('senha')!.hasError('pattern') &&
+              cadastroForm.get('senha')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="A senha deve incluir letras, números e caracteres especiais"
+          ></br-message>
+          <div
+            class="form-text"
+            *ngIf="
+              cadastroForm.get('senha')!.value &&
+              !cadastroForm.get('senha')!.hasError('pattern')
+            "
+          >
+            A senha deve ter pelo menos 8 caracteres, incluindo letras, números
+            e caracteres especiais.
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <br-input
+            ngDefaultControl
+            formControlName="confirmarSenha"
+            [type]="mostrarConfirmarSenha ? 'text' : 'password'"
+            [state]="
+              cadastroForm.get('confirmarSenha')!.invalid &&
+              cadastroForm.get('confirmarSenha')!.touched
+                ? 'danger'
+                : undefined
+            "
+            label="Confirmar Senha: (Obrigatório)"
+          >
+            <button
+              slot="suffix"
+              class="br-button"
+              type="button"
+              (click)="mostrarConfirmarSenha = !mostrarConfirmarSenha"
+              aria-label="Alternar visibilidade"
+            >
+              <i
+                [ngClass]="
+                  mostrarConfirmarSenha ? 'fas fa-eye-slash' : 'fas fa-eye'
+                "
+              ></i>
+            </button>
+          </br-input>
+          <br-message
+            *ngIf="
+              cadastroForm.get('confirmarSenha')!.hasError('required') &&
+              cadastroForm.get('confirmarSenha')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="A confirmação de senha é obrigatória"
+          ></br-message>
+          <br-message
+            *ngIf="
+              cadastroForm.get('confirmarSenha')!.hasError('mismatch') &&
+              cadastroForm.get('confirmarSenha')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="As senhas não coincidem"
+          ></br-message>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-12 mb-3">
+          <br-checkbox
+            ngDefaultControl
+            formControlName="termos"
+            [state]="
+              cadastroForm.get('termos')!.invalid &&
+              cadastroForm.get('termos')!.touched
+                ? 'danger'
+                : undefined
+            "
+            label="Li e concordo com os termos de uso e política de privacidade: (Obrigatório)"
+          ></br-checkbox>
+          <br-message
+            class="mt-2"
+            *ngIf="
+              cadastroForm.get('termos')!.hasError('required') &&
+              cadastroForm.get('termos')!.touched
+            "
+            state="danger"
+            is-feedback
+            message="Você deve concordar com os termos"
+          ></br-message>
+        </div>
+      </div>
+
+      <br-button
+        class="mr-2"
+        style="display: inline-block"
+        type="button"
+        emphasis="secondary"
+        (click)="cadastroForm.reset()"
+      >
+        Limpar
+      </br-button>
+      <br-button style="display: inline-block" type="submit" emphasis="primary"
+        >Cadastrar</br-button
+      >
+    </form>
+  </div>
+</div>
