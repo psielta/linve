@@ -137,3 +137,22 @@ security:
 auth:
   magic-link:
     base-url: http://localhost:4200/auth/magic-link
+
+# Cache Caffeine - entidades estaticas (read-only)
+cache:
+  specs:
+    - name: MunicipioService.listarTodos
+      expireAfterWrite: "P1D"
+      initialCapacity: 1
+    - name: MunicipioService.listarPorUf
+      expireAfterWrite: "P1D"
+      initialCapacity: 27
+    - name: CulinariaService.listarTodas
+      expireAfterWrite: "P1D"
+      initialCapacity: 1
+    - name: CulinariaService.listarMeioMeio
+      expireAfterWrite: "P1D"
+      initialCapacity: 1
+    - name: UfService.listarTodas
+      expireAfterWrite: "P1D"
+      initialCapacity: 1

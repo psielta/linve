@@ -29,6 +29,7 @@ Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-back
 19. [Armazenamento de Arquivos com AWS S3](#armazenamento-de-arquivos-com-aws-s3)
 20. [Fotos de Organização e Usuário](#fotos-de-organizacao-e-usuario)
 21. [Logging e Rotação de Logs](#logging-e-rotação-de-logs)
+22. [Cache Caffeine](#cache-caffeine)
 
 ---
 
@@ -48,6 +49,7 @@ Este projeto segue a **mesma arquitetura** do projeto `Reforma\codigo-fonte-back
 | Lombok | - | Redução de código boilerplate |
 | ModelMapper | 3.2.5 | Mapeamento entre objetos |
 | BCrypt | - | Hash seguro de senhas |
+| Caffeine | - | Cache em memoria de alta performance |
 | JUnit 5 | - | Framework de testes |
 | AssertJ | - | Assertions fluentes |
 | Mockito | - | Mocks para testes |
@@ -2004,51 +2006,64 @@ curl http://localhost:8080/api/admin/users/5/login-history \
 
 ---
 
-## Comparação com o Projeto Base
+## Comparacao com o Projeto Base
 
-| Aspecto | Linve API | Reforma Tributária |
+O projeto base fica em `D:\R1\Reforma\codigo-fonte-backend` - uma API de calculo de tributos da Reforma Tributaria.
+
+| Aspecto | Linve API | Reforma Tributaria |
 |---------|----------|-------------------|
-| Controllers | 3 (Auth + Todo + UserAdmin) | Múltiplos |
-| Entities | 7 (User, Org, Todo, LoginAttempt...) | 50+ tabelas |
-| Autenticação | JWT + Refresh Token | JWT + OAuth2 |
-| Multi-tenancy | Por header X-Organization-Id | Complexo, múltiplas camadas |
-| Complexidade | CRUD + Auth + User Admin | Cálculos tributários complexos |
-| Endpoints | 22 | 50+ |
-| Cache | Não implementado | 60+ caches Caffeine |
-| Validações | Bean Validation + regras de negócio | Regras de negócio complexas |
-| Exceções | 11 customizadas | 40+ exceções de negócio |
-| Serviços externos | Nenhum | WebClient, retry patterns |
+| **Proposito** | Sistema delivery multi-tenant | Calculadora de tributos publica |
+| **Controllers** | 12 (Auth, Account, Todo, UserAdmin, Cliente, Produto...) | 7 (BaseCalculo, CalculadoraTributo, XML...) |
+| **Entities** | 19 | 33 |
+| **Services** | 21 | 40 |
+| **Exceptions** | 29 customizadas | 40 customizadas |
+| **Autenticacao** | JWT + Refresh Token + Magic Link | Nenhuma (API publica) |
+| **Multi-tenancy** | Sim (header X-Organization-Id) | Nao |
+| **Cache** | Nao implementado | 38 usos de @Cacheable (Caffeine) |
+| **Storage** | AWS S3 (com @ConditionalOnProperty) | Nao tem |
+| **Retry patterns** | Nao | spring-retry |
+| **WebClient** | Nao | Sim (chamadas externas) |
 
-### O que este projeto ensina:
+### Diferencas de arquitetura:
 
-**Básico (estrutura):**
-- **Estrutura de pastas** - Organização `api/`, `domain/`, `security/`, `config/`
-- **Padrão de camadas** - Controller → Service → Repository
-- **DTOs separados** - Input/Output para controle da API
-- **Exception Handler** - Tratamento centralizado com ProblemDetail (RFC 7807)
-- **OpenAPI/Swagger** - Documentação automática com autenticação
-- **Testes organizados** - Unitários vs Integração
+| Caracteristica | Linve | Reforma |
+|----------------|-------|---------|
+| Seguranca | Spring Security + JWT + Filtros | Nenhuma |
+| Banco | SQLite local | SQLite local |
+| Perfis | default, prod, testes | offline, prod |
+| Metricas | Prometheus (porta 9101) | Prometheus (porta 9101) |
+| OpenAPI | 3.1 com auth Bearer | 3.1 sem auth |
 
-**Intermediário (autenticação):**
-- **JWT stateless** - Access token + Refresh token
-- **Spring Security 6** - SecurityFilterChain (sem WebSecurityConfigurerAdapter)
-- **Filtros customizados** - JwtAuthenticationFilter, TenantFilter
-- **BCrypt** - Hash seguro de senhas
-- **Rotação de tokens** - Família de tokens para detecção de roubo
+### O que cada projeto ensina:
 
-**Avançado (multi-tenancy):**
-- **ThreadLocal** - TenantContext para isolamento por thread
-- **SpEL expressions** - @PreAuthorize com expressões customizadas
-- **Isolamento de dados** - Cada organização vê apenas seus dados
+**Linve API - Foco em Autenticacao e Multi-tenancy:**
+- JWT stateless com access + refresh token
+- Rotacao de tokens (familia de tokens para deteccao de roubo)
+- Magic Link para login sem senha
+- Spring Security 6 com SecurityFilterChain
+- Filtros customizados (JwtAuthenticationFilter, TenantFilter)
+- ThreadLocal para contexto do tenant
+- @PreAuthorize com expressoes SpEL
+- Isolamento de dados por organizacao
+- Upload de arquivos com AWS S3
+- @ConditionalOnProperty para beans condicionais
 
-### Próximos passos para aprender:
+**Reforma Tributaria - Foco em Performance e Logica Complexa:**
+- Cache Caffeine com multiplas configuracoes
+- @Cacheable em repositories e services
+- Logica de calculo tributario complexa
+- Parsing de XML (NF-e, CT-e, NFC-e, BP-e, NF3-e)
+- WebClient para chamadas HTTP externas
+- spring-retry para resiliencia
+- Versionamento de base de dados offline
+- Expressions JEXL para regras dinamicas
 
-1. Estudar os Services do projeto Reforma (lógica de negócio complexa)
-2. Ver como o cache Caffeine é configurado
-3. Analisar as validações de negócio customizadas
-4. Entender o uso de WebClient para chamadas externas
-5. Explorar os testes de integração mais elaborados
-6. Implementar OAuth2 (Google, GitHub) usando o padrão Account
+### Proximos passos para aprender:
+
+1. **Cache:** Estudar `CaffeineCacheConfig.java` do Reforma para ver como configurar multiplos caches
+2. **Retry:** Ver como spring-retry e usado para chamadas externas resilientes
+3. **XML Parsing:** Analisar os models em `api/model/xml/` para entender parsing de documentos fiscais
+4. **JEXL:** Ver como expressoes dinamicas sao usadas em regras de calculo
 
 ---
 
@@ -4242,3 +4257,167 @@ tail -f logs/linve-api.log | grep "ERROR\|WARN"
 Localização: `src/main/resources/logback-spring.xml`
 
 O Spring Boot detecta automaticamente este arquivo e aplica as configurações.
+
+---
+
+## Cache Caffeine
+
+O backend utiliza **Caffeine** para cache em memoria de alta performance. O cache e aplicado em entidades estaticas e read-only (Municipio, Culinaria, UF) que sao compartilhadas entre todos os tenants.
+
+### Por que usar Cache nestas entidades?
+
+- **Dados estaticos**: Municipios, Culinarias e UFs nao mudam com frequencia
+- **Read-only**: Nao ha operacoes de escrita nestas entidades via API
+- **Compartilhado entre tenants**: Mesmos dados para todas as organizacoes
+- **Alta frequencia de acesso**: Endpoints de listagem sao chamados frequentemente
+
+### Arquitetura do Cache
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          ARQUITETURA DE CACHE                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   Request                 @Cacheable              Repository                │
+│      │                        │                       │                     │
+│      ▼                        ▼                       ▼                     │
+│  ┌────────┐            ┌──────────────┐        ┌──────────────┐            │
+│  │ Client │ ─────────► │   Service    │ ─────► │   Database   │            │
+│  └────────┘            │  (Cached)    │        │   (SQLite)   │            │
+│                        └──────────────┘        └──────────────┘            │
+│                              │                                              │
+│                              │ cache hit                                    │
+│                              ▼                                              │
+│                        ┌──────────────┐                                    │
+│                        │   Caffeine   │                                    │
+│                        │    Cache     │                                    │
+│                        └──────────────┘                                    │
+│                                                                             │
+│   FLUXO:                                                                    │
+│   1. Request chega no Service                                               │
+│   2. @Cacheable verifica se existe no cache                                 │
+│   3. Se existe (cache hit): retorna do cache                                │
+│   4. Se nao existe (cache miss): busca no banco, armazena no cache          │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Configuracao
+
+#### application.yml
+
+```yaml
+cache:
+  specs:
+    - name: MunicipioService.listarTodos
+      expireAfterWrite: "P1D"     # 1 dia (formato ISO-8601 Duration)
+      initialCapacity: 1
+    - name: MunicipioService.listarPorUf
+      expireAfterWrite: "P1D"
+      initialCapacity: 27         # 27 UFs
+    - name: CulinariaService.listarTodas
+      expireAfterWrite: "P1D"
+      initialCapacity: 1
+    - name: CulinariaService.listarMeioMeio
+      expireAfterWrite: "P1D"
+      initialCapacity: 1
+    - name: UfService.listarTodas
+      expireAfterWrite: "P1D"
+      initialCapacity: 1
+```
+
+| Parametro | Descricao |
+|-----------|-----------|
+| `name` | Nome do cache (deve ser unico) |
+| `expireAfterWrite` | Tempo de expiracao apos a escrita (formato ISO-8601: P1D = 1 dia, PT1H = 1 hora) |
+| `initialCapacity` | Capacidade inicial do cache |
+
+### Classes de Configuracao
+
+#### CacheSpecs.java
+
+Carrega as specs do YAML via `@ConfigurationProperties`:
+
+```java
+@ConfigurationProperties(prefix = "cache")
+public class CacheSpecs {
+    private List<CacheSpec> specs;
+
+    public static class CacheSpec {
+        private String name;
+        private Duration expireAfterWrite;
+        private int initialCapacity;
+    }
+}
+```
+
+#### CaffeineCacheConfig.java
+
+Configura o `CacheManager` com base nas specs:
+
+```java
+@EnableCaching
+@Configuration
+public class CaffeineCacheConfig {
+
+    @Bean
+    public CacheManager cacheManager(CacheSpecs cacheSpec) {
+        CaffeineCacheManager manager = new CaffeineCacheManager();
+        cacheSpec.getSpecs().forEach(spec -> {
+            Cache<Object, Object> cache = Caffeine.newBuilder()
+                .expireAfterWrite(spec.getExpireAfterWrite())
+                .initialCapacity(spec.getInitialCapacity())
+                .recordStats()
+                .build();
+            manager.registerCustomCache(spec.getName(), cache);
+        });
+        return manager;
+    }
+}
+```
+
+### Uso nos Services
+
+Os services usam a anotacao `@Cacheable` para habilitar o cache:
+
+```java
+@Service
+public class MunicipioService {
+
+    @Cacheable(cacheNames = "MunicipioService.listarTodos")
+    @Transactional(readOnly = true)
+    public List<Municipio> listarTodos() {
+        return repository.findAllByOrderByNomeAsc();
+    }
+
+    @Cacheable(cacheNames = "MunicipioService.listarPorUf")
+    @Transactional(readOnly = true)
+    public List<Municipio> listarPorUf(String siglaUf) {
+        return repository.findByUfSiglaIgnoreCaseOrderByNomeAsc(siglaUf);
+    }
+}
+```
+
+### Services com Cache
+
+| Service | Metodo | Cache Name |
+|---------|--------|------------|
+| `MunicipioService` | `listarTodos()` | `MunicipioService.listarTodos` |
+| `MunicipioService` | `listarPorUf(sigla)` | `MunicipioService.listarPorUf` |
+| `CulinariaService` | `listarTodas()` | `CulinariaService.listarTodas` |
+| `CulinariaService` | `listarMeioMeio()` | `CulinariaService.listarMeioMeio` |
+| `UfService` | `listarTodas()` | `UfService.listarTodas` |
+
+### Metricas do Cache
+
+O cache esta configurado com `recordStats()`, o que permite monitorar metricas como:
+- Hit rate (taxa de acertos)
+- Miss rate (taxa de erros)
+- Eviction count (quantidade de itens removidos)
+
+### Quando NAO usar cache
+
+- Dados que mudam com frequencia
+- Dados especificos por tenant/organizacao
+- Operacoes de escrita
+- Dados sensiveis a consistencia em tempo real

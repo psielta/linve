@@ -2,11 +2,13 @@ package br.com.exemplo.todo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.cache.annotation.EnableCaching;
 
-@EnableCaching
+import br.com.exemplo.todo.config.cache.CacheSpecs;
+
+@EnableConfigurationProperties(CacheSpecs.class)
 @SpringBootApplication
 public class LinveApplication {
 

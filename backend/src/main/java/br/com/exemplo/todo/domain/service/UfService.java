@@ -5,6 +5,7 @@ import br.com.exemplo.todo.domain.model.entity.Uf;
 import br.com.exemplo.todo.domain.repository.UfRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ public class UfService {
 
     private final UfRepository ufRepository;
 
+    @Cacheable(cacheNames = "UfService.listarTodas")
     @Transactional(readOnly = true)
     public List<Uf> listarTodas() {
         log.debug("Listando todas as UFs");
