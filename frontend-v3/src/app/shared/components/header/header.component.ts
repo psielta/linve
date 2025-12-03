@@ -3,10 +3,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   EventEmitter,
+  inject,
   Input,
   Output,
 } from "@angular/core";
-import { RouterModule } from "@angular/router";
+import { Router, RouterModule } from "@angular/router";
+import { AuthService } from "../../../core/services/auth.service";
 
 @Component({
   selector: "app-header",
@@ -16,6 +18,8 @@ import { RouterModule } from "@angular/router";
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent {
+  private authService = inject(AuthService);
+  private router = inject(Router);
   /** URL e texto alternativo do logo */
   @Input() public logoUrl: string = "assets/img-template.png";
   @Input() public logoAlt: string = "logo";
@@ -84,5 +88,21 @@ export class HeaderComponent {
     if (termo) {
       this.searchSubmitted.emit(termo);
     }
+  }
+
+  /** Retorna o nome do usuário logado */
+  public get userName(): string {
+    return this.authService.currentUserName();
+  }
+
+  /** Retorna se o usuário está logado */
+  public get isLoggedIn(): boolean {
+    return this.authService.isLoggedIn();
+  }
+
+  /** Faz logout e redireciona para a landing page */
+  public logout(): void {
+    this.authService.logout();
+    this.router.navigate(["/"]);
   }
 }

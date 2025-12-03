@@ -3,28 +3,35 @@ import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 
 export const routes: Routes = [
-  // Área pública - Landing Page
+  // Área pública - Landing Page (standalone, sem template GovBR)
   {
     path: '',
     loadComponent: () => import('./pages/landing/landing.component').then(m => m.LandingComponent),
     canActivate: [guestGuard]
   },
 
-  // Auth - Login e Register
+  // Auth - Login e Register (standalone, sem template GovBR)
   {
     path: 'auth',
     loadChildren: () => import('./pages/auth/auth.routes').then(m => m.AUTH_ROUTES),
     canActivate: [guestGuard]
   },
 
-  // Área autenticada
+  // Área autenticada - COM template GovBR (header/menu/footer)
   {
     path: 'app',
-    loadChildren: () => import('./pages/app/app.routes').then(m => m.APP_ROUTES),
-    canActivate: [authGuard]
+    loadComponent: () => import('./shared/layouts/govbr-layout/govbr-layout.component').then(m => m.GovbrLayoutComponent),
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/app/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      }
+      // Futuras rotas autenticadas serão adicionadas aqui
+    ]
   },
 
-  // Páginas de demonstração do GovBR (podem ser removidas depois)
+  // Páginas de demonstração do GovBR (standalone, sem template)
   {
     path: 'demo/formulario',
     loadComponent: () => import('./pages/form/form.component').then(m => m.FormComponent)

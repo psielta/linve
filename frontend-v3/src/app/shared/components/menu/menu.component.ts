@@ -39,19 +39,12 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   menuItems: MenuItem[] = [
-    { id: "home", name: "Home", icon: "fas fa-home", url: "/" },
-    {
-      id: "form",
-      name: "Formulário",
-      icon: "fas fa-check-circle",
-      url: "/formulario",
-    },
-    {
-      id: "cores",
-      name: "Cores",
-      icon: "fas fa-palette",
-      url: "/cores",
-    },
+    { id: "dashboard", name: "Dashboard", icon: "fas fa-home", url: "/app" },
+    { id: "clientes", name: "Clientes", icon: "fas fa-users", url: "/app/clientes" },
+    { id: "produtos", name: "Produtos", icon: "fas fa-box", url: "/app/produtos" },
+    { id: "categorias", name: "Categorias", icon: "fas fa-tags", url: "/app/categorias" },
+    { id: "culinarias", name: "Culinárias", icon: "fas fa-utensils", url: "/app/culinarias" },
+    { id: "adicionais", name: "Adicionais", icon: "fas fa-plus-circle", url: "/app/adicionais" },
   ];
 
   toggleFolder(id: string) {
@@ -74,9 +67,12 @@ export class MenuComponent implements OnInit, OnDestroy {
 
     // Mapeia URLs para IDs dos itens do menu
     const routeToIdMap: { [key: string]: string } = {
-      "/": "home",
-      "/formulario": "form",
-      "/cores": "cores",
+      "/app": "dashboard",
+      "/app/clientes": "clientes",
+      "/app/produtos": "produtos",
+      "/app/categorias": "categorias",
+      "/app/culinarias": "culinarias",
+      "/app/adicionais": "adicionais",
     };
 
     const activeId = routeToIdMap[cleanUrl];

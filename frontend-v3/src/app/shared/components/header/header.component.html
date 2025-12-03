@@ -7,6 +7,24 @@
         {{ headerSign }}
       </div>
     </div>
+
+    <!-- User actions (only when logged in) -->
+    <div class="header-actions" *ngIf="isLoggedIn">
+      <div class="header-login">
+        <div class="header-sign-in">
+          <button class="br-sign-in" type="button" data-trigger="login">
+            <span class="br-avatar" title="Avatar">
+              <span class="content">{{ userName.charAt(0).toUpperCase() }}</span>
+            </span>
+            <span class="ml-2">{{ userName }}</span>
+          </button>
+        </div>
+        <button class="br-button secondary small ml-3" type="button" (click)="logout()">
+          <i class="fas fa-sign-out-alt mr-1" aria-hidden="true"></i>
+          Sair
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="header-bottom">
