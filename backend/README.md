@@ -4415,6 +4415,34 @@ O cache esta configurado com `recordStats()`, o que permite monitorar metricas c
 - Miss rate (taxa de erros)
 - Eviction count (quantidade de itens removidos)
 
+### Diferencas em relacao ao projeto Reforma
+
+A configuracao de cache neste projeto e baseada no projeto `Reforma\codigo-fonte-backend`, porem com algumas adaptacoes:
+
+| Aspecto | Reforma | Linve (este projeto) |
+|---------|---------|----------------------|
+| `CacheSpecs.java` | `@Component` + `@ConfigurationProperties` | Apenas `@ConfigurationProperties` |
+| `CaffeineCacheConfig.cacheManager()` | Sem null check | Com null check para `specs` |
+| Registro do bean | Via `@Component` | Via `@EnableConfigurationProperties` em `LinveApplication` |
+
+**Por que as diferencas:**
+
+1. **Removido `@Component` de `CacheSpecs`**: O `LinveApplication` usa `@EnableConfigurationProperties(CacheSpecs.class)`, que ja registra o bean automaticamente. Manter `@Component` causaria **bean duplicado** (erro: "expected single matching bean but found 2").
+
+2. **Adicionado null check**: Protecao extra caso `cache.specs` nao esteja definido no YAML, evitando `NullPointerException` durante a inicializacao.
+
+```java
+// CaffeineCacheConfig.java - com null check
+@Bean
+public CacheManager cacheManager(CacheSpecs cacheSpec) {
+    CaffeineCacheManager manager = new CaffeineCacheManager();
+    if (cacheSpec.getSpecs() != null) {  // <-- protecao adicionada
+        cacheSpec.getSpecs().forEach(spec -> buildCache(manager, spec));
+    }
+    return manager;
+}
+```
+
 ### Quando NAO usar cache
 
 - Dados que mudam com frequencia
