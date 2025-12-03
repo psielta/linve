@@ -26,6 +26,7 @@ export const appRoutes: Routes = [
             { path: 'categorias', loadChildren: () => import('./app/features/categorias/categorias.routes') },
             { path: 'produtos', loadChildren: () => import('./app/features/produtos/produtos.routes') },
             { path: 'adicionais', loadChildren: () => import('./app/features/adicionais/adicionais.routes') },
+            { path: 'clientes', loadChildren: () => import('./app/features/clientes/clientes.routes') },
             { path: 'account', loadChildren: () => import('./app/pages/account/account.routes') }
         ]
     },

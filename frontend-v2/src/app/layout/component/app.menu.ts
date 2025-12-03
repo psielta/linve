@@ -35,6 +35,12 @@ export class AppMenu {
                 ]
             },
             {
+                label: 'Cadastros',
+                items: [
+                    { label: 'Clientes', icon: 'pi pi-fw pi-users', routerLink: ['/app/clientes'] }
+                ]
+            },
+            {
                 label: 'UI Components',
                 items: [
                     { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', routerLink: ['/app/uikit/formlayout'] },

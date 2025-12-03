@@ -113,3 +113,17 @@ export type { Listar5$Params as Listar5$Params } from './fn/culinarias/listar-5'
 export { listar5 as listar5 } from './fn/culinarias/listar-5';
 export type { BuscarPorId$Params as BuscarPorId$Params } from './fn/culinarias/buscar-por-id';
 export { buscarPorId as buscarPorId } from './fn/culinarias/buscar-por-id';
+export type { Buscar5$Params as Buscar5$Params } from './fn/clientes/buscar-5';
+export { buscar5 as buscar5 } from './fn/clientes/buscar-5';
+export type { Atualizar6$Params as Atualizar6$Params } from './fn/clientes/atualizar-6';
+export { atualizar6 as atualizar6 } from './fn/clientes/atualizar-6';
+export type { Excluir4$Params as Excluir4$Params } from './fn/clientes/excluir-4';
+export { excluir4 as excluir4 } from './fn/clientes/excluir-4';
+export type { Listar6$Params as Listar6$Params } from './fn/clientes/listar-6';
+export { listar6 as listar6 } from './fn/clientes/listar-6';
+export type { Criar6$Params as Criar6$Params } from './fn/clientes/criar-6';
+export { criar6 as criar6 } from './fn/clientes/criar-6';
+export type { ListarUfs$Params as ListarUfs$Params } from './fn/dados-abertos/listar-ufs';
+export { listarUfs as listarUfs } from './fn/dados-abertos/listar-ufs';
+export type { ListarMunicipios$Params as ListarMunicipios$Params } from './fn/dados-abertos/listar-municipios';
+export { listarMunicipios as listarMunicipios } from './fn/dados-abertos/listar-municipios';

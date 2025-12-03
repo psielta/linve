@@ -22,6 +22,11 @@ import br.com.exemplo.todo.domain.service.exception.ProdutoPrecoNaoEncontradoExc
 import br.com.exemplo.todo.domain.service.exception.AdicionalNaoEncontradoException;
 import br.com.exemplo.todo.domain.service.exception.AdicionalItemNaoEncontradoException;
 import br.com.exemplo.todo.domain.service.exception.AdicionalSelecaoInvalidaException;
+import br.com.exemplo.todo.domain.service.exception.ClienteNaoEncontradoException;
+import br.com.exemplo.todo.domain.service.exception.ClienteEnderecoNaoEncontradoException;
+import br.com.exemplo.todo.domain.service.exception.DocumentoJaCadastradoException;
+import br.com.exemplo.todo.domain.service.exception.DocumentoInvalidoException;
+import br.com.exemplo.todo.domain.service.exception.MunicipioNaoEncontradoException;
 import br.com.exemplo.todo.domain.service.exception.TodoNaoEncontradoException;
 import lombok.Getter;
 import lombok.NonNull;
@@ -103,6 +108,21 @@ public enum ProblemType {
 
     SENHA_EXPIRADA(PasswordExpiredException.class,
             "Senha expirada", "senha-expirada"),
+
+    CLIENTE_NAO_ENCONTRADO(ClienteNaoEncontradoException.class,
+            "Cliente nao encontrado", "cliente-nao-encontrado"),
+
+    CLIENTE_ENDERECO_NAO_ENCONTRADO(ClienteEnderecoNaoEncontradoException.class,
+            "Endereco de cliente nao encontrado", "cliente-endereco-nao-encontrado"),
+
+    MUNICIPIO_NAO_ENCONTRADO(MunicipioNaoEncontradoException.class,
+            "Municipio nao encontrado", "municipio-nao-encontrado"),
+
+    DOCUMENTO_JA_CADASTRADO(DocumentoJaCadastradoException.class,
+            "Documento ja cadastrado", "documento-ja-cadastrado"),
+
+    DOCUMENTO_INVALIDO(DocumentoInvalidoException.class,
+            "Documento invalido", "documento-invalido"),
 
     ERRO_SISTEMA(Exception.class,
             "Erro de sistema nao previsto", "erro-de-sistema-nao-previsto");
