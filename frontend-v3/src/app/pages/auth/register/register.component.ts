@@ -16,7 +16,8 @@ import { AuthService } from '../../../core/services/auth.service';
     BrInput,
     BrMessage
   ],
-  templateUrl: './register.component.html'
+  templateUrl: './register.component.html',
+  styleUrl: './register.component.scss'
 })
 export class RegisterComponent {
   registerForm: FormGroup;

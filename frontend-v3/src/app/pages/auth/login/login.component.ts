@@ -17,7 +17,8 @@ import { AuthService } from '../../../core/services/auth.service';
     BrMessage,
     BrCheckbox
   ],
-  templateUrl: './login.component.html'
+  templateUrl: './login.component.html',
+  styleUrl: './login.component.scss'
 })
 export class LoginComponent {
   loginForm: FormGroup;

@@ -1,28 +1,41 @@
-<div class="container-fluid">
-  <div class="header-top">
+<div class="container-fluid" style="width: 100%;">
+  <div class="header-top" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
     <div class="header-logo">
-      <img [src]="logoUrl" [alt]="logoAlt" />
-      <span class="br-divider vertical" aria-hidden="true"></span>
-      <div class="header-sign">
-        {{ headerSign }}
-      </div>
+      <i class="fas fa-utensils fa-2x" style="color: var(--blue-warm-vivid-70)"></i>
+      <span class="br-divider vertical mx-3" aria-hidden="true"></span>
+      <div class="header-sign">{{ headerSign }}</div>
     </div>
 
-    <!-- User actions (only when logged in) -->
+    <!-- User actions (only when logged in) - alinhado à direita -->
     <div class="header-actions" *ngIf="isLoggedIn">
-      <div class="header-login">
-        <div class="header-sign-in">
-          <button class="br-sign-in" type="button" data-trigger="login">
-            <span class="br-avatar" title="Avatar">
-              <span class="content">{{ userName.charAt(0).toUpperCase() }}</span>
+      <div class="user-dropdown" [class.active]="isDropdownOpen">
+        <!-- Avatar button -->
+        <button
+          class="avatar-btn"
+          type="button"
+          [title]="userName"
+          (click)="toggleDropdown()"
+          [attr.aria-expanded]="isDropdownOpen"
+        >
+          <span class="br-avatar">
+            <span class="content bg-blue-warm-vivid-70 text-pure-0">
+              {{ userName.charAt(0).toUpperCase() }}
             </span>
-            <span class="ml-2">{{ userName }}</span>
+          </span>
+          <i class="fas fa-caret-down ml-1" aria-hidden="true"></i>
+        </button>
+
+        <!-- Dropdown menu -->
+        <div class="dropdown-menu" *ngIf="isDropdownOpen">
+          <div class="dropdown-header">
+            <span class="text-weight-semi-bold">{{ userName }}</span>
+          </div>
+          <span class="br-divider"></span>
+          <button class="dropdown-item" type="button" (click)="logout()">
+            <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i>
+            Sair
           </button>
         </div>
-        <button class="br-button secondary small ml-3" type="button" (click)="logout()">
-          <i class="fas fa-sign-out-alt mr-1" aria-hidden="true"></i>
-          Sair
-        </button>
       </div>
     </div>
   </div>
@@ -30,16 +43,19 @@
   <div class="header-bottom">
     <div class="header-menu">
       <div class="header-menu-trigger" id="header-navigation">
-        <button class="br-button small circle" type="button" aria-label="Menu"
-                [attr.aria-expanded]="menuVisible" (click)="toggleMenu()">
+        <button
+          class="br-button small circle"
+          type="button"
+          aria-label="Menu"
+          [attr.aria-expanded]="menuVisible"
+          (click)="toggleMenu()"
+        >
           <i class="fas fa-bars" aria-hidden="true"></i>
         </button>
       </div>
 
       <div class="header-info">
-        <div class="header-title">
-          {{ headerTitle }}
-        </div>
+        <div class="header-title">{{ headerTitle }}</div>
       </div>
     </div>
   </div>

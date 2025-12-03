@@ -1,58 +1,735 @@
-.landing-header {
-  background-color: var(--background);
-  padding: 1rem 0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+// ========================================
+// Landing Page - Responsive Styles
+// ========================================
+// Breakpoints:
+// - xs: 0-575px (mobile pequeno - iPhone SE, etc)
+// - sm: 576-767px (mobile grande - iPhone Plus, Samsung)
+// - md: 768-991px (tablet)
+// - lg: 992-1199px (laptop pequeno)
+// - xl: 1200-1399px (laptop/desktop HD)
+// - xxl: 1400-1919px (desktop Full HD)
+// - 3xl: 1920-2559px (desktop Full HD+)
+// - 4xl: 2560-3839px (2K/QHD)
+// - 5xl: 3840px+ (4K/8K)
+
+// Base styles
+:host {
+  display: block;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
-.hero-section {
-  background: linear-gradient(135deg, var(--blue-warm-vivid-10) 0%, var(--blue-warm-vivid-20) 100%);
-  padding: 4rem 0;
-  min-height: 500px;
+// Prevent horizontal overflow
+* {
+  box-sizing: border-box;
 }
 
-.feature-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+// Scroll offset for sticky header
+section[id] {
+  scroll-margin-top: 70px;
+}
 
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+// Container fluido com padding responsivo
+.container-lg {
+  width: 100%;
+  margin: 0 auto;
+  // Padding fluido usando clamp() - min, preferred, max
+  padding-left: clamp(1rem, 4vw, 12rem);
+  padding-right: clamp(1rem, 4vw, 12rem);
+
+  // Ajustes específicos por breakpoint
+  @media (min-width: 1920px) {
+    padding-left: clamp(3rem, 8vw, 15rem);
+    padding-right: clamp(3rem, 8vw, 15rem);
+  }
+
+  @media (min-width: 2560px) {
+    padding-left: clamp(5rem, 10vw, 20rem);
+    padding-right: clamp(5rem, 10vw, 20rem);
+  }
+
+  @media (min-width: 3840px) {
+    padding-left: clamp(10rem, 15vw, 30rem);
+    padding-right: clamp(10rem, 15vw, 30rem);
   }
 }
 
-.feature-icon {
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+// ========================================
+// Header
+// ========================================
+.landing-header {
+  background-color: var(--pure-0, #fff);
+  padding: 0.5rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.5rem;
+      color: var(--blue-warm-vivid-70);
+
+      @media (min-width: 768px) {
+        font-size: 2rem;
+      }
+    }
+
+    span {
+      margin-left: 0.5rem;
+      font-weight: bold;
+      font-size: 1.25rem;
+      color: var(--gray-80);
+
+      @media (min-width: 768px) {
+        font-size: 1.5rem;
+      }
+    }
+  }
+
+  .auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    br-button {
+      display: block;
+
+      // Botões menores em mobile
+      &::part(button) {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+      }
+    }
+  }
 }
 
+// ========================================
+// Hero Section
+// ========================================
+.hero-section {
+  background: linear-gradient(135deg, var(--blue-warm-vivid-10) 0%, var(--blue-warm-vivid-20) 100%);
+  padding: 2rem 0;
+  min-height: auto;
+
+  @media (min-width: 768px) {
+    padding: 3rem 0;
+  }
+
+  @media (min-width: 992px) {
+    padding: 4rem 0;
+    min-height: 500px;
+  }
+
+  @media (min-width: 1920px) {
+    padding: 5rem 0;
+    min-height: 600px;
+  }
+
+  @media (min-width: 2560px) {
+    padding: 6rem 0;
+    min-height: 700px;
+  }
+
+  @media (min-width: 3840px) {
+    padding: 8rem 0;
+    min-height: 900px;
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+    line-height: 1.2;
+    color: var(--gray-80);
+    margin-bottom: 1rem;
+
+    @media (min-width: 576px) {
+      font-size: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      font-size: 2.5rem;
+    }
+
+    @media (min-width: 992px) {
+      font-size: 3rem;
+    }
+
+    @media (min-width: 1920px) {
+      font-size: 3.5rem;
+    }
+
+    @media (min-width: 2560px) {
+      font-size: 4rem;
+    }
+
+    @media (min-width: 3840px) {
+      font-size: 5rem;
+    }
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    color: var(--gray-60);
+    margin-bottom: 1.5rem;
+
+    @media (min-width: 768px) {
+      font-size: 1.125rem;
+    }
+
+    @media (min-width: 1920px) {
+      font-size: 1.25rem;
+    }
+
+    @media (min-width: 2560px) {
+      font-size: 1.5rem;
+    }
+
+    @media (min-width: 3840px) {
+      font-size: 1.75rem;
+    }
+  }
+
+  .hero-image {
+    max-width: 100%;
+    height: auto;
+    margin-top: 2rem;
+
+    @media (min-width: 992px) {
+      margin-top: 0;
+    }
+  }
+}
+
+// ========================================
+// Sections Common
+// ========================================
+.section {
+  padding: 2.5rem 0;
+
+  @media (min-width: 768px) {
+    padding: 3.5rem 0;
+  }
+
+  @media (min-width: 992px) {
+    padding: 5rem 0;
+  }
+
+  @media (min-width: 1920px) {
+    padding: 6rem 0;
+  }
+
+  @media (min-width: 2560px) {
+    padding: 7rem 0;
+  }
+
+  @media (min-width: 3840px) {
+    padding: 10rem 0;
+  }
+}
+
+.section-title {
+  font-size: 1.5rem;
+  color: var(--gray-80);
+  margin-bottom: 0.5rem;
+
+  @media (min-width: 768px) {
+    font-size: 1.75rem;
+  }
+
+  @media (min-width: 992px) {
+    font-size: 2rem;
+  }
+
+  @media (min-width: 1920px) {
+    font-size: 2.25rem;
+  }
+
+  @media (min-width: 2560px) {
+    font-size: 2.5rem;
+  }
+
+  @media (min-width: 3840px) {
+    font-size: 3rem;
+  }
+}
+
+.section-subtitle {
+  font-size: 1rem;
+  color: var(--gray-60);
+
+  @media (min-width: 768px) {
+    font-size: 1.125rem;
+  }
+
+  @media (min-width: 1920px) {
+    font-size: 1.25rem;
+  }
+
+  @media (min-width: 2560px) {
+    font-size: 1.375rem;
+  }
+
+  @media (min-width: 3840px) {
+    font-size: 1.5rem;
+  }
+}
+
+// ========================================
+// Feature Cards
+// ========================================
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+
+  // Tablet
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  // Desktop HD
+  @media (min-width: 1200px) {
+    gap: 1.5rem;
+  }
+
+  // Full HD+
+  @media (min-width: 1920px) {
+    gap: 2rem;
+  }
+
+  // 2K/4K - mais colunas para aproveitar espaço
+  @media (min-width: 2560px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+  }
+
+  // 4K+
+  @media (min-width: 3840px) {
+    gap: 3rem;
+  }
+}
+
+.feature-card {
+  background: var(--pure-0, #fff);
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid var(--gray-10, #e5e5e5);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  @media (min-width: 768px) {
+    padding: 1.5rem;
+  }
+
+  @media (min-width: 1920px) {
+    padding: 2rem;
+    border-radius: 16px;
+  }
+
+  @media (min-width: 2560px) {
+    padding: 2.5rem;
+  }
+
+  @media (min-width: 3840px) {
+    padding: 3rem;
+    border-radius: 20px;
+  }
+
+  @media (min-width: 992px) {
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+      border-color: var(--blue-warm-vivid-30);
+    }
+  }
+
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.25rem;
+    }
+
+    @media (min-width: 1920px) {
+      width: 56px;
+      height: 56px;
+
+      i {
+        font-size: 1.5rem;
+      }
+    }
+
+    @media (min-width: 2560px) {
+      width: 64px;
+      height: 64px;
+
+      i {
+        font-size: 1.75rem;
+      }
+    }
+
+    @media (min-width: 3840px) {
+      width: 80px;
+      height: 80px;
+      border-radius: 16px;
+
+      i {
+        font-size: 2rem;
+      }
+    }
+  }
+
+  .feature-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--gray-80);
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+
+    @media (min-width: 768px) {
+      font-size: 1rem;
+    }
+
+    @media (min-width: 1920px) {
+      font-size: 1.125rem;
+    }
+
+    @media (min-width: 2560px) {
+      font-size: 1.25rem;
+    }
+
+    @media (min-width: 3840px) {
+      font-size: 1.5rem;
+    }
+  }
+
+  .feature-description {
+    font-size: 0.85rem;
+    color: var(--gray-60);
+    line-height: 1.5;
+    margin: 0;
+    flex-grow: 1;
+
+    @media (min-width: 1920px) {
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    @media (min-width: 2560px) {
+      font-size: 1.05rem;
+    }
+
+    @media (min-width: 3840px) {
+      font-size: 1.25rem;
+    }
+  }
+}
+
+// ========================================
+// Pricing Cards
+// ========================================
 .pricing-card {
   border: 2px solid var(--gray-20);
   border-radius: 10px;
   transition: border-color 0.3s ease;
+  background: var(--pure-0, #fff);
 
-  &:hover {
-    border-color: var(--blue-warm-vivid-50);
+  @media (min-width: 992px) {
+    &:hover {
+      border-color: var(--blue-warm-vivid-50);
+    }
+  }
+
+  .price {
+    font-size: 2rem;
+    font-weight: bold;
+
+    @media (min-width: 768px) {
+      font-size: 2.5rem;
+    }
   }
 }
 
+// ========================================
+// Highlight Section
+// ========================================
 .highlight-image {
   background: var(--blue-warm-vivid-10);
   border-radius: 8px;
   padding: 1rem;
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
+.highlight-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 0.75rem;
+
+  @media (min-width: 768px) {
+    font-size: 1.5rem;
+  }
+}
+
+// ========================================
+// Navigation Links
+// ========================================
 .nav-link {
   cursor: pointer;
   color: var(--gray-80);
   text-decoration: none;
   font-weight: 500;
+  padding: 0.5rem 1rem;
 
   &:hover {
     color: var(--blue-warm-vivid-50);
+  }
+}
+
+// ========================================
+// Footer
+// ========================================
+.footer {
+  padding: 2.5rem 0;
+  background: var(--blue-warm-vivid-90, #071D41);
+  color: var(--pure-0, #fff);
+
+  @media (min-width: 768px) {
+    padding: 3.5rem 0;
+  }
+
+  .logo {
+    i, span {
+      color: var(--pure-0, #fff);
+    }
+  }
+
+  .footer-links {
+    h6 {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      color: var(--pure-0, #fff);
+
+      @media (min-width: 768px) {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+      }
+    }
+
+    ul {
+      li {
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    a {
+      font-size: 0.875rem;
+      color: var(--blue-warm-20, #C5D4EB);
+      text-decoration: none;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: var(--pure-0, #fff);
+      }
+    }
+  }
+
+  hr {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .footer-copyright {
+    color: var(--blue-warm-20, #C5D4EB);
+    font-size: 0.85rem;
+  }
+}
+
+// ========================================
+// Testimonial
+// ========================================
+.testimonial-card {
+  margin-top: 2.5rem;
+  background: var(--blue-warm-vivid-80, #1351B4);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+
+  // Decorative elements
+  &::before {
+    content: '"';
+    position: absolute;
+    top: 1rem;
+    left: 2rem;
+    font-size: 8rem;
+    font-family: Georgia, serif;
+    color: rgba(255, 255, 255, 0.1);
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  @media (min-width: 768px) {
+    margin-top: 3.5rem;
+    border-radius: 20px;
+
+    &::before {
+      font-size: 12rem;
+      top: 0;
+      left: 3rem;
+    }
+  }
+
+  @media (min-width: 1920px) {
+    margin-top: 4rem;
+    border-radius: 24px;
+  }
+
+  @media (min-width: 2560px) {
+    margin-top: 5rem;
+  }
+}
+
+.testimonial-content {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+
+  @media (min-width: 768px) {
+    padding: 3.5rem 3rem;
+  }
+
+  @media (min-width: 1920px) {
+    padding: 4rem 4rem;
+  }
+
+  @media (min-width: 2560px) {
+    padding: 5rem 5rem;
+  }
+}
+
+.testimonial-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--pure-0, #fff);
+  margin-bottom: 0.5rem;
+
+  @media (min-width: 768px) {
+    font-size: 1.5rem;
+  }
+
+  @media (min-width: 1920px) {
+    font-size: 1.75rem;
+  }
+
+  @media (min-width: 2560px) {
+    font-size: 2rem;
+  }
+}
+
+.testimonial-subtitle {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1.5rem;
+
+  @media (min-width: 768px) {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  @media (min-width: 1920px) {
+    font-size: 1.125rem;
+  }
+}
+
+.testimonial-quote {
+  font-size: 1rem;
+  color: var(--pure-0, #fff) !important;
+  line-height: 1.7;
+  font-style: italic;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0;
+  border: none;
+  background: transparent !important;
+  box-shadow: none;
+
+  @media (min-width: 768px) {
+    font-size: 1.125rem;
+    line-height: 1.8;
+  }
+
+  @media (min-width: 1920px) {
+    font-size: 1.25rem;
+    max-width: 900px;
+  }
+
+  @media (min-width: 2560px) {
+    font-size: 1.375rem;
+    max-width: 1000px;
+  }
+
+  @media (min-width: 3840px) {
+    font-size: 1.5rem;
+    max-width: 1200px;
+  }
+}
+
+// ========================================
+// Utility: Hide on mobile
+// ========================================
+.hide-mobile {
+  display: none !important;
+
+  @media (min-width: 992px) {
+    display: flex !important;
+  }
+}
+
+// ========================================
+// Row/Grid fixes
+// ========================================
+.row {
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+
+  > [class*="col-"] {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  @media (min-width: 768px) {
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+
+    > [class*="col-"] {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
   }
 }

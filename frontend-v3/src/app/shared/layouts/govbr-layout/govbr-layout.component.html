@@ -5,20 +5,19 @@
   </header>
 
   <section class="d-flex flex-fill mb-5" id="main">
-    <div class="container-fluid d-flex">
-      <div class="row">
-        <aside class="br-menu push active" id="main-navigation"
-               [style.display]="isMenuVisible ? 'block' : 'none'" style="width: 250px">
+    <div class="layout-wrapper">
+      <aside class="sidebar" [class.collapsed]="!isMenuVisible">
+        <div class="br-menu">
           <app-menu></app-menu>
-        </aside>
+        </div>
+      </aside>
 
-        <section class="col mb-5">
-          <br-breadcrumb [crumbs]="breadcrumbItems" homeUrl="/app"></br-breadcrumb>
-          <div class="main-content pl-sm-3 mt-4" id="main-content">
-            <router-outlet></router-outlet>
-          </div>
-        </section>
-      </div>
+      <main class="main-section">
+        <br-breadcrumb [crumbs]="breadcrumbItems" homeUrl="/app"></br-breadcrumb>
+        <div class="main-content mt-4" id="main-content">
+          <router-outlet></router-outlet>
+        </div>
+      </main>
     </div>
   </section>
 

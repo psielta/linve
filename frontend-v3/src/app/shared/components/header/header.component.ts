@@ -2,7 +2,9 @@ import { CommonModule } from "@angular/common";
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   EventEmitter,
+  HostListener,
   inject,
   Input,
   Output,
@@ -15,21 +17,22 @@ import { AuthService } from "../../../core/services/auth.service";
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: "./header.component.html",
+  styleUrl: "./header.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private elementRef = inject(ElementRef);
   /** URL e texto alternativo do logo */
-  @Input() public logoUrl: string = "assets/img-template.png";
-  @Input() public logoAlt: string = "logo";
+  @Input() public logoUrl: string = "assets/dog.svg";
+  @Input() public logoAlt: string = "Linve Logo";
 
   /** Texto que aparece ao lado do logo */
-  @Input() public headerSign: string =
-    "Quickstart Angular - Web Components 2.0";
+  @Input() public headerSign: string = "Linve";
 
   /** Título e subtítulo do header */
-  @Input() public headerTitle: string = "Template básico";
+  @Input() public headerTitle: string = "Linve";
 
   /** Labels e placeholder do campo de busca */
   @Input() public searchLabel: string = "Texto da pesquisa";
@@ -60,6 +63,17 @@ export class HeaderComponent {
 
   /** Armazena o texto digitado no campo de busca */
   public searchQuery = "";
+
+  /** Controla visibilidade do dropdown do usuário */
+  public isDropdownOpen = false;
+
+  /** Fecha dropdown ao clicar fora */
+  @HostListener("document:click", ["$event"])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.isDropdownOpen = false;
+    }
+  }
 
   /**
    * Inverte menuVisible e emite menuToggled com o valor atual.
@@ -100,8 +114,14 @@ export class HeaderComponent {
     return this.authService.isLoggedIn();
   }
 
+  /** Alterna visibilidade do dropdown */
+  public toggleDropdown(): void {
+    this.isDropdownOpen = !this.isDropdownOpen;
+  }
+
   /** Faz logout e redireciona para a landing page */
   public logout(): void {
+    this.isDropdownOpen = false;
     this.authService.logout();
     this.router.navigate(["/"]);
   }

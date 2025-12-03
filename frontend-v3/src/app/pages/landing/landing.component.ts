@@ -11,11 +11,40 @@ import { BrButton } from '@govbr-ds/webcomponents-angular/standalone';
   styleUrls: ['./landing.component.scss']
 })
 export class LandingComponent {
-  scrollToSection(sectionId: string): void {
+  private readonly HEADER_OFFSET = 80;
+  private readonly SCROLL_DURATION = 800;
+
+  scrollToSection(event: Event, sectionId: string): void {
+    event.preventDefault();
     const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    if (!element) return;
+
+    const targetPosition = element.getBoundingClientRect().top + window.scrollY - this.HEADER_OFFSET;
+    const startPosition = window.scrollY;
+    const distance = targetPosition - startPosition;
+    let startTime: number | null = null;
+
+    // Easing function (easeInOutCubic)
+    const easeInOutCubic = (t: number): number => {
+      return t < 0.5
+        ? 4 * t * t * t
+        : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    };
+
+    const animation = (currentTime: number) => {
+      if (startTime === null) startTime = currentTime;
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / this.SCROLL_DURATION, 1);
+      const easedProgress = easeInOutCubic(progress);
+
+      window.scrollTo(0, startPosition + distance * easedProgress);
+
+      if (progress < 1) {
+        requestAnimationFrame(animation);
+      }
+    };
+
+    requestAnimationFrame(animation);
   }
 
   features = [
