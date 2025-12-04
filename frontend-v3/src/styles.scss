@@ -388,4 +388,25 @@ body.dark-mode {
     border-color: #168821 !important;
     border-width: 2px !important;
   }
+
+  // Table dark mode
+  br-table-header-row {
+    --background-alternative: #0f3460 !important;
+  }
+
+  br-table-header-cell {
+    --color: #FFFFFF !important;
+    --table-th-background: #0f3460 !important;
+  }
+
+  br-table-row {
+    --background: #16213e !important;
+    --table-background: #16213e !important;
+  }
+
+  br-table-cell {
+    --color: #FFFFFF !important;
+    --table-color: #FFFFFF !important;
+    --table-border-color: #1a1a2e !important;
+  }
 }

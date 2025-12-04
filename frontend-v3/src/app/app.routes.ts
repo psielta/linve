@@ -30,6 +30,10 @@ export const routes: Routes = [
       {
         path: 'account',
         loadComponent: () => import('./pages/app/account/account.component').then(m => m.AccountComponent)
+      },
+      {
+        path: 'culinarias',
+        loadComponent: () => import('./pages/app/culinarias/culinaria-list.component').then(m => m.CulinariaListComponent)
       }
       // Futuras rotas autenticadas serão adicionadas aqui
     ]

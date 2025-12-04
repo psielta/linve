@@ -171,12 +171,52 @@ O componente `<br-avatar>` tem comportamentos específicos:
 </br-avatar>
 ```
 
-### 4. Boas Práticas
+### 4. Slots em Web Components (br-table, br-card, etc.)
+
+Alguns Web Components usam **slots nomeados** para projetar conteúdo em áreas específicas. Quando combinados com `*ngFor` do Angular, é necessário usar `[attr.slot]` em vez de `slot` estático.
+
+**Problema com slot estático + *ngFor:**
+
+```html
+<!-- ❌ Angular pode não passar o atributo slot corretamente para elementos dinâmicos -->
+<br-table>
+  <br-table-header-row slot="header">...</br-table-header-row>
+  <br-table-row slot="row" *ngFor="let item of items">...</br-table-row>
+</br-table>
+```
+
+**Solução com attribute binding:**
+
+```html
+<!-- ✅ Usar [attr.slot] garante que o Angular passe o atributo corretamente -->
+<br-table>
+  <br-table-header-row [attr.slot]="'header'">
+    <br-table-header-cell>ID</br-table-header-cell>
+    <br-table-header-cell>Nome</br-table-header-cell>
+  </br-table-header-row>
+
+  <br-table-row [attr.slot]="'row'" *ngFor="let item of items; trackBy: trackByFn">
+    <br-table-cell>{{ item.id }}</br-table-cell>
+    <br-table-cell>{{ item.nome }}</br-table-cell>
+  </br-table-row>
+</br-table>
+```
+
+**Slots comuns nos componentes GovBR DS:**
+
+| Componente | Slots disponíveis |
+|------------|-------------------|
+| `br-table` | `tool-bar`, `header`, `row`, `footer` |
+| `br-card` | `header`, `content`, `footer` |
+| `br-modal` | `header`, `footer` |
+
+### 5. Boas Práticas
 
 1. **Sempre adicione `CUSTOM_ELEMENTS_SCHEMA`** em componentes que usam GovBR DS
 2. **Use `[attr.propriedade]`** para valores dinâmicos que podem ser `null`
-3. **Consulte a documentação** em https://www.gov.br/ds/components para atributos obrigatórios
-4. **Teste no Dark Mode** - alguns componentes usam variáveis CSS que precisam de override
+3. **Use `[attr.slot]`** para slots em elementos gerados com `*ngFor`
+4. **Consulte a documentação** em https://www.gov.br/ds/components para atributos obrigatórios
+5. **Teste no Dark Mode** - alguns componentes usam variáveis CSS que precisam de override
 
 ## Responsividade
 
