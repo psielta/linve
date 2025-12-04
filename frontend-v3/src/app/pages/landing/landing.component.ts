@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { BrButton } from '@govbr-ds/webcomponents-angular/standalone';
+import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-landing',
@@ -10,7 +11,20 @@ import { BrButton } from '@govbr-ds/webcomponents-angular/standalone';
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.scss']
 })
-export class LandingComponent {
+export class LandingComponent implements OnInit {
+  private themeService = inject(ThemeService);
+
+  /** Estado reativo do dark mode */
+  isDarkMode = this.themeService.isDarkMode;
+
+  ngOnInit(): void {
+    this.themeService.applyTheme();
+  }
+
+  /** Alterna entre dark mode e light mode */
+  toggleTheme(): void {
+    this.themeService.toggleTheme();
+  }
   private readonly HEADER_OFFSET = 80;
   private readonly SCROLL_DURATION = 800;
 

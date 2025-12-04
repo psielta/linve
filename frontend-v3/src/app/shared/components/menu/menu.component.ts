@@ -45,6 +45,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     { id: "categorias", name: "Categorias", icon: "fas fa-tags", url: "/app/categorias" },
     { id: "culinarias", name: "Culinárias", icon: "fas fa-utensils", url: "/app/culinarias" },
     { id: "adicionais", name: "Adicionais", icon: "fas fa-plus-circle", url: "/app/adicionais" },
+    { id: "account", name: "Minha conta", icon: "fas fa-user-cog", url: "/app/account" },
   ];
 
   toggleFolder(id: string) {
@@ -73,6 +74,7 @@ export class MenuComponent implements OnInit, OnDestroy {
       "/app/categorias": "categorias",
       "/app/culinarias": "culinarias",
       "/app/adicionais": "adicionais",
+      "/app/account": "account",
     };
 
     const activeId = routeToIdMap[cleanUrl];
@@ -84,3 +86,4 @@ export class MenuComponent implements OnInit, OnDestroy {
     }
   }
 }
+

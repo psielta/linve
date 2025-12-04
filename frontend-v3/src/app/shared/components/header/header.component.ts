@@ -2,20 +2,26 @@ import { CommonModule } from "@angular/common";
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   ElementRef,
   EventEmitter,
   HostListener,
   inject,
   Input,
   Output,
+  CUSTOM_ELEMENTS_SCHEMA,
 } from "@angular/core";
 import { Router, RouterModule } from "@angular/router";
 import { AuthService } from "../../../core/services/auth.service";
+import { ThemeService } from "../../../core/services/theme.service";
+import { OrganizationSwitcherComponent } from "../organization-switcher/organization-switcher.component";
+import { environment } from "../../../../environments/environment";
 
 @Component({
   selector: "app-header",
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, OrganizationSwitcherComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: "./header.component.html",
   styleUrl: "./header.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,6 +30,26 @@ export class HeaderComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private elementRef = inject(ElementRef);
+  private themeService = inject(ThemeService);
+
+  /** Estado reativo do dark mode */
+  isDarkMode = this.themeService.isDarkMode;
+
+  /** URL completa do avatar do usuário */
+  userAvatarUrl = computed(() => {
+    const avatar = this.authService.user()?.avatar;
+    if (!avatar) return null;
+    const baseUrl = environment.baseUrl.replace(/\/$/, '');
+    return avatar.startsWith('http') ? avatar : `${baseUrl}${avatar.startsWith('/') ? avatar : '/' + avatar}`;
+  });
+
+  /** Iniciais do usuário para fallback */
+  userInitials = computed(() => {
+    const nome = this.authService.currentUserName();
+    const parts = nome.split(' ').filter(Boolean);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return (nome || 'U').substring(0, 2).toUpperCase();
+  });
   /** URL e texto alternativo do logo */
   @Input() public logoUrl: string = "assets/dog.svg";
   @Input() public logoAlt: string = "Linve Logo";
@@ -124,5 +150,16 @@ export class HeaderComponent {
     this.isDropdownOpen = false;
     this.authService.logout();
     this.router.navigate(["/"]);
+  }
+
+  /** Vai para a página de conta do usuário */
+  public goToAccount(): void {
+    this.isDropdownOpen = false;
+    this.router.navigate(["/app/account"]);
+  }
+
+  /** Alterna entre dark mode e light mode */
+  public toggleTheme(): void {
+    this.themeService.toggleTheme();
   }
 }

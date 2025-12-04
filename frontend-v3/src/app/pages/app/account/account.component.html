@@ -1,0 +1,202 @@
+<div class="account-page">
+  <div class="page-header">
+    <div>
+      <h1 class="text-up-04 text-weight-bold mb-1">Minha conta</h1>
+      <p class="text-base text-muted">Gerencie seu perfil, avatar e organizações.</p>
+    </div>
+    <div class="current-org">
+      <span class="label">Organização atual</span>
+      <span class="value">{{ currentOrgName() || '—' }}</span>
+    </div>
+  </div>
+
+  <div class="messages" *ngIf="feedbacks().length">
+    <br-message
+      *ngFor="let msg of feedbacks(); trackBy: trackFeedback"
+      [state]="msg.type"
+      [message]="msg.text"
+      [isClosable]="true"
+      [showIcon]="true"
+      (brDidClose)="dismissFeedback(msg.id)">
+    </br-message>
+  </div>
+
+  <div class="row">
+    <!-- Dados pessoais e avatar -->
+    <div class="col-12 col-lg-6 mb-4">
+      <br-card>
+        <div slot="header" class="card-header-content">
+          <span>Informações pessoais</span>
+        </div>
+
+        <div class="card-body" slot="content">
+          <div class="profile">
+            <br-avatar
+              density="large"
+              alt="Avatar"
+              src="{{ userAvatarUrl() }}"
+              text="{{ userAvatarUrl() ? '' : userInitials() }}"
+              title="{{ userName() }}">
+            </br-avatar>
+
+            <div class="profile-info">
+              <div class="user-name">{{ userName() }}</div>
+              <div class="text-muted">{{ userEmail() }}</div>
+              <div class="chips">
+                <br-tag
+                  shape="rounded"
+                  density="small"
+                  [label]="currentRoleLabel()"
+                  [bgColor]="roleColor(currentRole() ?? '')">
+                </br-tag>
+              </div>
+            </div>
+          </div>
+
+          <br-divider></br-divider>
+
+          <div class="upload-section">
+            <div>
+              <div class="section-title">Foto de perfil</div>
+              <p class="helper">Selecione um arquivo JPG, PNG ou WEBP (até 5 MB). O envio começa ao escolher o arquivo.</p>
+            </div>
+            <div class="upload-actions">
+              <br-upload
+                #avatarUpload
+                accept="image/png,image/jpeg,image/webp"
+                label="Trocar foto">
+              </br-upload>
+              <br-button
+                type="button"
+                emphasis="secondary"
+                density="small"
+                [disabled]="isRemovingAvatar() || avatarLoading() || !userAvatarUrl()"
+                (click)="removeAvatar()">
+                Remover foto
+              </br-button>
+            </div>
+          </div>
+        </div>
+      </br-card>
+    </div>
+
+    <!-- Organizações -->
+    <div class="col-12 col-lg-6 mb-4">
+      <br-card>
+        <div slot="header" class="card-header-content">
+          <span>Minhas organizações</span>
+          <br-button
+            type="button"
+            emphasis="secondary"
+            density="small"
+            (click)="openCreate()">
+            Nova
+          </br-button>
+        </div>
+
+        <div class="card-body" slot="content">
+          <div *ngIf="organizations().length === 0" class="text-muted empty">
+            Nenhuma organização encontrada.
+          </div>
+
+          <ng-container *ngFor="let membership of organizations(); trackBy: trackOrg; let last = last">
+            <div class="org-item">
+              <br-avatar
+                density="medium"
+                alt="Logo"
+                src="{{ membership.organization.logo | mediaUrl }}"
+                text="{{ membership.organization.logo ? '' : membership.organization.nome.charAt(0).toUpperCase() }}"
+                [attr.bg-color]="membership.organization.logo ? null : getAvatarBgColor(membership.organization.id)"
+                title="{{ membership.organization.nome }}">
+              </br-avatar>
+
+              <div class="org-info">
+                <div class="org-title">
+                  <span class="name">{{ membership.organization.nome }}</span>
+                  <span class="pill" *ngIf="isCurrentOrg(membership.organization.id)">atual</span>
+                </div>
+                <div class="org-meta">
+                  <br-tag
+                    shape="rounded"
+                    density="small"
+                    [label]="getRoleLabel(membership.role)"
+                    [bgColor]="roleColor(membership.role)">
+                  </br-tag>
+                </div>
+              </div>
+
+              <div class="org-actions" *ngIf="canEdit(membership)">
+                <br-upload
+                  #logoUpload
+                  [attr.data-org-id]="membership.organization.id"
+                  accept="image/png,image/jpeg,image/webp"
+                  label="Alterar logo"
+                  [disabled]="isLogoLoading(membership.organization.id)">
+                </br-upload>
+                <div class="inline-actions">
+                  <br-button
+                    type="button"
+                    emphasis="secondary"
+                    density="small"
+                    [disabled]="isLogoLoading(membership.organization.id)"
+                    (click)="openEdit(membership)">
+                    Renomear
+                  </br-button>
+                  <br-button
+                    type="button"
+                    emphasis="secondary"
+                    density="small"
+                    [disabled]="isLogoLoading(membership.organization.id) || !membership.organization.logo"
+                    (click)="removeLogo(membership.organization.id)">
+                    Remover logo
+                  </br-button>
+                </div>
+              </div>
+            </div>
+
+            <br-divider *ngIf="!last"></br-divider>
+          </ng-container>
+        </div>
+      </br-card>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para criar/editar organização -->
+<br-scrim [isOpen]="showOrgModal()" position-content="center" (brScrimClose)="closeModal()">
+  <br-modal
+    [show]="showOrgModal()"
+    size="small"
+    auto-close="true"
+    scrollable="false"
+    align-footer="end"
+    (brModalClose)="closeModal()">
+    <div slot="header">
+      {{ isEditMode() ? 'Editar organização' : 'Nova organização' }}
+    </div>
+
+    <form [formGroup]="orgForm" (ngSubmit)="saveOrganization()">
+      <div class="modal-body">
+        <br-input
+          ngDefaultControl
+          formControlName="nome"
+          label="Nome da organização"
+          [state]="orgForm.get('nome')?.invalid && orgForm.get('nome')?.touched ? 'danger' : undefined">
+        </br-input>
+        <br-message
+          *ngIf="orgForm.get('nome')?.invalid && orgForm.get('nome')?.touched"
+          state="danger"
+          is-feedback
+          message="Informe um nome com pelo menos 2 caracteres">
+        </br-message>
+      </div>
+
+      <div slot="footer" class="modal-footer-actions">
+        <br-button type="button" emphasis="secondary" (click)="closeModal()">Cancelar</br-button>
+        <br-button type="submit" emphasis="primary" [disabled]="orgForm.invalid || isSavingOrg()">
+          {{ isEditMode() ? 'Salvar' : 'Criar' }}
+        </br-button>
+      </div>
+    </form>
+  </br-modal>
+</br-scrim>

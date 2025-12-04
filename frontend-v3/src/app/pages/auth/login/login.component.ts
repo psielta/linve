@@ -1,9 +1,10 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { BrButton, BrInput, BrMessage, BrCheckbox } from '@govbr-ds/webcomponents-angular/standalone';
 import { AuthService } from '../../../core/services/auth.service';
+import { ThemeService } from '../../../core/services/theme.service';
 
 @Component({
   selector: 'app-login',
@@ -20,7 +21,9 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
+  private themeService = inject(ThemeService);
+
   loginForm: FormGroup;
   magicLinkForm: FormGroup;
   loading = signal(false);
@@ -48,6 +51,10 @@ export class LoginComponent {
     this.magicLinkForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]]
     });
+  }
+
+  ngOnInit(): void {
+    this.themeService.applyTheme();
   }
 
   onSubmit(): void {

@@ -64,3 +64,20 @@
 .main-content {
   width: 100%;
 }
+
+// Dark mode adjustments
+:host-context(body.dark-mode) {
+  .br-header {
+    background-color: var(--gray-5, #16213e);
+  }
+
+  .sidebar {
+    .br-menu {
+      background-color: var(--gray-5, #16213e);
+    }
+  }
+
+  .main-section {
+    background-color: var(--background-dark, #071D41);
+  }
+}

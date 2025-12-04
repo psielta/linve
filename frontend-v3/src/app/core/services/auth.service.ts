@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap, catchError, throwError, firstValueFrom, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   AuthResponse,
@@ -140,7 +140,7 @@ export class AuthService {
   }
 
   addOrganization(membership: MembershipOutput): void {
-    const current = this._organizations();
+    const current = this._organizations() ?? [];
     const updated = [...current, membership];
     this.storage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
     this._organizations.set(updated);
@@ -193,14 +193,64 @@ export class AuthService {
     this._organizations.set(updated);
   }
 
+  /**
+   * Carrega o perfil do usuário da API.
+   * Usado pelo APP_INITIALIZER para garantir que os dados estejam atualizados.
+   */
+  loadProfile(): Promise<void> {
+    console.log('loadProfile chamado');
+    console.log('_user:', this._user());
+    console.log('_organizations:', this._organizations());
+    console.log('hasValidToken:', this.hasValidToken());
+    console.log('refreshToken:', this.getRefreshToken());
+
+    // Se já tem dados no storage, não precisa fazer refresh
+    if (this._user() && this._organizations().length > 0) {
+      console.log('Já tem dados, pulando refresh');
+      return Promise.resolve();
+    }
+
+    if (!this.hasValidToken()) {
+      console.log('Sem token válido');
+      return Promise.resolve();
+    }
+
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      console.log('Sem refresh token');
+      return Promise.resolve();
+    }
+
+    console.log('Fazendo requisição de refresh...');
+
+    return firstValueFrom(
+      this.http.post<AuthResponse>(`${this.apiUrl}/auth/refresh`, { refreshToken }).pipe(
+        tap(response => {
+          console.log('Resposta do refresh:', response);
+          console.log('User:', response?.user);
+          console.log('Organizations:', response?.organizations);
+          this.handleAuthResponse(response);
+        }),
+        catchError((error) => {
+          console.error('Erro ao carregar perfil:', error);
+          // Não limpa auth aqui - deixa o guard decidir
+          return of(null);
+        })
+      )
+    ).then(() => {});
+  }
+
   private handleAuthResponse(response: AuthResponse): void {
+    // Garante que sempre salvaremos um array (evita null/undefined vindo do backend)
+    const organizations = Array.isArray(response.organizations) ? response.organizations : [];
+
     this.storage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
     this.storage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
     this.storage.setItem(USER_KEY, JSON.stringify(response.user));
-    this.storage.setItem(ORGANIZATIONS_KEY, JSON.stringify(response.organizations));
+    this.storage.setItem(ORGANIZATIONS_KEY, JSON.stringify(organizations));
 
     this._user.set(response.user);
-    this._organizations.set(response.organizations);
+    this._organizations.set(organizations);
     this._isAuthenticated.set(true);
   }
 
@@ -243,13 +293,13 @@ export class AuthService {
   private loadOrganizations(): MembershipOutput[] {
     // Verifica em ambos storages
     const orgsStr = localStorage.getItem(ORGANIZATIONS_KEY) || sessionStorage.getItem(ORGANIZATIONS_KEY);
-    if (orgsStr) {
-      try {
-        return JSON.parse(orgsStr);
-      } catch {
-        return [];
-      }
+    if (!orgsStr) return [];
+
+    try {
+      const parsed = JSON.parse(orgsStr);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
     }
-    return [];
   }
 }

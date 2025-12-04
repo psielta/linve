@@ -1,0 +1,46 @@
+<div class="org-switcher" *ngIf="showSwitcher">
+  <button
+    class="org-btn"
+    type="button"
+    (click)="toggleDropdown()"
+    [attr.aria-expanded]="isDropdownOpen"
+    aria-label="Trocar organização"
+  >
+    <br-avatar
+      density="small"
+      alt="Logo"
+      src="{{ currentOrg()?.organization?.logo | mediaUrl }}"
+      text="{{ currentOrg()?.organization?.logo ? '' : currentOrgName().charAt(0).toUpperCase() }}"
+      [attr.bg-color]="currentOrg()?.organization?.logo ? null : getAvatarBgColor(currentOrg()?.organization?.id)">
+    </br-avatar>
+    <span class="org-name">{{ currentOrgName() }}</span>
+    <i class="fas fa-caret-down" aria-hidden="true"></i>
+  </button>
+
+  <div class="org-dropdown" *ngIf="isDropdownOpen">
+    <button
+      *ngFor="let membership of organizations()"
+      class="org-item"
+      type="button"
+      [class.active]="membership.organization.id === currentOrg()?.organization?.id"
+      (click)="selectOrganization(membership.organization.id)"
+    >
+      <br-avatar
+        density="small"
+        alt="Logo"
+        src="{{ membership.organization.logo | mediaUrl }}"
+        text="{{ membership.organization.logo ? '' : membership.organization.nome.charAt(0).toUpperCase() }}"
+        [attr.bg-color]="membership.organization.logo ? null : getAvatarBgColor(membership.organization.id)">
+      </br-avatar>
+      <div class="org-info">
+        <span class="org-item-name">{{ membership.organization.nome }}</span>
+        <span class="org-role">{{ getRoleLabel(membership.role) }}</span>
+      </div>
+      <i
+        *ngIf="membership.organization.id === currentOrg()?.organization?.id"
+        class="fas fa-check"
+        aria-hidden="true"
+      ></i>
+    </button>
+  </div>
+</div>
