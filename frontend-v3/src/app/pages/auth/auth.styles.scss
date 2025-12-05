@@ -80,35 +80,3 @@ br-message {
   }
 }
 
-// ===========================================
-// Dark Mode Styles
-// ===========================================
-:host-context(body.dark-mode) {
-  .auth-container {
-    background: var(--background-dark, #071D41);
-  }
-
-  .auth-card {
-    .br-card {
-      background: var(--gray-5, #16213e);
-      border-color: var(--gray-10, #0f3460);
-    }
-
-    .card-header {
-      h2 {
-        color: var(--pure-0, #fff);
-      }
-    }
-  }
-
-  .auth-divider {
-    &::before,
-    &::after {
-      border-color: var(--gray-10, #0f3460);
-    }
-
-    span {
-      color: var(--gray-60, #a0a0a0);
-    }
-  }
-}

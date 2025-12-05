@@ -13,7 +13,6 @@ import {
 } from "@angular/core";
 import { Router, RouterModule } from "@angular/router";
 import { AuthService } from "../../../core/services/auth.service";
-import { ThemeService } from "../../../core/services/theme.service";
 import { OrganizationSwitcherComponent } from "../organization-switcher/organization-switcher.component";
 import { environment } from "../../../../environments/environment";
 
@@ -30,10 +29,6 @@ export class HeaderComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private elementRef = inject(ElementRef);
-  private themeService = inject(ThemeService);
-
-  /** Estado reativo do dark mode */
-  isDarkMode = this.themeService.isDarkMode;
 
   /** URL completa do avatar do usuário */
   userAvatarUrl = computed(() => {
@@ -156,10 +151,5 @@ export class HeaderComponent {
   public goToAccount(): void {
     this.isDropdownOpen = false;
     this.router.navigate(["/app/account"]);
-  }
-
-  /** Alterna entre dark mode e light mode */
-  public toggleTheme(): void {
-    this.themeService.toggleTheme();
   }
 }

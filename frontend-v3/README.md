@@ -33,7 +33,7 @@ src/
 ├── app/
 │   ├── core/               # Serviços singleton e guards
 │   │   ├── guards/         # AuthGuard, etc.
-│   │   └── services/       # AuthService, ThemeService, etc.
+│   │   └── services/       # AuthService, etc.
 │   ├── pages/              # Páginas/rotas da aplicação
 │   │   ├── auth/           # Login, Register
 │   │   ├── dashboard/      # Dashboard principal
@@ -43,68 +43,6 @@ src/
 │       └── layouts/        # GovbrLayoutComponent
 ├── assets/                 # Imagens e recursos estáticos
 └── styles.scss            # Estilos globais
-```
-
-## Dark Mode
-
-O sistema suporta alternância entre tema claro e escuro, utilizando as variáveis CSS nativas do GovBR DS.
-
-### Funcionalidades
-
-1. **Persistência**: Preferência de tema salva no localStorage
-2. **Preferência do Sistema**: Detecta automaticamente `prefers-color-scheme` do SO
-3. **Toggle Manual**: Botão de alternância no header (ícone sol/lua)
-4. **Transição Suave**: Animação CSS de 300ms entre temas
-5. **Componentes GovBR**: Utiliza sistema de temas nativo do Design System
-
-### Uso
-
-O tema é gerenciado pelo `ThemeService`:
-
-```typescript
-import { ThemeService } from './core/services/theme.service';
-
-// Injetar o serviço
-private themeService = inject(ThemeService);
-
-// Acessar estado reativo (Signal)
-isDarkMode = this.themeService.isDarkMode;
-
-// Alternar tema
-this.themeService.toggleTheme();
-
-// Definir tema específico
-this.themeService.setTheme(true);  // dark mode
-this.themeService.setTheme(false); // light mode
-
-// Resetar para preferência do sistema
-this.themeService.resetToSystemPreference();
-```
-
-### Variáveis CSS
-
-O dark mode sobrescreve as variáveis principais do GovBR DS:
-
-```scss
-body.dark-mode {
-  --background: var(--background-dark, #071D41);
-  --color: var(--color-dark, #FFFFFF);
-  --interactive: var(--interactive-dark, #C5D4EB);
-  // ...
-}
-```
-
-### Estilização de Componentes
-
-Para estilos específicos de dark mode em componentes, use `:host-context`:
-
-```scss
-:host-context(body.dark-mode) {
-  .my-component {
-    background: var(--gray-5);
-    color: var(--pure-0);
-  }
-}
 ```
 
 ## Web Components GovBR DS
@@ -217,6 +155,199 @@ Alguns Web Components usam **slots nomeados** para projetar conteúdo em áreas 
 3. **Use `[attr.slot]`** para slots em elementos gerados com `*ngFor`
 4. **Consulte a documentação** em https://www.gov.br/ds/components para atributos obrigatórios
 5. **Teste no Dark Mode** - alguns componentes usam variáveis CSS que precisam de override
+
+### 6. Formulários com br-select e br-checkbox
+
+Os componentes `br-select` e `br-checkbox` **NÃO funcionam corretamente** com `formControlName` do Angular Reactive Forms, mesmo utilizando os Value Accessors fornecidos (`SelectValueAccessor`, `BooleanValueAccessor`). É necessário usar uma abordagem manual com signals.
+
+#### Problema
+
+```html
+<!-- ❌ NÃO FUNCIONA - formControlName não sincroniza valor -->
+<br-select
+  formControlName="meuCampo"
+  [options]="opcoes">
+</br-select>
+```
+
+O Web Component não reage corretamente às mudanças de valor do FormControl e não dispara os eventos esperados pelo Angular.
+
+#### Solução: Abordagem Manual com Signals
+
+**1. Declarar signals para controlar os valores:**
+
+```typescript
+// No componente
+selectedValue = signal<string>('');
+
+opcoes = [
+  { label: 'Opção 1', value: '1' },
+  { label: 'Opção 2', value: '2' },
+];
+```
+
+**2. Usar `[value]` + `(valueChange)` no template:**
+
+```html
+<!-- ✅ FUNCIONA - controle manual com signal -->
+<br-select
+  label="Meu Campo"
+  [options]="opcoes"
+  [value]="selectedValue()"
+  (valueChange)="onSelectChange($event)">
+</br-select>
+```
+
+**3. Handler para atualizar signal e form:**
+
+```typescript
+onSelectChange(event: CustomEvent): void {
+  const value = event.detail ?? '';
+  this.form.get('meuCampo')?.setValue(value);
+  this.selectedValue.set(value);
+}
+```
+
+#### Problema com Valor Inicial em Edição
+
+Quando o componente é renderizado com um valor inicial (ex: edição de registro), o `br-select` não exibe o valor selecionado mesmo que o signal tenha o valor correto. Isso ocorre porque o Web Component inicializa antes do Angular atualizar a propriedade.
+
+**Solução: setTimeout para setar valor após renderização:**
+
+```typescript
+loadDados(): void {
+  this.api.buscar(id).subscribe({
+    next: (dados) => {
+      this.form.patchValue({ meuCampo: dados.valor });
+      this.loading.set(false);
+
+      // Delay para o br-select reagir após renderização
+      setTimeout(() => {
+        this.selectedValue.set(dados.valor);
+      }, 50);
+    }
+  });
+}
+```
+
+#### br-checkbox
+
+O `br-checkbox` também precisa de abordagem manual, usando o evento `(checkedChange)`:
+
+```html
+<!-- ✅ FUNCIONA -->
+<br-checkbox
+  [label]="'Ativo'"
+  [checked]="form.get('ativo')?.value"
+  (checkedChange)="onCheckChange($event)">
+</br-checkbox>
+```
+
+```typescript
+onCheckChange(event: CustomEvent<boolean>): void {
+  this.form.get('ativo')?.setValue(event.detail);
+}
+```
+
+#### br-input
+
+O `br-input` **funciona** com `formControlName`, mas requer `ngDefaultControl`:
+
+```html
+<!-- ✅ FUNCIONA -->
+<br-input
+  formControlName="nome"
+  ngDefaultControl
+  label="Nome"
+  placeholder="Digite o nome">
+</br-input>
+```
+
+#### Resumo de Compatibilidade
+
+| Componente | formControlName | Abordagem Manual |
+|------------|-----------------|------------------|
+| `br-input` | ✅ Funciona (com `ngDefaultControl`) | - |
+| `br-select` | ❌ Não funciona | `[value]` + `(valueChange)` + signal |
+| `br-checkbox` | ❌ Não funciona | `[checked]` + `(checkedChange)` |
+
+#### Exemplo Completo
+
+```typescript
+@Component({
+  // ...
+})
+export class MeuFormComponent {
+  form: FormGroup;
+
+  // Signals para controle manual dos selects
+  selectedCategoria = signal<string>('');
+  selectedStatus = signal<string>('');
+
+  categoriaOptions = [
+    { label: 'Categoria A', value: 'A' },
+    { label: 'Categoria B', value: 'B' },
+  ];
+
+  constructor(private fb: FormBuilder) {
+    this.form = this.fb.group({
+      nome: ['', Validators.required],
+      categoria: ['', Validators.required],
+      ativo: [true],
+    });
+  }
+
+  loadParaEdicao(id: number): void {
+    this.api.buscar(id).subscribe({
+      next: (dados) => {
+        this.form.patchValue(dados);
+        this.loading.set(false);
+
+        // Delay para br-select
+        setTimeout(() => {
+          this.selectedCategoria.set(dados.categoria);
+        }, 50);
+      }
+    });
+  }
+
+  onCategoriaChange(event: CustomEvent): void {
+    const value = event.detail ?? '';
+    this.form.get('categoria')?.setValue(value);
+    this.selectedCategoria.set(value);
+  }
+
+  onAtivoChange(event: CustomEvent<boolean>): void {
+    this.form.get('ativo')?.setValue(event.detail);
+  }
+}
+```
+
+```html
+<form [formGroup]="form">
+  <!-- br-input funciona com formControlName -->
+  <br-input
+    formControlName="nome"
+    ngDefaultControl
+    label="Nome">
+  </br-input>
+
+  <!-- br-select precisa de abordagem manual -->
+  <br-select
+    label="Categoria"
+    [options]="categoriaOptions"
+    [value]="selectedCategoria()"
+    (valueChange)="onCategoriaChange($event)">
+  </br-select>
+
+  <!-- br-checkbox precisa de abordagem manual -->
+  <br-checkbox
+    label="Ativo"
+    [checked]="form.get('ativo')?.value"
+    (checkedChange)="onAtivoChange($event)">
+  </br-checkbox>
+</form>
+```
 
 ## Responsividade
 

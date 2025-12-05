@@ -1,4 +1,4 @@
-.culinaria-list-page {
+.adicional-list-page {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-scale-3x);
@@ -9,6 +9,11 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-scale-3x);
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--spacing-scale-base);
 }
 
 .messages br-message {
@@ -24,7 +29,7 @@
 }
 
 .card-body {
-  padding: var(--spacing-scale-2x);
+  padding: var(--spacing-scale-3x);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-scale-2x);
@@ -44,7 +49,7 @@
 
     &.search {
       flex: 2;
-      max-width: 400px;
+      max-width: 420px;
     }
   }
 }
@@ -60,17 +65,24 @@
 
   br-table {
     width: 100%;
-    min-width: 500px;
+    min-width: 900px;
   }
 }
 
-.id-cell {
-  color: var(--gray-60);
-  font-size: var(--font-size-scale-down-01);
+.nome .title {
+  font-weight: var(--font-weight-medium);
 }
 
-.nome-cell {
-  font-weight: var(--font-weight-medium);
+.opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-scale-half);
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-scale-half);
 }
 
 .empty-state {
@@ -97,14 +109,18 @@
   display: flex;
   justify-content: center;
   padding-top: var(--spacing-scale-2x);
-  border-top: 1px solid var(--border-color, var(--gray-20));
+  border-top: 1px solid var(--gray-20);
 }
-
 
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
   }
 
   .filters {

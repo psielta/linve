@@ -1,10 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { BrButton, BrInput, BrMessage } from '@govbr-ds/webcomponents-angular/standalone';
 import { AuthService } from '../../../core/services/auth.service';
-import { ThemeService } from '../../../core/services/theme.service';
 
 @Component({
   selector: 'app-register',
@@ -20,9 +19,7 @@ import { ThemeService } from '../../../core/services/theme.service';
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
 })
-export class RegisterComponent implements OnInit {
-  private themeService = inject(ThemeService);
-
+export class RegisterComponent {
   registerForm: FormGroup;
   loading = signal(false);
   errorMessage = signal('');
@@ -43,10 +40,6 @@ export class RegisterComponent implements OnInit {
       confirmarSenha: ['', [Validators.required]],
       nomeOrganizacao: ['', [Validators.maxLength(100)]]
     }, { validators: this.passwordMatchValidator });
-  }
-
-  ngOnInit(): void {
-    this.themeService.applyTheme();
   }
 
   passwordMatchValidator(control: AbstractControl): ValidationErrors | null {

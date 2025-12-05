@@ -41,11 +41,10 @@ export class MenuComponent implements OnInit, OnDestroy {
   menuItems: MenuItem[] = [
     { id: "dashboard", name: "Dashboard", icon: "fas fa-home", url: "/app" },
     { id: "clientes", name: "Clientes", icon: "fas fa-users", url: "/app/clientes" },
-    { id: "produtos", name: "Produtos", icon: "fas fa-box", url: "/app/produtos" },
-    { id: "categorias", name: "Categorias", icon: "fas fa-tags", url: "/app/categorias" },
     { id: "culinarias", name: "Culinárias", icon: "fas fa-utensils", url: "/app/culinarias" },
+    { id: "categorias", name: "Categorias", icon: "fas fa-tags", url: "/app/categorias" },
     { id: "adicionais", name: "Adicionais", icon: "fas fa-plus-circle", url: "/app/adicionais" },
-    { id: "account", name: "Minha conta", icon: "fas fa-user-cog", url: "/app/account" },
+    { id: "produtos", name: "Produtos", icon: "fas fa-box", url: "/app/produtos" },
   ];
 
   toggleFolder(id: string) {
@@ -74,16 +73,40 @@ export class MenuComponent implements OnInit, OnDestroy {
       "/app/categorias": "categorias",
       "/app/culinarias": "culinarias",
       "/app/adicionais": "adicionais",
-      "/app/account": "account",
     };
 
     const activeId = routeToIdMap[cleanUrl];
     if (activeId) {
       this.itemAtivo = activeId;
-    } else {
-      // Se não encontrar uma correspondência exata, define como null
-      this.itemAtivo = null;
+      return;
     }
+
+    if (cleanUrl.startsWith("/app/categorias")) {
+      this.itemAtivo = "categorias";
+      return;
+    }
+
+    if (cleanUrl.startsWith("/app/produtos")) {
+      this.itemAtivo = "produtos";
+      return;
+    }
+
+    if (cleanUrl.startsWith("/app/adicionais")) {
+      this.itemAtivo = "adicionais";
+      return;
+    }
+
+    if (cleanUrl.startsWith("/app/clientes")) {
+      this.itemAtivo = "clientes";
+      return;
+    }
+
+    if (cleanUrl.startsWith("/app/categorias")) {
+      this.itemAtivo = "categorias";
+      return;
+    }
+
+    // Se não encontrar uma correspondência exata, define como null
+    this.itemAtivo = null;
   }
 }
-

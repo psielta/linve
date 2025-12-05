@@ -1,0 +1,238 @@
+<div class="cliente-form-page">
+  <div class="page-header">
+    <div>
+      <h1 class="text-up-04 text-weight-bold mb-1">
+        {{ isEditMode() ? 'Editar cliente' : 'Novo cliente' }}
+      </h1>
+      <p class="text-base text-muted">Dados pessoais e endereços.</p>
+    </div>
+    <div class="header-actions">
+      <br-button type="button" emphasis="secondary" density="small" (click)="goBack()">
+        <i class="fas fa-arrow-left mr-2"></i>Voltar
+      </br-button>
+      <br-button type="button" emphasis="primary" density="small" [disabled]="saving()" (click)="submit()">
+        {{ saving() ? 'Salvando...' : 'Salvar' }}
+      </br-button>
+    </div>
+  </div>
+
+  <div class="messages" *ngIf="feedback()">
+    <br-message
+      [state]="feedback()?.type"
+      [message]="feedback()?.text"
+      [isClosable]="true"
+      [showIcon]="true"
+      (brDidClose)="clearFeedback()">
+    </br-message>
+  </div>
+
+  <br-card>
+    <div slot="header" class="card-header-content">
+      <span>Dados do cliente</span>
+    </div>
+
+    <div class="card-body" slot="content">
+      <div class="loading-container" *ngIf="loading()">
+        <br-loading label="Carregando..."></br-loading>
+      </div>
+
+      <div *ngIf="!loading()">
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <br-input
+              formControlName="nome"
+              ngDefaultControl
+              label="Nome *"
+              placeholder="Nome completo"
+              [state]="invalid('nome') ? 'danger' : undefined">
+            </br-input>
+            <br-message
+              *ngIf="invalid('nome')"
+              state="danger"
+              is-feedback
+              message="Informe o nome (até 200 caracteres)">
+            </br-message>
+          </div>
+
+          <div class="form-group">
+            <br-select
+              label="Tipo de documento"
+              [options]="[{label:'CPF',value:'CPF'},{label:'CNPJ',value:'CNPJ'}]"
+              [value]="tipoDocumentoValue()"
+              (valueChange)="onDocumentoTypeChange($event)">
+            </br-select>
+          </div>
+
+          <div class="form-group">
+            <br-input
+              formControlName="documento"
+              ngDefaultControl
+              label="{{ tipoDocumentoValue() === 'CNPJ' ? 'CNPJ' : 'CPF' }}"
+              placeholder="Somente números"
+              [state]="invalid('documento') ? 'danger' : undefined">
+            </br-input>
+          </div>
+
+          <div class="form-group">
+            <br-input
+              formControlName="tel_1"
+              ngDefaultControl
+              label="Telefone 1"
+              placeholder="(00) 00000-0000">
+            </br-input>
+          </div>
+          <div class="form-group">
+            <br-input
+              formControlName="tel_2"
+              ngDefaultControl
+              label="Telefone 2"
+              placeholder="(00) 00000-0000">
+            </br-input>
+          </div>
+          <div class="form-group">
+            <br-input
+              formControlName="tel_3"
+              ngDefaultControl
+              label="Telefone 3"
+              placeholder="(00) 00000-0000">
+            </br-input>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section">
+          <div class="section-title">
+            <i class="fas fa-map-marker-alt"></i>
+            Endereços *
+          </div>
+
+          <br-message
+            *ngIf="enderecos.length === 0"
+            state="danger"
+            is-feedback
+            message="Adicione ao menos um endereço">
+          </br-message>
+
+          <div formArrayName="enderecos" class="enderecos-list">
+            <div
+              class="endereco-card"
+              *ngFor="let end of enderecos.controls; let i = index"
+              [formGroupName]="i">
+              <div class="card-row">
+                <span class="badge">Endereço {{ i + 1 }}</span>
+                <div class="row-actions">
+                  <br-button
+                    type="button"
+                    emphasis="tertiary"
+                    density="small"
+                    [disabled]="enderecos.length === 1"
+                    (click)="removeEndereco(i)">
+                    <i class="fas fa-trash"></i>
+                  </br-button>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <br-select
+                    #ufSelect
+                    label="UF *"
+                    placeholder="Selecione o estado"
+                    [showSearchIcon]="true"
+                    [options]="ufOptions()"
+                    [attr.value]="selectedUfs()[i] || null"
+                    (valueChange)="onUfChange(i, $event, ufSelect)">
+                  </br-select>
+                </div>
+
+                <div class="form-group">
+                  <br-select
+                    #municipioSelect
+                    label="Município *"
+                    [placeholder]="loadingMunicipios()[i] ? 'Carregando...' : (selectedUfs()[i] ? 'Selecione o município' : 'Selecione a UF primeiro')"
+                    [showSearchIcon]="true"
+                    [disabled]="!selectedUfs()[i] || loadingMunicipios()[i]"
+                    [options]="municipiosPorEndereco()[i] || []"
+                    [attr.value]="selectedMunicipios()[i] || null"
+                    (valueChange)="onMunicipioChange(i, $event, municipioSelect)">
+                  </br-select>
+                  <br-message
+                    *ngIf="invalidEndereco(i,'municipio')"
+                    state="danger"
+                    is-feedback
+                    message="Selecione um município">
+                  </br-message>
+                </div>
+
+                <div class="form-group">
+                  <br-input
+                    formControlName="cep"
+                    ngDefaultControl
+                    label="CEP"
+                    placeholder="00000-000">
+                  </br-input>
+                </div>
+
+                <div class="form-group">
+                  <br-input
+                    formControlName="bairro"
+                    ngDefaultControl
+                    label="Bairro">
+                  </br-input>
+                </div>
+
+                <div class="form-group full-width">
+                  <br-input
+                    formControlName="rua"
+                    ngDefaultControl
+                    label="Rua/Logradouro">
+                  </br-input>
+                </div>
+
+                <div class="form-group">
+                  <br-input
+                    formControlName="num"
+                    ngDefaultControl
+                    label="Número">
+                  </br-input>
+                </div>
+
+                <div class="form-group">
+                  <br-input
+                    formControlName="complemento"
+                    ngDefaultControl
+                    label="Complemento">
+                  </br-input>
+                </div>
+
+                <div class="form-group">
+                  <br-input
+                    formControlName="ponto_referencia"
+                    ngDefaultControl
+                    label="Ponto de referência">
+                  </br-input>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="opcoes-actions">
+            <br-button type="button" emphasis="secondary" density="small" (click)="addEndereco()">
+              <i class="fas fa-plus mr-2"></i>Adicionar endereço
+            </br-button>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <br-button type="button" emphasis="secondary" (click)="goBack()">Cancelar</br-button>
+          <br-button type="submit" emphasis="primary" [disabled]="saving()">
+            {{ saving() ? 'Salvando...' : 'Salvar cliente' }}
+          </br-button>
+        </div>
+      </form>
+      </div>
+    </div>
+  </br-card>
+</div>

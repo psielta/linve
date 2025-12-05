@@ -34,6 +34,54 @@ export const routes: Routes = [
       {
         path: 'culinarias',
         loadComponent: () => import('./pages/app/culinarias/culinaria-list.component').then(m => m.CulinariaListComponent)
+      },
+      {
+        path: 'categorias',
+        loadComponent: () => import('./pages/app/categorias/categoria-list.component').then(m => m.CategoriaListComponent)
+      },
+      {
+        path: 'categorias/new',
+        loadComponent: () => import('./pages/app/categorias/categoria-form.component').then(m => m.CategoriaFormComponent)
+      },
+      {
+        path: 'categorias/:id',
+        loadComponent: () => import('./pages/app/categorias/categoria-form.component').then(m => m.CategoriaFormComponent)
+      },
+      {
+        path: 'produtos',
+        loadComponent: () => import('./pages/app/produtos/produto-list.component').then(m => m.ProdutoListComponent)
+      },
+      {
+        path: 'produtos/new',
+        loadComponent: () => import('./pages/app/produtos/produto-form.component').then(m => m.ProdutoFormComponent)
+      },
+      {
+        path: 'produtos/:id',
+        loadComponent: () => import('./pages/app/produtos/produto-form.component').then(m => m.ProdutoFormComponent)
+      },
+      {
+        path: 'adicionais',
+        loadComponent: () => import('./pages/app/adicionais/adicional-list.component').then(m => m.AdicionalListComponent)
+      },
+      {
+        path: 'adicionais/new',
+        loadComponent: () => import('./pages/app/adicionais/adicional-form.component').then(m => m.AdicionalFormComponent)
+      },
+      {
+        path: 'adicionais/:id',
+        loadComponent: () => import('./pages/app/adicionais/adicional-form.component').then(m => m.AdicionalFormComponent)
+      },
+      {
+        path: 'clientes',
+        loadComponent: () => import('./pages/app/clientes/cliente-list.component').then(m => m.ClienteListComponent)
+      },
+      {
+        path: 'clientes/new',
+        loadComponent: () => import('./pages/app/clientes/cliente-form.component').then(m => m.ClienteFormComponent)
+      },
+      {
+        path: 'clientes/:id',
+        loadComponent: () => import('./pages/app/clientes/cliente-form.component').then(m => m.ClienteFormComponent)
       }
       // Futuras rotas autenticadas serão adicionadas aqui
     ]

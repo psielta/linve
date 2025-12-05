@@ -1,0 +1,167 @@
+<div class="adicional-list-page">
+  <div class="page-header">
+    <div>
+      <h1 class="text-up-04 text-weight-bold mb-1">Adicionais</h1>
+      <p class="text-base text-muted">Gerencie grupos de adicionais vinculados às categorias.</p>
+    </div>
+    <div class="header-actions">
+      <br-button type="button" emphasis="secondary" density="small" (click)="loadAdicionais()">
+        <i class="fas fa-sync mr-2"></i>Recarregar
+      </br-button>
+      <br-button type="button" emphasis="primary" density="small" (click)="goToNew()">
+        <i class="fas fa-plus mr-2"></i>Novo adicional
+      </br-button>
+    </div>
+  </div>
+
+  <div class="messages" *ngIf="error() || feedback()">
+    <br-message
+      *ngIf="error()"
+      state="danger"
+      [message]="error()"
+      [isClosable]="true"
+      [showIcon]="true"
+      (brDidClose)="dismissError()">
+    </br-message>
+    <br-message
+      *ngIf="feedback()"
+      state="success"
+      [message]="feedback()"
+      [isClosable]="true"
+      [showIcon]="true"
+      (brDidClose)="dismissFeedback()">
+    </br-message>
+  </div>
+
+  <br-card>
+    <div slot="header" class="card-header-content">
+      <span>Lista de adicionais</span>
+    </div>
+
+    <div class="card-body" slot="content">
+      <div class="filters">
+        <div class="filter-item">
+          <br-select
+            label="Categoria"
+            placeholder="Todas"
+            [options]="categoriaOptions()"
+            [value]="selectedCategoria()"
+            (valueChange)="onCategoriaChange($event)">
+          </br-select>
+        </div>
+
+        <div class="filter-item search">
+          <br-input
+            label="Buscar"
+            placeholder="Nome, categoria ou seleção"
+            type="search"
+            (valueChange)="onSearchChange($event)">
+          </br-input>
+        </div>
+      </div>
+
+      <div class="loading-container" *ngIf="loading()">
+        <br-loading label="Carregando adicionais..."></br-loading>
+      </div>
+
+      <div class="table-container" *ngIf="!loading()">
+        <br-table *ngIf="paginatedAdicionais().length > 0">
+          <br-table-header-row [attr.slot]="'header'">
+            <br-table-header-cell>Adicional</br-table-header-cell>
+            <br-table-header-cell>Categoria</br-table-header-cell>
+            <br-table-header-cell>Seleção</br-table-header-cell>
+            <br-table-header-cell>Regras</br-table-header-cell>
+            <br-table-header-cell>Opções / Valores</br-table-header-cell>
+            <br-table-header-cell>Status</br-table-header-cell>
+            <br-table-header-cell horizontalAlign="center">Ações</br-table-header-cell>
+          </br-table-header-row>
+
+          <br-table-row
+            [attr.slot]="'row'"
+            *ngFor="let adc of paginatedAdicionais(); trackBy: trackByAdicional">
+            <br-table-cell>
+              <div class="nome">
+                <div class="title">{{ adc.nome }}</div>
+              </div>
+            </br-table-cell>
+
+            <br-table-cell>
+              <span class="text-muted">{{ categoriaNome(adc.id_categoria) }}</span>
+            </br-table-cell>
+
+            <br-table-cell>
+              <br-tag
+                shape="rounded"
+                density="small"
+                [label]="selecaoLabel(adc.selecao)"
+                bgColor="blue-warm-vivid-60">
+              </br-tag>
+            </br-table-cell>
+
+            <br-table-cell>
+              <span class="text-muted">{{ regrasLabel(adc) }}</span>
+            </br-table-cell>
+
+            <br-table-cell>
+              <div class="opcoes">
+                <ng-container *ngIf="(adc.opcoes?.length || 0) === 0; else opcoesTpl">
+                  <span class="text-muted">Sem opções</span>
+                </ng-container>
+                <ng-template #opcoesTpl>
+                  <br-tag
+                    *ngFor="let op of adc.opcoes"
+                    shape="rounded"
+                    density="small"
+                    [label]="op.nome ? op.nome + ' • ' + precoLabel(op.valor) : precoLabel(op.valor)"
+                    [bgColor]="op.status ? 'green-vivid-20' : 'gray-20'">
+                  </br-tag>
+                </ng-template>
+              </div>
+            </br-table-cell>
+
+            <br-table-cell>
+              <br-tag
+                shape="rounded"
+                density="small"
+                [label]="adc.status ? 'Ativo' : 'Inativo'"
+                [bgColor]="adc.status ? 'green-vivid-50' : 'red-vivid-60'">
+              </br-tag>
+            </br-table-cell>
+
+            <br-table-cell horizontalAlign="center">
+              <div class="actions">
+                <br-button type="button" emphasis="tertiary" density="small" (click)="goToEdit(adc.id_adicional)">
+                  <i class="fas fa-pen"></i>
+                </br-button>
+                <br-button type="button" emphasis="tertiary" density="small" (click)="confirmarExcluir(adc)">
+                  <i class="fas fa-trash"></i>
+                </br-button>
+              </div>
+            </br-table-cell>
+          </br-table-row>
+        </br-table>
+
+        <div class="empty-state" *ngIf="paginatedAdicionais().length === 0">
+          <i class="fas fa-clipboard-list"></i>
+          <p>Nenhum adicional encontrado</p>
+        </div>
+      </div>
+
+      <div class="pagination-container" *ngIf="!loading() && totalItems() > 0">
+        <br-pagination
+          [total]="totalPages()"
+          [current]="currentPage()"
+          [totalItems]="totalItems()"
+          [perPage]="perPage()"
+          [perPageOptions]="[5, 10, 25, 50]"
+          variant="contextual"
+          itemsText="adicionais"
+          perPageLabel="Itens por página"
+          goToPageLabel="Ir para página"
+          (pageChange)="onPageChange($event)"
+          (perPageChange)="onPerPageChange($event)">
+        </br-pagination>
+      </div>
+    </div>
+  </br-card>
+</div>
