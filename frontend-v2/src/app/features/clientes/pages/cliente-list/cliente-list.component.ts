@@ -12,10 +12,15 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { DividerModule } from 'primeng/divider';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ClienteOutput } from '../../../../core/api/models/cliente-output';
 import { ClienteService } from '../../services/cliente.service';
 import { TenantService } from '../../../../core/services/tenant.service';
+
+interface ExpandedRows {
+  [key: string]: boolean;
+}
 
 @Component({
   selector: 'app-cliente-list',
@@ -33,7 +38,8 @@ import { TenantService } from '../../../../core/services/tenant.service';
     SkeletonModule,
     InputTextModule,
     IconFieldModule,
-    InputIconModule
+    InputIconModule,
+    DividerModule
   ],
   providers: [MessageService, ConfirmationService],
   template: `
@@ -89,10 +95,12 @@ import { TenantService } from '../../../../core/services/tenant.service';
           [showCurrentPageReport]="true"
           currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} clientes"
           dataKey="id"
+          [expandedRowKeys]="expandedRows"
         >
           <ng-template #header>
             <tr>
-              <th pSortableColumn="nome" style="width: 30%">
+              <th style="width: 3rem"></th>
+              <th pSortableColumn="nome" style="width: 27%">
                 <div class="flex items-center gap-2">
                   Nome
                   <p-sortIcon field="nome" />
@@ -104,8 +112,18 @@ import { TenantService } from '../../../../core/services/tenant.service';
               <th style="width: 12%">Acoes</th>
             </tr>
           </ng-template>
-          <ng-template #body let-cliente>
+          <ng-template #body let-cliente let-expanded="expanded">
             <tr>
+              <td>
+                <p-button
+                  type="button"
+                  [pRowToggler]="cliente"
+                  [text]="true"
+                  [rounded]="true"
+                  [plain]="true"
+                  [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                />
+              </td>
               <td>
                 <div class="font-semibold text-lg">{{ cliente.nome }}</div>
               </td>
@@ -122,6 +140,9 @@ import { TenantService } from '../../../../core/services/tenant.service';
                     severity="info"
                     icon="pi pi-map-marker"
                   />
+                  @if (cliente.enderecos.length > 1) {
+                    <span class="text-xs text-surface-500 ml-1">+{{ cliente.enderecos.length - 1 }}</span>
+                  }
                 } @else {
                   <span class="text-surface-400">Sem endereco</span>
                 }
@@ -150,9 +171,72 @@ import { TenantService } from '../../../../core/services/tenant.service';
               </td>
             </tr>
           </ng-template>
+          <ng-template #expandedrow let-cliente>
+            <tr>
+              <td colspan="6">
+                <div class="p-4">
+                  <div class="flex items-center gap-4 mb-4">
+                    <i class="pi pi-user text-2xl text-primary"></i>
+                    <div>
+                      <h4 class="font-bold text-lg m-0">{{ cliente.nome }}</h4>
+                      <p class="text-surface-500 m-0">Detalhes do cliente</p>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="flex flex-col gap-1">
+                      <span class="text-xs text-surface-500 uppercase">Documento</span>
+                      <span class="font-medium">{{ formatarDocumento(cliente.documento) || '-' }}</span>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <span class="text-xs text-surface-500 uppercase">Telefone Principal</span>
+                      <span class="font-medium">{{ formatarTelefone(cliente.tel_1) || '-' }}</span>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <span class="text-xs text-surface-500 uppercase">Telefone Secundario</span>
+                      <span class="font-medium">{{ formatarTelefone(cliente.tel_2) || '-' }}</span>
+                    </div>
+                  </div>
+
+                  @if (cliente.enderecos && cliente.enderecos.length > 0) {
+                    <p-divider />
+                    <h5 class="font-semibold mb-3 flex items-center gap-2">
+                      <i class="pi pi-map-marker text-primary"></i>
+                      Enderecos ({{ cliente.enderecos.length }})
+                    </h5>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      @for (endereco of cliente.enderecos; track endereco.id_endereco) {
+                        <div class="p-3 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800">
+                          <div class="flex justify-between items-start mb-2">
+                            <span class="font-semibold">{{ endereco.cidade }} / {{ endereco.uf }}</span>
+                            @if (endereco.principal) {
+                              <p-tag value="Principal" severity="success" />
+                            }
+                          </div>
+                          <p class="text-sm text-surface-600 dark:text-surface-300 m-0">
+                            {{ endereco.logradouro }}@if (endereco.numero) {, {{ endereco.numero }}}
+                            @if (endereco.complemento) { - {{ endereco.complemento }}}
+                          </p>
+                          <p class="text-sm text-surface-500 m-0">
+                            {{ endereco.bairro }} - CEP: {{ endereco.cep }}
+                          </p>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <p-divider />
+                    <div class="text-center py-4 text-surface-500">
+                      <i class="pi pi-map-marker text-2xl mb-2"></i>
+                      <p class="m-0">Nenhum endereco cadastrado</p>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          </ng-template>
           <ng-template #emptymessage>
             <tr>
-              <td colspan="5">
+              <td colspan="6">
                 <div class="flex flex-col items-center justify-center py-16 px-4">
                   <div class="relative mb-6">
                     <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center border border-primary/20">
@@ -221,6 +305,7 @@ export class ClienteListComponent implements OnInit {
   clientes = signal<ClienteOutput[]>([]);
   clientesFiltrados = signal<ClienteOutput[]>([]);
   loading = signal(true);
+  expandedRows: ExpandedRows = {};
 
   searchTerm = '';
 
