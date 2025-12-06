@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, effect, inject, signal } from '@angular/core';
 import {
-  FormBuilder,
+  FormArray,
   FormControl,
   FormGroup,
   ReactiveFormsModule,
@@ -26,7 +26,7 @@ import { CategoriaOpcaoOutput } from '../../../../core/api/models/categoria-opca
 import { ProdutoOutput } from '../../../../core/api/models/produto-output';
 import { TenantService } from '../../../../core/services/tenant.service';
 
-interface OpcaoPrecoView {
+interface OpcaoFormValue {
   id_opcao: number;
   nome: string;
   valor: number;
@@ -124,56 +124,63 @@ interface OpcaoPrecoView {
             Opcoes e precos *
           </h3>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-4" [formGroup]="opcaoForm">
-            <div class="flex flex-col gap-2 md:col-span-1">
-              <label class="font-semibold">Opcao da categoria</label>
-              <p-select
-                formControlName="id_opcao"
-                [options]="opcoesCategoria()"
-                optionLabel="nome"
-                optionValue="id_opcao"
-                placeholder="Selecione a opcao"
-                [filter]="true"
-                [showClear]="true"
-                [disabled]="!opcoesCategoria().length"
-                styleClass="w-full"
-                [invalid]="invalidOpcaoField('id_opcao')"
-              />
-              <small class="text-red-500" *ngIf="invalidOpcaoField('id_opcao')">
-                Selecione uma opcao
-              </small>
-            </div>
+          @if (!todasOpcoesLancadas) {
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-4" [formGroup]="opcaoForm">
+              <div class="flex flex-col gap-2 md:col-span-1">
+                <label class="font-semibold">Opcao da categoria</label>
+                <p-select
+                  formControlName="id_opcao"
+                  [options]="opcoesDisponiveis"
+                  optionLabel="nome"
+                  optionValue="id_opcao"
+                  placeholder="Selecione a opcao"
+                  [filter]="true"
+                  [showClear]="true"
+                  [disabled]="!opcoesDisponiveis.length"
+                  styleClass="w-full"
+                  [invalid]="invalidOpcaoField('id_opcao')"
+                />
+                <small class="text-red-500" *ngIf="invalidOpcaoField('id_opcao')">
+                  Selecione uma opcao
+                </small>
+              </div>
 
-            <div class="flex flex-col gap-2 md:col-span-1">
-              <label class="font-semibold">Valor</label>
-              <p-inputNumber
-                formControlName="valor"
-                mode="currency"
-                currency="BRL"
-                [minFractionDigits]="2"
-                [maxFractionDigits]="2"
-                [useGrouping]="true"
-                inputStyleClass="w-full"
-                styleClass="w-full"
-                [invalid]="invalidOpcaoField('valor')"
-              />
-              <small class="text-red-500" *ngIf="invalidOpcaoField('valor')">
-                Informe um valor maior que zero
-              </small>
-            </div>
+              <div class="flex flex-col gap-2 md:col-span-1">
+                <label class="font-semibold">Valor</label>
+                <p-inputNumber
+                  formControlName="valor"
+                  mode="currency"
+                  currency="BRL"
+                  [minFractionDigits]="2"
+                  [maxFractionDigits]="2"
+                  [useGrouping]="true"
+                  inputStyleClass="w-full"
+                  styleClass="w-full"
+                  [invalid]="invalidOpcaoField('valor')"
+                />
+                <small class="text-red-500" *ngIf="invalidOpcaoField('valor')">
+                  Informe um valor maior que zero
+                </small>
+              </div>
 
-            <div class="flex gap-2 md:col-span-1">
-              <p-button
-                label="Adicionar opcao"
-                icon="pi pi-plus"
-                class="w-full md:w-auto"
-                (onClick)="addOpcao()"
-                [outlined]="true"
-              />
+              <div class="flex gap-2 md:col-span-1">
+                <p-button
+                  label="Adicionar opcao"
+                  icon="pi pi-plus"
+                  class="w-full md:w-auto"
+                  (onClick)="addOpcao()"
+                  [outlined]="true"
+                />
+              </div>
             </div>
-          </div>
+          } @else {
+            <div class="p-3 mb-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 flex items-center gap-2">
+              <i class="pi pi-check-circle"></i>
+              <span>Todas as opcoes da categoria ja foram lancadas.</span>
+            </div>
+          }
 
-          @if (opcoesSelecionadas().length === 0) {
+          @if (opcoesArray.length === 0) {
             <div
               class="p-4 rounded-lg border"
               [ngClass]="{
@@ -191,17 +198,29 @@ interface OpcaoPrecoView {
               }
             </div>
           } @else {
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              @for (op of opcoesSelecionadas(); track op.id_opcao) {
-                <div class="p-4 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 flex flex-col gap-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" formArrayName="opcoes">
+              @for (opcaoGroup of opcoesArray.controls; track opcaoGroup.controls.id_opcao.value; let i = $index) {
+                <div [formGroupName]="i" class="p-4 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 flex flex-col gap-2">
                   <div class="flex justify-between items-start gap-2">
                     <div>
                       <p class="text-sm text-surface-500 mb-1">Opcao</p>
-                      <p class="text-base font-semibold m-0">{{ op.nome }}</p>
+                      <p class="text-base font-semibold m-0">{{ opcaoGroup.controls.nome.value }}</p>
                     </div>
                     <p-tag value="Ativo" severity="success" />
                   </div>
-                  <div class="text-2xl font-bold text-primary">{{ op.valor | currency: 'BRL':'symbol-narrow' }}</div>
+                  <div class="flex flex-col gap-1">
+                    <label class="text-sm text-surface-500">Valor</label>
+                    <p-inputNumber
+                      formControlName="valor"
+                      mode="currency"
+                      currency="BRL"
+                      [minFractionDigits]="2"
+                      [maxFractionDigits]="2"
+                      [useGrouping]="true"
+                      inputStyleClass="w-full"
+                      styleClass="w-full"
+                    />
+                  </div>
                   <div class="flex justify-end">
                     <p-button
                       icon="pi pi-trash"
@@ -210,7 +229,7 @@ interface OpcaoPrecoView {
                       [rounded]="true"
                       pTooltip="Remover"
                       tooltipPosition="top"
-                      (onClick)="removeOpcao(op.id_opcao)"
+                      (onClick)="removeOpcao(i)"
                     />
                   </div>
                 </div>
@@ -247,6 +266,11 @@ export class ProdutoFormComponent implements OnInit {
     categoria: FormControl<number | null>;
     nome: FormControl<string>;
     descricao: FormControl<string>;
+    opcoes: FormArray<FormGroup<{
+      id_opcao: FormControl<number>;
+      nome: FormControl<string>;
+      valor: FormControl<number>;
+    }>>;
   }>;
 
   opcaoForm: FormGroup<{
@@ -262,12 +286,23 @@ export class ProdutoFormComponent implements OnInit {
   categorias = signal<CategoriaOutput[]>([]);
   categoriaOptions = signal<CategoriaOutput[]>([]);
   opcoesCategoria = signal<CategoriaOpcaoOutput[]>([]);
-  opcoesSelecionadas = signal<OpcaoPrecoView[]>([]);
 
   private currentOrgId: number | null = null;
 
+  get opcoesArray() {
+    return this.form.controls.opcoes;
+  }
+
+  get opcoesDisponiveis(): CategoriaOpcaoOutput[] {
+    const idsJaLancados = new Set(this.opcoesArray.controls.map((g) => g.controls.id_opcao.value));
+    return this.opcoesCategoria().filter((o) => !idsJaLancados.has(o.id_opcao!));
+  }
+
+  get todasOpcoesLancadas(): boolean {
+    return this.opcoesCategoria().length > 0 && this.opcoesDisponiveis.length === 0;
+  }
+
   constructor(
-    private fb: FormBuilder,
     private produtoService: ProdutoService,
     private categoriaService: CategoriaService,
     private messageService: MessageService,
@@ -280,7 +315,12 @@ export class ProdutoFormComponent implements OnInit {
         nonNullable: true,
         validators: [Validators.required, Validators.maxLength(150)]
       }),
-      descricao: new FormControl<string>('', { nonNullable: true, validators: [Validators.maxLength(500)] })
+      descricao: new FormControl<string>('', { nonNullable: true, validators: [Validators.maxLength(500)] }),
+      opcoes: new FormArray<FormGroup<{
+        id_opcao: FormControl<number>;
+        nome: FormControl<string>;
+        valor: FormControl<number>;
+      }>>([])
     });
 
     this.opcaoForm = new FormGroup({
@@ -351,12 +391,14 @@ export class ProdutoFormComponent implements OnInit {
 
         // Carrega opcoes da categoria e, depois, as selecionadas
         this.handleCategoriaChange(prod.id_categoria, () => {
-          const selecionadas: OpcaoPrecoView[] = (prod.opcoes || []).map((p) => ({
-            id_opcao: p.id_opcao!,
-            nome: p.nome || `Opcao #${p.id_opcao}`,
-            valor: p.valor || 0
-          }));
-          this.opcoesSelecionadas.set(selecionadas);
+          this.opcoesArray.clear();
+          (prod.opcoes || []).forEach((p) => {
+            this.opcoesArray.push(this.createOpcaoGroup(
+              p.id_opcao!,
+              p.nome || `Opcao #${p.id_opcao}`,
+              p.valor || 0
+            ));
+          });
         });
       },
       error: () => {
@@ -370,10 +412,18 @@ export class ProdutoFormComponent implements OnInit {
     });
   }
 
+  private createOpcaoGroup(idOpcao: number, nome: string, valor: number) {
+    return new FormGroup({
+      id_opcao: new FormControl<number>(idOpcao, { nonNullable: true }),
+      nome: new FormControl<string>(nome, { nonNullable: true }),
+      valor: new FormControl<number>(valor, { nonNullable: true, validators: [Validators.required, Validators.min(0.01)] })
+    });
+  }
+
   handleCategoriaChange(categoriaId: number | null, afterLoad?: () => void): void {
     if (!categoriaId) {
       this.opcoesCategoria.set([]);
-      this.opcoesSelecionadas.set([]);
+      this.opcoesArray.clear();
       return;
     }
 
@@ -383,7 +433,7 @@ export class ProdutoFormComponent implements OnInit {
 
         // Se categoria mudou manualmente, limpamos opcoes selecionadas
         if (!afterLoad) {
-          this.opcoesSelecionadas.set([]);
+          this.opcoesArray.clear();
         }
         if (afterLoad) {
           afterLoad();
@@ -395,7 +445,7 @@ export class ProdutoFormComponent implements OnInit {
           summary: 'Atencao',
           detail: 'Nao foi possivel carregar opcoes da categoria selecionada'
         });
-        this.opcoesSelecionadas.set([]);
+        this.opcoesArray.clear();
       }
     });
   }
@@ -420,7 +470,8 @@ export class ProdutoFormComponent implements OnInit {
     }
 
     // Evita duplicados
-    if (this.opcoesSelecionadas().some((o) => o.id_opcao === id_opcao)) {
+    const jaExiste = this.opcoesArray.controls.some((g) => g.controls.id_opcao.value === id_opcao);
+    if (jaExiste) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Opcao duplicada',
@@ -429,19 +480,17 @@ export class ProdutoFormComponent implements OnInit {
       return;
     }
 
-    const nova: OpcaoPrecoView = {
+    this.opcoesArray.push(this.createOpcaoGroup(
       id_opcao,
-      nome: opcaoCatalogo.nome || `Opcao #${id_opcao}`,
-      valor: valor
-    };
-
-    this.opcoesSelecionadas.set([...this.opcoesSelecionadas(), nova]);
+      opcaoCatalogo.nome || `Opcao #${id_opcao}`,
+      valor
+    ));
     this.opcaoForm.reset();
     this.opcoesInvalidas.set(false);
   }
 
-  removeOpcao(idOpcao: number): void {
-    this.opcoesSelecionadas.set(this.opcoesSelecionadas().filter((o) => o.id_opcao !== idOpcao));
+  removeOpcao(index: number): void {
+    this.opcoesArray.removeAt(index);
   }
 
   submit(): void {
@@ -455,7 +504,7 @@ export class ProdutoFormComponent implements OnInit {
       return;
     }
 
-    if (this.opcoesSelecionadas().length === 0) {
+    if (this.opcoesArray.length === 0) {
       this.opcoesInvalidas.set(true);
       this.messageService.add({
         severity: 'warn',
@@ -471,9 +520,9 @@ export class ProdutoFormComponent implements OnInit {
       id_categoria: this.form.controls.categoria.value!,
       nome: this.form.controls.nome.value.trim(),
       descricao: this.form.controls.descricao.value?.trim() || undefined,
-      opcoes: this.opcoesSelecionadas().map((o) => ({
-        id_opcao: o.id_opcao,
-        valor: o.valor
+      opcoes: this.opcoesArray.controls.map((g) => ({
+        id_opcao: g.controls.id_opcao.value,
+        valor: g.controls.valor.value
       }))
     };
 

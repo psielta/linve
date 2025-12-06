@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit, effect, inject, signal } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, effect, inject, signal } from '@angular/core';
+import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -17,14 +17,6 @@ import { AdicionalInput } from '../../../../core/api/models/adicional-input';
 import { CategoriaOutput } from '../../../../core/api/models/categoria-output';
 import { AdicionalOutput } from '../../../../core/api/models/adicional-output';
 import { TenantService } from '../../../../core/services/tenant.service';
-
-interface OpcaoAdicionalView {
-  id_item?: number;
-  _trackId: string;
-  nome: string;
-  valor: number;
-  status?: boolean;
-}
 
 @Component({
   selector: 'app-adicional-form',
@@ -204,44 +196,60 @@ interface OpcaoAdicionalView {
             </div>
           </div>
 
-          <div class="space-y-3">
-            <ng-container *ngFor="let op of opcoesSelecionadas; trackBy: trackByFn">
-              <div class="flex items-center justify-between bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-lg px-4 py-3">
-                <div class="flex flex-col">
-                  <span class="font-semibold">{{ op.nome }}</span>
-                  <span class="text-sm text-surface-600 dark:text-surface-300">
-                    R$ {{ op.valor.toFixed(2) }}
-                  </span>
+          @if (opcoesArray.length > 0) {
+            <div class="space-y-3" formArrayName="opcoes">
+              @for (opcaoGroup of opcoesArray.controls; track $index; let i = $index) {
+                <div [formGroupName]="i" class="flex items-center gap-4 bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-lg px-4 py-3">
+                  <div class="flex-1 flex flex-col gap-1">
+                    <label class="text-xs text-surface-500">Nome</label>
+                    <input
+                      pInputText
+                      formControlName="nome"
+                      class="w-full"
+                    />
+                  </div>
+                  <div class="w-40 flex flex-col gap-1">
+                    <label class="text-xs text-surface-500">Valor</label>
+                    <p-inputNumber
+                      formControlName="valor"
+                      [min]="0"
+                      mode="currency"
+                      currency="BRL"
+                      locale="pt-BR"
+                      inputStyleClass="w-full"
+                      styleClass="w-full"
+                    />
+                  </div>
+                  <div class="flex items-center">
+                    <p-button
+                      icon="pi pi-trash"
+                      [text]="true"
+                      severity="danger"
+                      [rounded]="true"
+                      (onClick)="removeOpcao(i)"
+                    />
+                  </div>
                 </div>
-                <div class="flex items-center gap-3">
-                  <button
-                    type="button"
-                    class="p-button p-button-rounded p-button-text p-button-danger"
-                    (click)="removeOpcao(op)"
-                  >
-                    <i class="pi pi-trash"></i>
-                  </button>
-                </div>
-              </div>
-            </ng-container>
-          </div>
-
-          <div
-            *ngIf="opcoesSelecionadas.length === 0"
-            class="p-4 rounded-lg border"
-            [ngClass]="{
-              'border-dashed border-surface-300 dark:border-surface-600 text-surface-500': !opcoesInvalidas,
-              'border-solid border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20': opcoesInvalidas
-            }"
-          >
-            <div *ngIf="opcoesInvalidas" class="flex items-center gap-3 text-red-700 dark:text-red-400">
-              <i class="pi pi-exclamation-triangle text-xl"></i>
-              <span class="font-medium">Adicione ao menos uma opcao para este adicional</span>
+              }
             </div>
-            <span *ngIf="!opcoesInvalidas">
-              Nenhuma opcao adicionada. Informe o nome e valor para adicionar uma opcao.
-            </span>
-          </div>
+          } @else {
+            <div
+              class="p-4 rounded-lg border"
+              [ngClass]="{
+                'border-dashed border-surface-300 dark:border-surface-600 text-surface-500': !opcoesInvalidas,
+                'border-solid border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20': opcoesInvalidas
+              }"
+            >
+              @if (opcoesInvalidas) {
+                <div class="flex items-center gap-3 text-red-700 dark:text-red-400">
+                  <i class="pi pi-exclamation-triangle text-xl"></i>
+                  <span class="font-medium">Adicione ao menos uma opcao para este adicional</span>
+                </div>
+              } @else {
+                <span>Nenhuma opcao adicionada. Informe o nome e valor para adicionar uma opcao.</span>
+              }
+            </div>
+          }
         </div>
       </form>
     </div>
@@ -249,13 +257,27 @@ interface OpcaoAdicionalView {
 })
 export class AdicionalFormComponent implements OnInit {
   private tenantService = inject(TenantService);
-  private cdr = inject(ChangeDetectorRef);
 
-  form: FormGroup;
-  opcaoForm: FormGroup;
+  form: FormGroup<{
+    categoria: FormControl<number | null>;
+    nome: FormControl<string>;
+    selecao: FormControl<'U' | 'M' | 'Q' | null>;
+    minimo: FormControl<number | null>;
+    limite: FormControl<number | null>;
+    opcoes: FormArray<FormGroup<{
+      id_item: FormControl<number | null>;
+      nome: FormControl<string>;
+      valor: FormControl<number>;
+      status: FormControl<boolean>;
+    }>>;
+  }>;
+
+  opcaoForm: FormGroup<{
+    nome: FormControl<string>;
+    valor: FormControl<number | null>;
+  }>;
 
   categoriaOptions = signal<CategoriaOutput[]>([]);
-  opcoesSelecionadas: OpcaoAdicionalView[] = [];
   opcoesInvalidas = false;
   saving = signal(false);
 
@@ -267,28 +289,38 @@ export class AdicionalFormComponent implements OnInit {
 
   private currentId: number | null = null;
 
+  get opcoesArray() {
+    return this.form.controls.opcoes;
+  }
+
   constructor(
-    private fb: FormBuilder,
     private adicionalService: AdicionalService,
     private categoriaService: CategoriaService,
     private messageService: MessageService,
     private route: ActivatedRoute,
     private router: Router
   ) {
-    this.form = this.fb.group({
+    this.form = new FormGroup({
       categoria: new FormControl<number | null>(null, { validators: [Validators.required] }),
       nome: new FormControl<string>('', {
+        nonNullable: true,
         validators: [Validators.required, Validators.maxLength(150)]
       }),
       selecao: new FormControl<'U' | 'M' | 'Q' | null>(null, { validators: [Validators.required] }),
       minimo: new FormControl<number | null>(null),
-      limite: new FormControl<number | null>(null)
+      limite: new FormControl<number | null>(null),
+      opcoes: new FormArray<FormGroup<{
+        id_item: FormControl<number | null>;
+        nome: FormControl<string>;
+        valor: FormControl<number>;
+        status: FormControl<boolean>;
+      }>>([])
     });
 
-    this.opcaoForm = this.fb.group({
-      nome: new FormControl<string>('', { validators: [Validators.required] }),
+    this.opcaoForm = new FormGroup({
+      nome: new FormControl<string>('', { nonNullable: true, validators: [Validators.required] }),
       valor: new FormControl<number | null>(null, {
-        validators: [Validators.required, Validators.min(0.01)]
+        validators: [Validators.required, Validators.min(0)]
       })
     });
 
@@ -297,6 +329,15 @@ export class AdicionalFormComponent implements OnInit {
       if (orgId) {
         this.loadCategorias();
       }
+    });
+  }
+
+  private createOpcaoGroup(nome: string, valor: number, idItem?: number, status: boolean = true) {
+    return new FormGroup({
+      id_item: new FormControl<number | null>(idItem ?? null),
+      nome: new FormControl<string>(nome, { nonNullable: true, validators: [Validators.required] }),
+      valor: new FormControl<number>(valor, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+      status: new FormControl<boolean>(status, { nonNullable: true })
     });
   }
 
@@ -318,17 +359,17 @@ export class AdicionalFormComponent implements OnInit {
   }
 
   invalidMinimo(): boolean {
-    const selecao = this.form.get('selecao')?.value as 'U' | 'M' | 'Q' | null;
-    const minimo = this.form.get('minimo')?.value;
-    const limite = this.form.get('limite')?.value ?? null;
+    const selecao = this.form.controls.selecao.value;
+    const minimo = this.form.controls.minimo.value;
+    const limite = this.form.controls.limite.value;
     const formTouched = this.form.touched || this.form.dirty;
 
     if (selecao === 'Q') {
-      // Mínimo é obrigatório para seleção Q (deve ser >= 0)
-      if ((minimo === null || minimo === undefined || minimo === '') && formTouched) {
+      // Minimo e obrigatorio para selecao Q (deve ser >= 0)
+      if (minimo === null && formTouched) {
         return true;
       }
-      // Mínimo não pode ser maior que limite
+      // Minimo nao pode ser maior que limite
       if (minimo !== null && limite !== null && minimo > limite) {
         return true;
       }
@@ -337,10 +378,10 @@ export class AdicionalFormComponent implements OnInit {
   }
 
   getMinimoErrorMessage(): string {
-    const minimo = this.form.get('minimo')?.value;
-    const limite = this.form.get('limite')?.value ?? null;
+    const minimo = this.form.controls.minimo.value;
+    const limite = this.form.controls.limite.value;
 
-    if (minimo === null || minimo === undefined || minimo === '') {
+    if (minimo === null) {
       return 'Minimo e obrigatorio (deve ser >= 0)';
     }
     if (limite !== null && minimo > limite) {
@@ -350,8 +391,8 @@ export class AdicionalFormComponent implements OnInit {
   }
 
   invalidLimite(): boolean {
-    const selecao = this.form.get('selecao')?.value as 'U' | 'M' | 'Q' | null;
-    const limite = this.form.get('limite')?.value ?? null;
+    const selecao = this.form.controls.selecao.value;
+    const limite = this.form.controls.limite.value;
     const formTouched = this.form.touched || this.form.dirty;
 
     if (selecao === 'Q' && (limite === null || limite < 1) && formTouched) {
@@ -383,16 +424,15 @@ export class AdicionalFormComponent implements OnInit {
           limite: adc.limite ?? null
         });
 
-        const opcoesView: OpcaoAdicionalView[] = (adc.opcoes || []).map((o: any, idx: number) => ({
-          id_item: o.id_item,
-          _trackId: o.id_item ? `db-${o.id_item}` : `load-${idx}-${Date.now()}`,
-          nome: o.nome || '',
-          valor: o.valor ?? 0,
-          status: o.status ?? true
-        }));
-
-        this.opcoesSelecionadas = opcoesView;
-        this.cdr.detectChanges();
+        this.opcoesArray.clear();
+        (adc.opcoes || []).forEach((o: any) => {
+          this.opcoesArray.push(this.createOpcaoGroup(
+            o.nome || '',
+            o.valor ?? 0,
+            o.id_item,
+            o.status ?? true
+          ));
+        });
       },
       error: () => {
         this.messageService.add({
@@ -411,16 +451,16 @@ export class AdicionalFormComponent implements OnInit {
       return;
     }
 
-    const nomeRaw = this.opcaoForm.get('nome')?.value;
-    const valorRaw = this.opcaoForm.get('valor')?.value;
-    const nome = (nomeRaw ?? '').toString().trim();
-    const valor = Number(valorRaw);
+    const nome = this.opcaoForm.controls.nome.value.trim();
+    const valor = Number(this.opcaoForm.controls.valor.value);
 
     if (!nome) {
       return;
     }
 
-    const jaExiste = this.opcoesSelecionadas.some((o) => o.nome.toLowerCase() === nome.toLowerCase());
+    const jaExiste = this.opcoesArray.controls.some(
+      (g) => g.controls.nome.value.toLowerCase() === nome.toLowerCase()
+    );
     if (jaExiste) {
       this.messageService.add({
         severity: 'warn',
@@ -430,23 +470,13 @@ export class AdicionalFormComponent implements OnInit {
       return;
     }
 
-    const nova: OpcaoAdicionalView = {
-      _trackId: `new-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      nome,
-      valor,
-      status: true
-    };
-    console.log('Adicionando opcao:', nova);
-    this.opcoesSelecionadas = [...this.opcoesSelecionadas, nova];
-    console.log('Lista atual:', this.opcoesSelecionadas);
+    this.opcoesArray.push(this.createOpcaoGroup(nome, valor));
     this.opcoesInvalidas = false;
     this.opcaoForm.reset();
-    this.cdr.detectChanges();
   }
 
-  removeOpcao(op: OpcaoAdicionalView): void {
-    this.opcoesSelecionadas = this.opcoesSelecionadas.filter((o) => o._trackId !== op._trackId);
-    this.cdr.detectChanges();
+  removeOpcao(index: number): void {
+    this.opcoesArray.removeAt(index);
   }
 
   submit(): void {
@@ -460,7 +490,7 @@ export class AdicionalFormComponent implements OnInit {
       return;
     }
 
-    if (this.opcoesSelecionadas.length === 0) {
+    if (this.opcoesArray.length === 0) {
       this.opcoesInvalidas = true;
       this.messageService.add({
         severity: 'warn',
@@ -471,16 +501,16 @@ export class AdicionalFormComponent implements OnInit {
     }
 
     const payload: AdicionalInput = {
-      id_categoria: this.form.get('categoria')?.value!,
-      nome: this.form.get('nome')?.value!.toString().trim(),
-      selecao: this.form.get('selecao')?.value as any,
-      minimo: this.form.get('minimo')?.value ?? undefined,
-      limite: this.form.get('limite')?.value ?? undefined,
+      id_categoria: this.form.controls.categoria.value!,
+      nome: this.form.controls.nome.value.trim(),
+      selecao: this.form.controls.selecao.value as any,
+      minimo: this.form.controls.minimo.value ?? undefined,
+      limite: this.form.controls.limite.value ?? undefined,
       status: true,
-      opcoes: this.opcoesSelecionadas.map((o) => ({
-        nome: o.nome,
-        valor: o.valor,
-        status: o.status ?? true
+      opcoes: this.opcoesArray.controls.map((g) => ({
+        nome: g.controls.nome.value,
+        valor: g.controls.valor.value,
+        status: g.controls.status.value
       }))
     };
 
@@ -522,9 +552,5 @@ export class AdicionalFormComponent implements OnInit {
   invalidOpcaoField(controlName: string): boolean {
     const control = this.opcaoForm.get(controlName);
     return !!control && control.invalid && (control.touched || control.dirty);
-  }
-
-  trackByFn(index: number, item: OpcaoAdicionalView): string {
-    return item._trackId;
   }
 }
